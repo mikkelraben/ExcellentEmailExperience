@@ -49,11 +49,6 @@ jobs:
         # Specify the Az PowerShell script here.
         inlineScript: $AppBundle = Get-ChildItem -Filter ExcellentEmailExperience*Test -Name;cd $AppBundle;"C:\Program Files (x86)\Windows Kits\10\bin\10.0.22000.0\x64\signtool.exe" sign /fd SHA256 /a /f ../GitHubActionsWorkflow.pfx /p "${{ secrets.PFX_KEY }}" ${{ env.MSIX_FILE }}
                 
-    - name: Sign Package
-      env:
-        KEY_PASSWORD: ${{ secrets.PFX_KEY }}
-      if: "${{ env.KEY_PASSWORD != '' }}"
-      run: '& "C:\Program Files (x86)\Windows Kits\10\bin\10.0.22000.0\x64\signtool.exe" sign /fd SHA256 /a /f GitHubActionsWorkflow.pfx /p "${{ secrets.PFX_KEY }}" Packages\${{ env.MSIX_FILE }}'
     # Upload the MSIX package: https://github.com/marketplace/actions/upload-a-build-artifact
     - name: Upload MSIX package
       uses: actions/upload-artifact@v3
