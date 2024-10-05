@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "ExcellentEmailExperience (Package)": {
+      "commandName": "MsixPackage"
+    },
+    "ExcellentEmailExperience (Unpackaged)": {
+      "commandName": "Project"
+    }
+  }
+}

@@ -1,0 +1,157 @@
+using ExcellentEmailExperience.Model;
+using Microsoft.UI.Input;
+using Microsoft.UI.Windowing;
+using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Data;
+using Microsoft.UI.Xaml.Media;
+using System;
+using System.Collections.Generic;
+using Windows.Foundation;
+using Windows.Graphics;
+
+// To learn more about WinUI, the WinUI project structure,
+// and more about our project templates, see: http://aka.ms/winui-project-info.
+
+namespace ExcellentEmailExperience.Views
+{
+    /// <summary>
+    /// An empty window that can be used on its own or navigated to within a Frame.
+    /// </summary>
+    public sealed partial class MainWindow : WinUIEx.WindowEx
+    {
+        public MainWindow()
+        {
+            this.InitializeComponent();
+
+            this.ExtendsContentIntoTitleBar = true;
+            this.AppWindow.TitleBar.PreferredHeightOption = TitleBarHeightOption.Tall;
+            Titlebar.Loaded += Titlebar_Loaded;
+
+            Title = "EEE";
+
+            this.MinWidth = 760;
+            this.MinHeight = 450;
+
+            //if the the app is not in debug mode then collapse the subtitle
+#if !DEBUG
+            Subtitle.Opacity = 0;
+#endif
+
+            MailContent mail = new MailContent();
+
+            mail.from = new System.Net.Mail.MailAddress("test@example.org");
+            mail.to = new System.Net.Mail.MailAddress[] { new System.Net.Mail.MailAddress("user@example.org") };
+            mail.subject = "Test";
+            mail.body = "This is a test email";
+            mail.date = DateTime.Now.ToString();
+
+            MainFrame.Content = new Email(mail);
+
+        }
+
+        private void Titlebar_Loaded(object sender, Microsoft.UI.Xaml.RoutedEventArgs e)
+        {
+            SetPassthroughRegion();
+        }
+
+        private void SetPassthroughRegion()
+        {
+            InputNonClientPointerSource inputNonClientPointerSource = InputNonClientPointerSource.GetForWindowId(this.AppWindow.Id);
+
+            List<RectInt32> rects = new();
+
+            double scaleAdjustment = Titlebar.XamlRoot.RasterizationScale;
+
+            UIElementCollection titleChildren = Titlebar.Children;
+
+
+
+            foreach (var child in titleChildren)
+            {
+                if (child is AppBarButton)
+                {
+                    System.Numerics.Vector2 sizeVector = child.ActualSize;
+
+                    Rect rect = child.TransformToVisual(null).TransformBounds(new Rect(0, 0,
+                                                         sizeVector.X,
+                                                         sizeVector.Y));
+
+                    rects.Add(new RectInt32((int)(rect.X * scaleAdjustment),
+                                            (int)(rect.Y * scaleAdjustment),
+                                            (int)(rect.Width * scaleAdjustment),
+                                            (int)(rect.Height * scaleAdjustment)));
+
+                }
+            }
+
+            inputNonClientPointerSource.SetRegionRects(NonClientRegionKind.Passthrough, rects.ToArray());
+
+        }
+    }
+
+
+    public class SelectedToOpacity : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, string language)
+        {
+            return (bool)value ? 1 : 0.0;
+        }
+        public object ConvertBack(object value, Type targetType, object parameter, string language)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
+    public static class AncestorSource
+    {
+        public static readonly DependencyProperty AncestorTypeProperty =
+            DependencyProperty.RegisterAttached(
+                "AncestorType",
+                typeof(Type),
+                typeof(AncestorSource),
+                new PropertyMetadata(default(Type), OnAncestorTypeChanged)
+        );
+
+        public static void SetAncestorType(FrameworkElement element, Type value) =>
+            element.SetValue(AncestorTypeProperty, value);
+
+        public static Type GetAncestorType(FrameworkElement element) =>
+            (Type)element.GetValue(AncestorTypeProperty);
+
+        private static void OnAncestorTypeChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            FrameworkElement target = (FrameworkElement)d;
+            if (target.IsLoaded)
+                SetDataContext(target);
+            else
+                target.Loaded += OnTargetLoaded;
+        }
+
+        private static void OnTargetLoaded(object sender, RoutedEventArgs e)
+        {
+            FrameworkElement target = (FrameworkElement)sender;
+            target.Loaded -= OnTargetLoaded;
+            SetDataContext(target);
+        }
+
+        private static void SetDataContext(FrameworkElement target)
+        {
+            Type ancestorType = GetAncestorType(target);
+            if (ancestorType != null)
+                target.DataContext = FindParent(target, ancestorType);
+        }
+
+        private static object FindParent(DependencyObject dependencyObject, Type ancestorType)
+        {
+            DependencyObject parent = VisualTreeHelper.GetParent(dependencyObject);
+            if (parent == null)
+                return null;
+
+            if (ancestorType.IsAssignableFrom(parent.GetType()))
+                return parent;
+
+            return FindParent(parent, ancestorType);
+        }
+    }
+}
