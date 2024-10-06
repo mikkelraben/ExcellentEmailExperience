@@ -36,13 +36,15 @@ jobs:
 
       
 
-    - name: Test
+    - name: Build Test
       uses: Azure/powershell@v2
       with:
         # Specify the Az PowerShell script here.
-        inlineScript:  msbuild /restore /t:Build Test/Test.csproj /p:Configuration=Release /p:Platform=x64;cd .\Test\bin\x64\Release\net*\win-x64;dotnet test Test.dll
-        azPSVersion:  latest
+        inlineScript:  msbuild /restore /t:Build Test/Test.csproj /p:Configuration=Release /p:Platform=x64
+        azPSVersion: latest
         
+    - name: Run Test
+      run: dotnet test Test\bin\x64\Release\net8.0-windows10.0.19041.0\win-x64\Test.dll
     # Create the app package by building and packaging the project
     - name: Create the app package
       run: msbuild $env:Solution_Name /p:Configuration=$env:Configuration /p:Platform=$env:Platform /p:UapAppxPackageBuildMode=$env:Appx_Package_Build_Mode /p:AppxBundle=$env:Appx_Bundle /p:GenerateAppxPackageOnBuild=true /p:MsixName=$env:MSIX_FILE
