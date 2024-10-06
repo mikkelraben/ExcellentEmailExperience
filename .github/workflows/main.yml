@@ -36,7 +36,7 @@ jobs:
 
       
     - name: Test
-      run: dotnet test ..\Test\bin\x64\Release\net8.0-windows10.0.19041.0\win-x64\Test.dll
+      run: dotnet test \Test\bin\x64\*\net*\win-*\Test.dll
         
     # Create the app package by building and packaging the project
     - name: Create the app package
