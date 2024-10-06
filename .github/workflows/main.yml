@@ -35,8 +35,13 @@ jobs:
         Configuration: ${{ matrix.configuration }}
 
       
+
     - name: Test
-      run: dotnet test \Test\bin\x64\*\net*\win-*\Test.dll
+      uses: Azure/powershell@v2
+      with:
+        # Specify the Az PowerShell script here.
+        inlineScript:  cd .\Test\bin\x64\Release\net*\win-x64;dotnet test Test.dll
+        azPSVersion:  latest
         
     # Create the app package by building and packaging the project
     - name: Create the app package
