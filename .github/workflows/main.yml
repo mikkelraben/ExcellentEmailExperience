@@ -33,6 +33,11 @@ jobs:
       run: msbuild $env:Solution_Name /t:Restore /p:Configuration=$env:Configuration
       env:
         Configuration: ${{ matrix.configuration }}
+
+      
+    - name: Test
+      run: dotnet test
+        
     # Create the app package by building and packaging the project
     - name: Create the app package
       run: msbuild $env:Solution_Name /p:Configuration=$env:Configuration /p:Platform=$env:Platform /p:UapAppxPackageBuildMode=$env:Appx_Package_Build_Mode /p:AppxBundle=$env:Appx_Bundle /p:GenerateAppxPackageOnBuild=true /p:MsixName=$env:MSIX_FILE
