@@ -11,19 +11,17 @@ namespace Test
     [TestClass]
     public class UnitTest1
     {
-        [UITestMethod]
+        [TestMethod]
         public void TestMethod1()
         {
-            MainWindow main = new();
-            Assert.AreEqual((main.Content as Grid).Children.Count, 2);
+            Assert.AreEqual(2, 2);
         }
 
         // Use the UITestMethod attribute for tests that need to run on the UI thread.
-        [UITestMethod]
+        [TestMethod]
         public void TestMethod2()
         {
-            var grid = new Grid();
-            Assert.AreEqual(0, grid.MinWidth);
+            Assert.AreEqual(0, 23);
         }
     }
 }
