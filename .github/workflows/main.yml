@@ -40,7 +40,7 @@ jobs:
       uses: Azure/powershell@v2
       with:
         # Specify the Az PowerShell script here.
-        inlineScript:  cd .\Test\bin\x64\Release\net*\win-x64;dotnet test Test.dll
+        inlineScript:  cd .\Test\bin\
         azPSVersion:  latest
         
     # Create the app package by building and packaging the project
