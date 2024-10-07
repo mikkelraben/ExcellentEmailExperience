@@ -16,12 +16,5 @@ namespace Test
         {
             Assert.AreEqual(2, 2);
         }
-
-        // Use the UITestMethod attribute for tests that need to run on the UI thread.
-        [TestMethod]
-        public void TestMethod2()
-        {
-            Assert.AreEqual(0, 23);
-        }
     }
 }
