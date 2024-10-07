@@ -38,16 +38,20 @@ namespace ExcellentEmailExperience.Views
             Subtitle.Opacity = 0;
 #endif
 
-            MailContent mail = new MailContent();
+            var mails = new List<MailContent> { };
+            for (int i = 0; i < 20; i++)
+            {
+                MailContent mail = new MailContent();
 
-            mail.from = new System.Net.Mail.MailAddress("test@example.org");
-            mail.to = new System.Net.Mail.MailAddress[] { new System.Net.Mail.MailAddress("user@example.org") };
-            mail.subject = "Test";
-            mail.body = "This is a test email";
-            mail.date = DateTime.Now.ToString();
-
-            MainFrame.Content = new Email(mail);
-
+                mail.from = new System.Net.Mail.MailAddress("testlongusername@example.org");
+                mail.to = [new System.Net.Mail.MailAddress("user@example.org")];
+                mail.subject = "This is an awfully long subject line, like just unnecessarily long subject who would want to read this";
+                mail.body = "This is a test email";
+                mail.date = DateTime.Now.AddDays(-i).ToString();
+                mails.Add(mail);
+            }
+            MailList.ItemsSource = mails;
+            MainFrame.Content = new Email(mails[0]);
         }
 
         private void Titlebar_Loaded(object sender, Microsoft.UI.Xaml.RoutedEventArgs e)
@@ -88,8 +92,37 @@ namespace ExcellentEmailExperience.Views
             inputNonClientPointerSource.SetRegionRects(NonClientRegionKind.Passthrough, rects.ToArray());
 
         }
-    }
 
+        private void MailList_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            var selectedCount = MailList.SelectedItems.Count;
+
+            if (selectedCount == 1)
+            {
+                MainFrame.Content = new Email(MailList.SelectedItem as MailContent);
+                MassEditMenu.Visibility = Visibility.Collapsed;
+            }
+            else if (selectedCount > 1)
+            {
+                MassEditMenu.Visibility = Visibility.Visible;
+            }
+        }
+
+        private void MailBox_PointerEntered(object sender, Microsoft.UI.Xaml.Input.PointerRoutedEventArgs e)
+        {
+            RefreshButton.Opacity = 1;
+        }
+
+        private void MailBox_PointerExited(object sender, Microsoft.UI.Xaml.Input.PointerRoutedEventArgs e)
+        {
+            RefreshButton.Opacity = 0;
+        }
+
+        private void RefreshButton_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
+    }
 
     public class SelectedToOpacity : IValueConverter
     {
@@ -103,6 +136,34 @@ namespace ExcellentEmailExperience.Views
         }
     }
 
+    public class DateToNiceString : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, string language)
+        {
+            var date = DateTime.Parse(value as string);
+
+            if (date.Date == DateTime.Now.Date)
+            {
+                return date.ToString("t");
+            }
+            else if (date.Date == DateTime.Now.Date.AddDays(-1))
+            {
+                return "Yesterday";
+            }
+            else if (date.Date > DateTime.Now.Date.AddDays(-7))
+            {
+                return date.ToString("dddd");
+            }
+            else
+            {
+                return date.ToString("d");
+            }
+        }
+        public object ConvertBack(object value, Type targetType, object parameter, string language)
+        {
+            throw new NotImplementedException();
+        }
+    }
     public static class AncestorSource
     {
         public static readonly DependencyProperty AncestorTypeProperty =
@@ -148,7 +209,7 @@ namespace ExcellentEmailExperience.Views
             if (parent == null)
                 return null;
 
-            if (ancestorType.IsAssignableFrom(parent.GetType()))
+            if (ancestorType.IsInstanceOfType(parent))
                 return parent;
 
             return FindParent(parent, ancestorType);
