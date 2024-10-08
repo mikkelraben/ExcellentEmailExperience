@@ -73,7 +73,7 @@ namespace ExcellentEmailExperience.Views
 
             foreach (var child in titleChildren)
             {
-                if (child is AppBarButton)
+                if (child is AppBarButton || child is Button)
                 {
                     System.Numerics.Vector2 sizeVector = child.ActualSize;
 
@@ -106,6 +106,9 @@ namespace ExcellentEmailExperience.Views
             {
                 MassEditMenu.Visibility = Visibility.Visible;
             }
+
+            if (SidebarLarge)
+                SidebarLarge = false;
         }
 
         private void MailBox_PointerEntered(object sender, Microsoft.UI.Xaml.Input.PointerRoutedEventArgs e)
@@ -121,6 +124,35 @@ namespace ExcellentEmailExperience.Views
         private void RefreshButton_Click(object sender, RoutedEventArgs e)
         {
 
+        }
+
+        bool sidebarLarge = false;
+
+        public bool SidebarLarge
+        {
+            get => sidebarLarge; set
+            {
+                sidebarLarge = value;
+                BackButton.IsEnabled = !value;
+                Siderbar.Width = value ? 200 : 0;
+
+            }
+        }
+
+        private void BackButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (!SidebarLarge)
+            {
+                SidebarLarge = true;
+            }
+        }
+
+        private void Folder_Click(object sender, RoutedEventArgs e)
+        {
+            if (SidebarLarge)
+            {
+                SidebarLarge = false;
+            }
         }
     }
 
@@ -164,6 +196,7 @@ namespace ExcellentEmailExperience.Views
             throw new NotImplementedException();
         }
     }
+
     public static class AncestorSource
     {
         public static readonly DependencyProperty AncestorTypeProperty =

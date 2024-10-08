@@ -26,8 +26,8 @@
             <local:DateToNiceString x:Key="DateToNiceString"/>
             <DataTemplate x:Key="ListMailTemplate" x:DataType="model:MailContent">
                 <Grid Margin="-12,0,-12,0">
-                    <Button IsHitTestVisible="False" Background="Transparent" Width="242" Opacity="{Binding IsSelected, Converter={StaticResource SelectedToOpacity}}" local:AncestorSource.AncestorType="ListViewItem" Height="43" IsTabStop="False"/>
-                    <StackPanel Orientation="Vertical" Padding="12,4">
+                    <Button IsHitTestVisible="False" Background="Transparent" Width="242" Opacity="{Binding IsSelected, Converter={StaticResource SelectedToOpacity}}" local:AncestorSource.AncestorType="ListViewItem" Height="51" IsTabStop="False"/>
+                    <StackPanel Orientation="Vertical" Padding="12,8">
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*"/>
@@ -48,8 +48,31 @@
         </Grid.RowDefinitions>
 
         <StackPanel Name="Titlebar" Orientation="Horizontal" Height="48">
-            <Button Margin="12,11,11,11" Background="Transparent" BorderBrush="Transparent" Padding="4,4">
-                <FontIcon Glyph="&#xE838;" FontSize="16"/>
+            <Button Height="40" Width="40" Margin="4,0,4,0" Name="BackButton" ToolTipService.ToolTip="Back" AnimatedIcon.State="Normal" Click="BackButton_Click">
+                <Button.Resources>
+                    <ResourceDictionary>
+                        <!-- Button resources -->
+                        <StaticResource x:Key="ButtonBackground" ResourceKey="SubtleFillColorTransparentBrush"/>
+                        <StaticResource x:Key="ButtonBackgroundDisabled" ResourceKey="SubtleFillColorTransparentBrush"/>
+                        <StaticResource x:Key="ButtonBackgroundPointerOver" ResourceKey="SubtleFillColorSecondaryBrush"/>
+                        <StaticResource x:Key="ButtonBackgroundPressed" ResourceKey="SubtleFillColorTertiaryBrush"/>
+
+                        <StaticResource x:Key="ButtonBorderBrush" ResourceKey="SubtleFillColorTransparentBrush" />
+                        <StaticResource x:Key="ButtonBorderBrushDisabled" ResourceKey="SubtleFillColorTransparentBrush" />
+                        <StaticResource x:Key="ButtonBorderBrushPointerOver" ResourceKey="SubtleFillColorTransparentBrush" />
+                        <StaticResource x:Key="ButtonBorderBrushPressed" ResourceKey="SubtleFillColorTransparentBrush" />
+                        
+                        
+                    </ResourceDictionary>
+                </Button.Resources>
+                <AnimatedIcon x:Name="BackAnimatedIcon" Width="18">
+                    <AnimatedIcon.Source>
+                        <animatedvisuals:AnimatedBackVisualSource/>
+                    </AnimatedIcon.Source>
+                    <AnimatedIcon.FallbackIconSource>
+                        <SymbolIconSource Symbol="Back"/>
+                    </AnimatedIcon.FallbackIconSource>
+                </AnimatedIcon>
             </Button>
             <FontIcon Glyph="&#xEA3A;" FontSize="16"/>
             <TextBlock Text="Excellent Email Experience" FontSize="12" Margin="16,10,8,10" VerticalAlignment="Center" />
@@ -67,10 +90,20 @@
         <Grid Grid.Row="1">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="auto"/>
+                <ColumnDefinition Width="auto"/>
                 <ColumnDefinition Width="*"/>
 
             </Grid.ColumnDefinitions>
-            <Grid Name="Sidebar" Width="270" Grid.Column="0">
+            <StackPanel Name="Siderbar" Width="0" Grid.Column="0">
+                <Button Content="Inbox" Click="Folder_Click"/>
+                <Button Content="Sent" Click="Folder_Click"/>
+                <Button Content="Drafts" Click="Folder_Click"/>
+                <Button Content="Trash" Click="Folder_Click"/>
+            </StackPanel>
+            <Grid Name="Sidebar" Width="270" Grid.Column="1">
+                <Grid.Transitions>
+                    <RepositionThemeTransition/>
+                </Grid.Transitions>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="auto"/>
                     <RowDefinition Height="auto"/>
@@ -91,7 +124,7 @@
                         <FontIcon Glyph="&#xE72C;" FontSize="16"/>
                     </Button>
                 </Grid>
-                <AutoSuggestBox PlaceholderText="Search" Grid.Row="1" Margin="8,0,8,16"/>
+                <AutoSuggestBox PlaceholderText="Search" Grid.Row="1" Margin="8,0,8,16" QueryIcon="Find"/>
                 <StackPanel Orientation="Horizontal" Grid.Row="2" Name="MassEditMenu" Visibility="Collapsed">
                     <Button Margin="8,0,0,0" Padding="8,4" Content="Delete??"/>
                 </StackPanel>
@@ -101,7 +134,7 @@
                     Name="MailList" 
                     ItemTemplate="{StaticResource ListMailTemplate}" 
                     Margin="4,0,4,0" 
-                    Padding="0,0,12,0"
+                    Padding="0,0,10,0"
                     SelectionChanged="MailList_SelectionChanged">
                     <ListView.Transitions>
                         <RepositionThemeTransition/>
@@ -115,33 +148,40 @@
                         </ResourceDictionary>
                     </ListView.Resources>
                 </ListView>
-                <Button Grid.Row="4" x:Name="SettingsButton" Height="40" Margin="5,0,0,0" Padding="8,4,160,4" AnimatedIcon.State="Normal">
-                    <Button.Resources>
-                        <ResourceDictionary>
-                            <!-- Button resources -->
-                            <StaticResource x:Key="ButtonBackground" ResourceKey="SubtleFillColorTransparentBrush"/>
-                            <StaticResource x:Key="ButtonBackgroundPointerOver" ResourceKey="SubtleFillColorSecondaryBrush"/>
-                            <StaticResource x:Key="ButtonBackgroundPressed" ResourceKey="SubtleFillColorTertiaryBrush"/>
+                <Grid Grid.Row="4" Height="52" Margin="5,0,5,0" BorderThickness="0,1,0,0" BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}">
+                    <Button  x:Name="SettingsButton" Height="40"  Padding="8,4,160,4" AnimatedIcon.State="Normal">
+                        <Button.Resources>
+                            <ResourceDictionary>
+                                <!-- Button resources -->
+                                <StaticResource x:Key="ButtonBackground" ResourceKey="SubtleFillColorTransparentBrush"/>
+                                <StaticResource x:Key="ButtonBackgroundPointerOver" ResourceKey="SubtleFillColorSecondaryBrush"/>
+                                <StaticResource x:Key="ButtonBackgroundPressed" ResourceKey="SubtleFillColorTertiaryBrush"/>
 
-                            <StaticResource x:Key="ButtonBorderBrush" ResourceKey="SubtleFillColorTransparentBrush" />
-                            <StaticResource x:Key="ButtonBorderBrushPointerOver" ResourceKey="SubtleFillColorTransparentBrush" />
-                            <StaticResource x:Key="ButtonBorderBrushPressed" ResourceKey="SubtleFillColorTransparentBrush" />
-                        </ResourceDictionary>
-                    </Button.Resources>
-                    <StackPanel Orientation="Horizontal" Height="20">
-                        <AnimatedIcon x:Name="SettingsAnimatedIcon" Width="18">
-                            <AnimatedIcon.Source>
-                                <animatedvisuals:AnimatedSettingsVisualSource/>
-                            </AnimatedIcon.Source>
-                            <AnimatedIcon.FallbackIconSource>
-                                <SymbolIconSource Symbol="Setting"/>
-                            </AnimatedIcon.FallbackIconSource>
-                        </AnimatedIcon>
-                        <TextBlock Margin="14,0,0,0" Style="{ThemeResource BodyStrongTextBlockStyle}">Settings</TextBlock>
-                    </StackPanel>
-                </Button>
+                                <StaticResource x:Key="ButtonBorderBrush" ResourceKey="SubtleFillColorTransparentBrush" />
+                                <StaticResource x:Key="ButtonBorderBrushPointerOver" ResourceKey="SubtleFillColorTransparentBrush" />
+                                <StaticResource x:Key="ButtonBorderBrushPressed" ResourceKey="SubtleFillColorTransparentBrush" />
+                            </ResourceDictionary>
+                        </Button.Resources>
+                        <StackPanel Orientation="Horizontal" Height="20">
+                            <AnimatedIcon x:Name="SettingsAnimatedIcon" Width="18">
+                                <AnimatedIcon.Source>
+                                    <animatedvisuals:AnimatedSettingsVisualSource/>
+                                </AnimatedIcon.Source>
+                                <AnimatedIcon.FallbackIconSource>
+                                    <SymbolIconSource Symbol="Setting"/>
+                                </AnimatedIcon.FallbackIconSource>
+                            </AnimatedIcon>
+                            <TextBlock Margin="14,0,0,0" Style="{ThemeResource BodyStrongTextBlockStyle}">Settings</TextBlock>
+                        </StackPanel>
+                    </Button>
+                    
+                </Grid>
             </Grid>
-            <Frame Name="MainFrame" Grid.Column="1" Background="{ThemeResource LayerFillColorAltBrush}" BorderBrush="{ThemeResource CardStrokeColorDefault}" CornerRadius="8,0,0,0"></Frame>
+            <Frame Name="MainFrame" Grid.Column="2" Background="{ThemeResource LayerFillColorDefaultBrush}" BorderThickness="1" BorderBrush="{ThemeResource CardStrokeColorDefault}" CornerRadius="8,0,0,0">
+                <Frame.Transitions>
+                    <RepositionThemeTransition/>
+                </Frame.Transitions>
+            </Frame>
         </Grid>
 
     </Grid>
