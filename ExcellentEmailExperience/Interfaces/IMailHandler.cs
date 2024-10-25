@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace ExcellentEmailExperience.Interfaces
 {
-    internal interface IMailHandler
+    public interface IMailHandler
     {
         MailAddress[] flaggedMails { get; set; }
         bool CheckSpam(MailContent content);

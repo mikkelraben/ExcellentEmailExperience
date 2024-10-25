@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace ExcellentEmailExperience.Interfaces
 {
-    internal interface IReciever
+    public interface IReciever
     {
         MailContent GetMail();
     }

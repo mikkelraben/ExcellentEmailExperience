@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace ExcellentEmailExperience.Interfaces
 {
-    internal interface ISender
+    public interface ISender
     {
         void SendMail(MailContent content);
     }
