@@ -9,7 +9,10 @@ namespace ExcellentEmailExperience.Model
 {
     public class GmailSender : ISender
     {
-
+        /*
+        this class only does one thing. it takes a content Class and sends the data in the class as an email 
+        this one is specific to GMAIL. and should only be used by the GMAILHandler. 
+         */
         public void SendMail(MailContent Content)
         {
 
