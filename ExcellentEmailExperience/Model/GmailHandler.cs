@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace ExcellentEmailExperience.Model
 {
-    internal class GmailHandler : IMailHandler
+    public class GmailHandler : IMailHandler
     {
 
 
