@@ -17,7 +17,7 @@ namespace ExcellentEmailExperience.Model
     {
         Theme Darkmode;
         string[] signatures;
-        // seje settings pending
+        // seje settings pending (LLM on and off, spamfilterstuff)
 
     }
 }

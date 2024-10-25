@@ -10,7 +10,7 @@ namespace ExcellentEmailExperience.Interfaces
 {
     public interface IMailHandler
     {
-        MailAddress[] flaggedMails { get; set; }
+        MailAddress[] FlaggedMails { get; set; }
         bool CheckSpam(MailContent content);
         void Forward(MailContent content);
         void Reply(MailContent content);

@@ -29,12 +29,44 @@ namespace Test
             string validAttachment = "C:/Users/Downloads"; //valid attachment path maybe
             string invalidAttachment = "C:/Users/Downloads"; //invalid attachment path maybe
 
+            //instantiating a GmailHandler object
             IMailHandler mailHandler = new GmailHandler();
+
+            //accessing the password from the environment variables in github?
             string? password = Environment.GetEnvironmentVariable("password");
-            MailContent validMail=mailHandler.NewMail(validAddress,validSubject,validAddress3,validAddress2,validBody,null);
+
+            //creating a new mail object and sending it to the current mail address? checking for recieving mail
+            MailContent validMail =mailHandler.NewMail(validAddress,validSubject,validAddress3,validAddress2,validBody,null);
+            
+            int inboxLength = mailHandler.GetInbox().Length;
+
             mailHandler.Send(validMail);
-            //mailhandler.()
-            //Assert.IsTrue(mailhandler.GetInbox().Length == 0);
+
+            Assert.IsTrue(mailHandler.GetInbox().Length == inboxLength+1);
+
+            //checking recieved mail for spam mail
+            Assert.IsFalse(mailHandler.CheckSpam(mailHandler.GetInbox()[0]));
+
+            //forwarding the recieved mail to the current mail address?
+            mailHandler.Forward(mailHandler.GetInbox()[inboxLength+1]);
+
+            Assert.IsTrue(mailHandler.GetInbox().Length == inboxLength + 2);
+
+            //testing that the recieved mail and the forwarded mail are the same
+            Assert.IsTrue(mailHandler.GetInbox()[inboxLength + 1] == mailHandler.GetInbox()[inboxLength + 1]);
+
+            //replying to the recieved mail and checking the reply is recieved
+            mailHandler.Reply(mailHandler.GetInbox()[inboxLength + 1]);
+
+            Assert.IsTrue(mailHandler.GetInbox().Length == inboxLength + 3);
+
+
+
+            //replying to all the recieved mail and checking the reply is recieved
+            mailHandler.ReplyAll(mailHandler.GetInbox()[inboxLength + 1]);
+
+            Assert.IsTrue(mailHandler.GetInbox().Length == inboxLength + 4);
+
         }
     }
 }
