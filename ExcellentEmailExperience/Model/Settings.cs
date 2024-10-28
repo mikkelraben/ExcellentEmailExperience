@@ -13,7 +13,7 @@ namespace ExcellentEmailExperience.Model
         Dark
     }
 
-    internal class Settings
+    public class Settings
     {
         Theme Darkmode;
         string[] signatures;
