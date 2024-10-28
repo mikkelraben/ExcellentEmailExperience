@@ -6,6 +6,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:ExcellentEmailExperience.Views"
     xmlns:model="using:ExcellentEmailExperience.Model"
+    xmlns:viewmodel="using:ExcellentEmailExperience.ViewModel"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:animatedvisuals="using:Microsoft.UI.Xaml.Controls.AnimatedVisuals"
@@ -24,9 +25,9 @@
         <Grid.Resources>
             <local:SelectedToOpacity x:Key="SelectedToOpacity"/>
             <local:DateToNiceString x:Key="DateToNiceString"/>
-            <DataTemplate x:Key="ListMailTemplate" x:DataType="model:MailContent">
+            <DataTemplate x:Key="ListMailTemplate" x:DataType="viewmodel:InboxMail">
                 <Grid Margin="-12,0,-12,0">
-                    <Button IsHitTestVisible="False" Background="Transparent" Width="242" Opacity="{Binding IsSelected, Converter={StaticResource SelectedToOpacity}}" local:AncestorSource.AncestorType="ListViewItem" Height="51" IsTabStop="False"/>
+                    <Button IsHitTestVisible="False" Background="Transparent" Width="242" Opacity="{Binding Selected, Converter={StaticResource SelectedToOpacity}, Mode=OneWay}" Height="51" IsTabStop="False"/>
                     <StackPanel Orientation="Vertical" Padding="12,8">
                         <Grid>
                             <Grid.ColumnDefinitions>
@@ -77,7 +78,7 @@
             <FontIcon Glyph="&#xEA3A;" FontSize="16"/>
             <TextBlock Text="Excellent Email Experience" FontSize="12" Margin="16,10,8,10" VerticalAlignment="Center" />
             <TextBlock Text="Debug" Name="Subtitle" FontSize="12" Margin="0,10,0,10" VerticalAlignment="Center" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
-            <AppBarButton Icon="Mail" LabelPosition="Collapsed" Margin="2,0,0,0" Padding="0,0" Width="40" ToolTipService.ToolTip="Mail"/>
+            <AppBarButton Icon="Mail" LabelPosition="Collapsed" Margin="2,0,0,0" Padding="0,0" Width="40" ToolTipService.ToolTip="New Mail"/>
             <AppBarButton Icon="MailReply" LabelPosition="Collapsed" Width="40" ToolTipService.ToolTip="Reply"/>
             <AppBarButton Icon="MailReplyAll" LabelPosition="Collapsed" Width="40" ToolTipService.ToolTip="Reply All"/>
             <AppBarButton Icon="MailForward" LabelPosition="Collapsed" Width="40" ToolTipService.ToolTip="Forward"/>
@@ -149,7 +150,7 @@
                     </ListView.Resources>
                 </ListView>
                 <Grid Grid.Row="4" Height="52" Margin="5,0,5,0" BorderThickness="0,1,0,0" BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}">
-                    <Button  x:Name="SettingsButton" Height="40"  Padding="8,4,160,4" AnimatedIcon.State="Normal">
+                    <Button  x:Name="SettingsButton" Height="40"  Padding="8,4,160,4" AnimatedIcon.State="Normal" Click="SettingsButton_Click">
                         <Button.Resources>
                             <ResourceDictionary>
                                 <!-- Button resources -->
@@ -177,7 +178,7 @@
                     
                 </Grid>
             </Grid>
-            <Frame Name="MainFrame" Grid.Column="2" Background="{ThemeResource LayerFillColorDefaultBrush}" BorderThickness="1" BorderBrush="{ThemeResource CardStrokeColorDefault}" CornerRadius="8,0,0,0">
+            <Frame Name="MainFrame" Grid.Column="2" Background="{ThemeResource LayerFillColorDefaultBrush}" BorderThickness="1,1,0,0" BorderBrush="{ThemeResource CardStrokeColorDefault}" CornerRadius="8,0,0,0">
                 <Frame.Transitions>
                     <RepositionThemeTransition/>
                 </Frame.Transitions>
