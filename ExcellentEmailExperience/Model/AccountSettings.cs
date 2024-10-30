@@ -6,18 +6,13 @@ using System.Threading.Tasks;
 
 namespace ExcellentEmailExperience.Model
 {
-    enum Theme
-    {
-        System,
-        Light,
-        Dark
-    }
 
-    public class Settings
+
+    public class AccountSettings
     {
-        Theme Darkmode;
-        string[] signatures;
+
         // seje settings pending
+
 
     }
 }

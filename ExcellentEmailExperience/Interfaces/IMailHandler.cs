@@ -42,7 +42,7 @@ namespace ExcellentEmailExperience.Interfaces
         /// <param name="old"> True if GetFolder should retrieve older mails, false if newer </param>
         /// <param name="refresh"> True if the mail list should restart at the newest mail </param>
         /// <returns>List containing MailContent, with an upper bound of 50? elements</returns>
-        List<MailContent> GetFolder(string name, bool old, bool refresh);
+        IEnumerable<MailContent> GetFolder(string name, bool old, bool refresh);
 
         /// <summary>
         /// Refreshes the mail retrieved in all folders. Calls GetFolder with refresh = true.

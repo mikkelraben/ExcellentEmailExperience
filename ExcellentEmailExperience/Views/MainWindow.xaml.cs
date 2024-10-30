@@ -8,6 +8,9 @@ using Microsoft.UI.Xaml.Data;
 using Microsoft.UI.Xaml.Media;
 using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Threading;
 using Windows.Foundation;
 using Windows.Graphics;
 using WinUIEx;
@@ -22,8 +25,13 @@ namespace ExcellentEmailExperience.Views
     /// </summary>
     public sealed partial class MainWindow : WinUIEx.WindowEx
     {
-        public MainWindow()
+        MailApp mailApp;
+        FolderViewModel currentFolder;
+
+        public MainWindow(MailApp mailApp)
         {
+            this.mailApp = mailApp;
+
             this.InitializeComponent();
 
             this.ExtendsContentIntoTitleBar = true;
@@ -40,20 +48,15 @@ namespace ExcellentEmailExperience.Views
             Subtitle.Opacity = 0;
 #endif
 
-            var mails = new List<InboxMail> { };
-            for (int i = 0; i < 20; i++)
-            {
-                InboxMail mail = new InboxMail();
+            //Thread thread = new(() =>
+            //{
+            //    LoadMails();
+            //});
+            //
+            //thread.Start();
 
-                mail.from = new System.Net.Mail.MailAddress("testlongusername@example.org");
-                mail.to = [new System.Net.Mail.MailAddress("user@example.org")];
-                mail.subject = "This is an awfully long subject line, like just unnecessarily long subject who would want to read this";
-                //mail.body = "This is a test email";
-                mail.date = DateTime.Now.AddDays(-i).ToString();
-                mails.Add(mail);
-            }
-            MailList.ItemsSource = mails;
-            //MainFrame.Content = new Email(mails[0]);
+            currentFolder = new(mailApp.accounts[0].GetMailHandler(), "Inbox", DispatcherQueue);
+
         }
 
         private void Titlebar_Loaded(object sender, Microsoft.UI.Xaml.RoutedEventArgs e)
@@ -167,10 +170,18 @@ namespace ExcellentEmailExperience.Views
             }
         }
 
-        bool settingsActive = false;
-        SettingsWindow settings = new();
+        private async void SettingsButton_Click(object sender, RoutedEventArgs e)
+        {
+            new Thread(() =>
+            {
+                OpenSettings();
+            }).Start();
+        }
 
-        private void SettingsButton_Click(object sender, RoutedEventArgs e)
+        bool settingsActive = false;
+        SettingsWindow settings;
+
+        private async void OpenSettings()
         {
             if (settingsActive)
             {
@@ -191,12 +202,6 @@ namespace ExcellentEmailExperience.Views
             settings.Closed += (s, e) => settingsActive = false;
             Closed += (s, e) => settings.Close();
         }
-
-        private void MailList_PointerPressed(object sender, Microsoft.UI.Xaml.Input.PointerRoutedEventArgs e)
-        {
-            if (SidebarLarge)
-                SidebarLarge = false;
-        }
     }
 
     public class SelectedToOpacity : IValueConverter
@@ -215,7 +220,15 @@ namespace ExcellentEmailExperience.Views
     {
         public object Convert(object value, Type targetType, object parameter, string language)
         {
-            var date = DateTime.Parse(value as string);
+            DateTime date;
+            try
+            {
+                date = DateTime.Parse(value as string);
+            }
+            catch (FormatException)
+            {
+                return "Unknown";
+            }
 
             if (date.Date == DateTime.Now.Date)
             {

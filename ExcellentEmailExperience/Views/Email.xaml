@@ -15,7 +15,7 @@
         </Grid.RowDefinitions>
         <Grid></Grid>
         <ScrollView VerticalScrollBarVisibility="Auto">
-            <TextBlock TextWrapping="Wrap" IsTextSelectionEnabled="True" Margin="12,12">
+            <TextBlock TextWrapping="Wrap" IsTextSelectionEnabled="True" Margin="12,12" Name="MailContent">
                 <TextBlock.Text>
 
                     <x:String xml:space="preserve">Dear [Recipient's First Name],

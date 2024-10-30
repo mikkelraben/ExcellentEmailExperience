@@ -27,6 +27,7 @@ namespace ExcellentEmailExperience.Views
         public Email(MailContent mail)
         {
             this.InitializeComponent();
+            MailContent.Text = mail.body;
         }
     }
 }

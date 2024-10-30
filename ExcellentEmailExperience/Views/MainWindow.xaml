@@ -34,7 +34,7 @@
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="auto"/>
                             </Grid.ColumnDefinitions>
-                            <TextBlock Text="{Binding from}" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap" Grid.Column="0" VerticalAlignment="Bottom" Style="{ThemeResource BodyStrongTextBlockStyle}" ToolTipService.ToolTip="{Binding from}"/>
+                            <TextBlock Text="{x:Bind from.DisplayName}" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap" Grid.Column="0" VerticalAlignment="Bottom" Style="{ThemeResource BodyStrongTextBlockStyle}" ToolTipService.ToolTip="{Binding from.Address}"/>
                             <TextBlock Text="{Binding date, Converter={StaticResource DateToNiceString}}" Grid.Column="1" VerticalAlignment="Bottom" Style="{ThemeResource CaptionTextBlockStyle}" ToolTipService.ToolTip="{Binding date}"/>
                         </Grid>
                         <TextBlock Text="{Binding subject}" TextTrimming="CharacterEllipsis" ToolTipService.ToolTip="{Binding subject}"/>
@@ -134,6 +134,7 @@
                     SelectionMode="Extended" 
                     Name="MailList" 
                     ItemTemplate="{StaticResource ListMailTemplate}" 
+                    ItemsSource="{x:Bind currentFolder.mails}"
                     Margin="4,0,4,0" 
                     Padding="0,0,10,0"
                     SelectionChanged="MailList_SelectionChanged">
