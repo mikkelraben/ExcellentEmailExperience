@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
+using ExcellentEmailExperience.Model;
 using ExcellentEmailExperience.Views;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -42,10 +43,30 @@ namespace ExcellentEmailExperience
         /// <param name="args">Details about the launch request and process.</param>
         protected override void OnLaunched(Microsoft.UI.Xaml.LaunchActivatedEventArgs args)
         {
-            m_window = new MainWindow();
-            m_window.Activate();
+            mailApp = new MailApp();
+            if (!mailApp.HasAccount())
+            {
+                intro = new Intro(mailApp);
+                intro.FirstAccountCreated += (sender, e) =>
+                {
+                    CreateMainWindow(mailApp);
+                };
+                intro.Activate();
+            }
+            else
+            {
+                CreateMainWindow(mailApp);
+            }
         }
 
-        private Window? m_window;
+        public void CreateMainWindow(MailApp mailApp)
+        {
+            mainWindow = new MainWindow(mailApp);
+            mainWindow.Activate();
+        }
+
+        private Intro? intro;
+        private MainWindow? mainWindow;
+        private MailApp? mailApp;
     }
 }

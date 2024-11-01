@@ -6,7 +6,13 @@ using System.Threading.Tasks;
 
 namespace ExcellentEmailExperience.Model
 {
-    internal class GmailReciever
+
+
+    public class AccountSettings
     {
+
+        // seje settings pending
+
+
     }
 }

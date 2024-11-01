@@ -6,6 +6,8 @@ on:
     branches: [ main ]
 jobs:
   build:
+    permissions:
+      contents: write
     strategy:
       matrix:
         configuration: [Release]
@@ -46,6 +48,16 @@ jobs:
     - name: Run Test
       run: dotnet test Test\bin\x64\Release\net8.0-windows10.0.19041.0\win-x64\Test.dll
     # Create the app package by building and packaging the project
+    
+    - name: Version Bump
+      run: python ./.github/workflows/scripts/version_bump.py
+      if: github.event_name != 'pull_request'
+
+    - uses: stefanzweifel/git-auto-commit-action@v5
+      with:
+        file_pattern: '*.appxmanifest'
+      if: github.event_name != 'pull_request'
+    
     - name: Create the app package
       run: msbuild $env:Solution_Name /p:Configuration=$env:Configuration /p:Platform=$env:Platform /p:UapAppxPackageBuildMode=$env:Appx_Package_Build_Mode /p:AppxBundle=$env:Appx_Bundle /p:GenerateAppxPackageOnBuild=true /p:MsixName=$env:MSIX_FILE
       env:
@@ -54,6 +66,7 @@ jobs:
         Appx_Package_Dir: Packages\
         Configuration: ${{ matrix.configuration }}
         Platform: ${{ matrix.platform }}
+      if: github.event_name != 'pull_request'
 
     - name: Sign Package
       uses: Azure/powershell@v2
@@ -61,9 +74,12 @@ jobs:
         # Specify the Az PowerShell script here.
         inlineScript: $AppBundle = Get-ChildItem -Filter ExcellentEmailExperience*Test -Name;cd $AppBundle; $MsixName = Get-ChildItem -Filter ExcellentEmailExperience*.msix -Name; & "C:\Program Files (x86)\Windows Kits\10\bin\10.0.22000.0\x64\signtool.exe" sign /fd SHA256 /a /f ../GitHubActionsWorkflow.pfx /p "${{ secrets.PFX_KEY }}" $MsixName
         azPSVersion:  latest
+      if: github.event_name != 'pull_request'
+      
     # Upload the MSIX package: https://github.com/marketplace/actions/upload-a-build-artifact
     - name: Upload MSIX package
       uses: actions/upload-artifact@v3
       with:
         name: MSIX Package
         path: ExcellentEmailExperience*Test/ExcellentEmailExperience*.msix
+      if: github.event_name != 'pull_request'

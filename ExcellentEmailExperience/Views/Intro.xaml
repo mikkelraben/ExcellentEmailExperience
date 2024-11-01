@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<winex:WindowEx
+    xmlns:winex="using:WinUIEx" 
+    x:Class="ExcellentEmailExperience.Views.Intro"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:ExcellentEmailExperience.Views"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    Title="Intro">
+
+    <Window.SystemBackdrop>
+        <MicaBackdrop/>
+    </Window.SystemBackdrop>
+    
+    <Grid>
+        <TextBlock Name="TitleText" Style="{ThemeResource DisplayTextBlockStyle}" VerticalAlignment="Center" HorizontalAlignment="Center" Opacity="0.0">
+            Excellent Email Experience
+            <TextBlock.OpacityTransition>
+                <ScalarTransition Duration="0:0:1"/>
+            </TextBlock.OpacityTransition>
+        </TextBlock>
+        <StackPanel VerticalAlignment="Center">
+            <TextBlock Name="SubtitleText" Style="{ThemeResource SubtitleTextBlockStyle}" HorizontalAlignment="Center" Opacity="0.0">
+                A new way to experience email
+                <TextBlock.OpacityTransition>
+                    <ScalarTransition Duration="0:0:1"/>
+                </TextBlock.OpacityTransition>
+            </TextBlock>
+            <Button Name="GetStartedButton" Content="Get Started" Style="{StaticResource AccentButtonStyle}" HorizontalAlignment="Center" Opacity="0.0" Margin="36,36" Click="GetStartedButton_Click">
+                <Button.OpacityTransition>
+                    <ScalarTransition Duration="0:0:1"/>
+                </Button.OpacityTransition>
+            </Button>
+        </StackPanel>
+
+    </Grid>
+</winex:WindowEx>

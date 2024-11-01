@@ -13,11 +13,10 @@ namespace ExcellentEmailExperience.Model
         Dark
     }
 
-    internal class Settings
+    public class AppSettings
     {
-        Theme Darkmode;
+        Theme theme;
         string[] signatures;
-        // seje settings pending (LLM on and off, spamfilterstuff)
 
     }
 }

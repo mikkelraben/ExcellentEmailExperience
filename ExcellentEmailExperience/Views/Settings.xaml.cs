@@ -1,4 +1,3 @@
-using ExcellentEmailExperience.Model;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Controls.Primitives;
@@ -11,6 +10,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
+using Windows.ApplicationModel;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
 
@@ -20,14 +20,19 @@ using Windows.Foundation.Collections;
 namespace ExcellentEmailExperience.Views
 {
     /// <summary>
-    /// An empty page that can be used on its own or navigated to within a Frame.
+    /// An empty window that can be used on its own or navigated to within a Frame.
     /// </summary>
-    public sealed partial class Email : Page
+    public sealed partial class SettingsWindow : WinUIEx.WindowEx
     {
-        public Email(MailContent mail)
+        public SettingsWindow()
         {
             this.InitializeComponent();
-            MailContent.Text = mail.body;
+            this.ExtendsContentIntoTitleBar = true;
+
+            this.MinWidth = 500;
+            this.MinHeight = 300;
+
+            Version.Text = "Version: " + AppInfo.Current.Package.Id.Version.Major + "." + AppInfo.Current.Package.Id.Version.Minor + "." + AppInfo.Current.Package.Id.Version.Build + "." + AppInfo.Current.Package.Id.Version.Revision;
         }
     }
 }
