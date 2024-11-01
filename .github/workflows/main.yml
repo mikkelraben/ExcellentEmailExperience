@@ -6,6 +6,8 @@ on:
     branches: [ main ]
 jobs:
   build:
+    permissions:
+      contents: write
     strategy:
       matrix:
         configuration: [Release]
@@ -46,6 +48,14 @@ jobs:
     - name: Run Test
       run: dotnet test Test\bin\x64\Release\net8.0-windows10.0.19041.0\win-x64\Test.dll
     # Create the app package by building and packaging the project
+    
+    - name: Version Bump
+      run: python ./.github/workflows/scripts/version_bump.py
+
+    - uses: stefanzweifel/git-auto-commit-action@v5
+      with:
+        file_pattern: '*.appxmanifest'
+    
     - name: Create the app package
       run: msbuild $env:Solution_Name /p:Configuration=$env:Configuration /p:Platform=$env:Platform /p:UapAppxPackageBuildMode=$env:Appx_Package_Build_Mode /p:AppxBundle=$env:Appx_Bundle /p:GenerateAppxPackageOnBuild=true /p:MsixName=$env:MSIX_FILE
       env:
