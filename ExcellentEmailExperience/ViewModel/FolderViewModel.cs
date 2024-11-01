@@ -1,21 +1,21 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using ExcellentEmailExperience.Interfaces;
-using ExcellentEmailExperience.Model;
 using Microsoft.UI.Dispatching;
 using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Linq;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
-using Windows.Media.DialProtocol;
 
 namespace ExcellentEmailExperience.ViewModel
 {
     [ObservableObject]
     internal partial class FolderViewModel
     {
+        /// <summary>
+        /// Constructor for FolderViewModel
+        /// </summary>
+        /// <param name="mailHandler">Mailhandler for the account which contains a certain folder</param>
+        /// <param name="name">The name of the folder</param>
+        /// <param name="dispatcherQueue"></param>
         public FolderViewModel(IMailHandler mailHandler, string name, DispatcherQueue dispatcherQueue)
         {
             this.name = name;
@@ -32,11 +32,14 @@ namespace ExcellentEmailExperience.ViewModel
                         inboxMail.to = mail.to;
                         inboxMail.subject = mail.subject;
                         inboxMail.date = mail.date;
-                        if (dispatcherQueue == null)
+                        if (dispatcherQueue != null)
                         {
-                            return;
+                            dispatcherQueue.TryEnqueue(() => mails.Add(inboxMail));
                         }
-                        dispatcherQueue.TryEnqueue(() => mails.Add(inboxMail));
+                        else
+                        {
+                            mails.Add(inboxMail);
+                        }
                     }
                 }
                 catch (Exception)
