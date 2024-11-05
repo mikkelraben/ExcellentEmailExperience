@@ -1,4 +1,5 @@
 ﻿using ExcellentEmailExperience.Interfaces;
+using Microsoft.UI.Xaml.Controls;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,17 +11,18 @@ namespace ExcellentEmailExperience.Model
     public class MailApp
     {
         public readonly List<IAccount> accounts = new();
-
         public MailApp()
         {
-            //LoadAccounts();
+            LoadAccounts();
         }
 
+        /// <summary>
+        /// Creates a new account
+        /// </summary>
+        /// <param name="account">The account to add to the </param>
         public void NewAccount(IAccount account)
         {
             accounts.Add(account);
-
-
         }
 
         public void DeleteAccount()
@@ -35,7 +37,14 @@ namespace ExcellentEmailExperience.Model
 
         private void LoadAccounts()
         {
-            throw new NotImplementedException();
+            //TODO: Change this when imap is implemented
+
+            foreach (var account in CredentialHandler.GetAccounts())
+            {
+                GmailAccount gmailAccount = new();
+                gmailAccount.Login(account);
+                accounts.Add(gmailAccount);
+            }
         }
     }
 }
