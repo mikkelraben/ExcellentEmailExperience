@@ -4,6 +4,7 @@ using Google.Apis.Gmail.v1;
 using System;
 using System.Collections.Generic;
 using System.Net.Mail;
+using System.Text;
 
 namespace ExcellentEmailExperience.Model
 {
@@ -46,6 +47,56 @@ namespace ExcellentEmailExperience.Model
                 {
                     var msg = service.Users.Messages.Get("me", message.Id).Execute();
                     MailContent mailContent = new();
+
+
+                    //Change all this to support e-boks messages / other weird message types
+                    switch (msg.Payload.MimeType)
+                    {
+                        case "text/plain":
+                            mailContent.body = Encoding.UTF8.GetString(Convert.FromBase64String(msg.Payload.Body.Data.Replace('-', '+').Replace('_', '/')));
+                            mailContent.bodyType = BodyType.Plain;
+                            break;
+                        case "text/html":
+                            mailContent.body = Encoding.UTF8.GetString(Convert.FromBase64String(msg.Payload.Body.Data.Replace('-', '+').Replace('_', '/')));
+                            mailContent.bodyType = BodyType.Html;
+                            break;
+                        case "multipart/alternative":
+
+                            bool containsHtml = false;
+                            foreach (var part in msg.Payload.Parts)
+                            {
+                                if (part.MimeType == "text/html")
+                                {
+                                    containsHtml = true;
+                                    break;
+                                }
+                            }
+
+                            foreach (var part in msg.Payload.Parts)
+                            {
+                                switch (part.MimeType)
+                                {
+                                    case "text/plain":
+                                        if (containsHtml)
+                                        {
+                                            continue;
+                                        }
+                                        mailContent.body = Encoding.UTF8.GetString(Convert.FromBase64String(part.Body.Data.Replace('-', '+').Replace('_', '/')));
+                                        mailContent.bodyType = BodyType.Plain;
+                                        break;
+                                    case "text/html":
+                                        mailContent.body = Encoding.UTF8.GetString(Convert.FromBase64String(part.Body.Data.Replace('-', '+').Replace('_', '/')));
+                                        mailContent.bodyType = BodyType.Html;
+                                        break;
+                                }
+                            }
+                            break;
+                        default:
+                            //TODO: Emit a warning
+                            break;
+
+                    }
+
                     foreach (var header in msg.Payload.Headers)
                     {
                         if (header.Name == "From")
@@ -62,7 +113,9 @@ namespace ExcellentEmailExperience.Model
                         }
                         else if (header.Name == "Date")
                         {
-                            mailContent.date = header.Value;
+                            DateTimeOffset date;
+                            MimeKit.Utils.DateUtils.TryParse(header.Value, out date);
+                            mailContent.date = date.ToString();
                         }
                     }
                     yield return mailContent;

@@ -11,42 +11,26 @@
 
     <Grid>
         <Grid.RowDefinitions>
-
+            <RowDefinition Height="Auto"/>
+            <RowDefinition/>
         </Grid.RowDefinitions>
-        <Grid></Grid>
-        <ScrollView VerticalScrollBarVisibility="Auto">
-            <TextBlock TextWrapping="Wrap" IsTextSelectionEnabled="True" Margin="12,12" Name="MailContent">
-                <TextBlock.Text>
+        <Grid Height="60">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
 
-                    <x:String xml:space="preserve">Dear [Recipient's First Name],
-We hope this email finds you well, though we are absolutely certain that your vehicle's extended warranty situation is NOT well—like, at all. It's an absolute mess. We can't sleep. You can't sleep. Your car can't sleep. Your dog... well, your dog's probably fine, but let's not get distracted here.
-🔴 STOP EVERYTHING YOU’RE DOING! 🔴
-That's right. Put down the coffee. Drop the sandwich. Tell your boss this is far more important than that thing you're supposed to be working on (you can use us as a reference). Your car’s warranty is at a critical stage of neglect that can only be described as, frankly, apocalyptic. Imagine your engine deciding it wants to pursue a career as a paperweight. Or your transmission going on strike like it’s the leader of a disgruntled union. It’s that serious.
-🚗 IS THIS A JOKE?
-No, [Recipient's First Name], this is not a joke. Your car is practically crying out for help. If it could send emojis, they would all be the "screaming in fear" face, the crying face, and maybe even a few clown faces for good measure. The fate of your vehicle is teetering on the edge of a cliff, and you, my dear friend, are the only hero who can swoop in and save the day.
-🛠️ BUT WHAT CAN YOU DO?
-We’re so glad you asked. We here at Totally-Not-A-Scam Car Warranty Services, Inc. have been in the business of NOT ripping people off for years—you can trust us because we have a website and everything. You see, we've poured countless minutes into crafting a warranty plan that covers literally every single thing that could ever go wrong with your car. Flat tires? Covered. Engine meltdown? Covered. Spilled soda on the console? Probably not covered, but you never know! That’s the magic of our Absolutely Everything Warranty™.*
-⭐ STILL NOT CONVINCED? READ THIS TOTALLY REAL TESTIMONIAL: ⭐
-"Before I extended my car warranty with Totally-Not-A-Scam Car Warranty Services, Inc., I was stranded on the side of the road at least once a week. Now, I drive with confidence knowing that if my car explodes, they’ve got my back. It hasn’t exploded yet, but if it does, I’ll be ready!” – Someone Very Real
-⏰ ACT NOW BEFORE IT’S TOO LATE (AND WE REALLY MEAN IT THIS TIME)
-We don't want to alarm you (okay, maybe just a little), but your warranty is teetering on the brink of extinction. Once it's gone, it’s gone forever—kind of like that one sock from the dryer. Don’t be the person who has to tell their car, “Sorry buddy, I didn’t extend your warranty in time, and now you’re on your own.” Your car deserves better. You deserve better. We all deserve better.
-👉 WHAT YOU NEED TO DO RIGHT NOW:
-Click the big, shiny, not-at-all-suspicious link below.
-Input your deepest secrets—er, basic vehicle and contact information.
-Sit back and relax as we extend your car warranty to a time when flying cars will be a reality.
-CLICK HERE TO SAVE YOUR CAR’S FUTURE 🚀🚀🚀
-
-If you miss this opportunity, you’ll be hearing from us again. And again. And again. Until you cave, because we just care that much.
-Stay safe, stay insured, and keep driving…because after all, you have an extended warranty now.
-Best regards,
-Totally-Not-A-Scam Car Warranty Services, Inc.
-“We’ve got your back, and your car’s front, sides, top, and maybe even the cupholders.”
-P.S. This email is intended only for the true heroes who care deeply about their cars. If you’re not ready to be that hero, just ignore this email... but do you really want to be that person?
-P.P.S. If you got this email by mistake, congratulations! It means we think you’re a responsible car owner, or at the very least, someone who opens their email.
-  
-                </x:String>
-                </TextBlock.Text>
+            <TextBlock Text="From: Totally-Not-A-Scam Car Warranty Services, Inc." IsTextSelectionEnabled="True" Margin="12,12" Name="From" Grid.Column="0"/>
+            
+        </Grid>
+        <ScrollView Grid.Row="1" x:Name="ScrollView" VerticalScrollBarVisibility="Auto">
+            <TextBlock TextWrapping="Wrap" IsTextSelectionEnabled="True" Margin="12,12" Name="MailContent" Visibility="Collapsed">
+                No mail content.
             </TextBlock>
         </ScrollView>
+        <Grid Grid.Row="1"  Name="EmptyMail">
+            <TextBlock Text="No mail selected." IsTextSelectionEnabled="True" Margin="12,12" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+        </Grid>
+        <WebView2 Grid.Row="1" x:Name="HTMLViewer" Visibility="Collapsed" CanGoBack="False" CanGoForward="False" CanDrag="False" DefaultBackgroundColor="Transparent" Source="about:blank"/>
     </Grid>
 </Page>

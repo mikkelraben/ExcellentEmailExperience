@@ -27,6 +27,8 @@ namespace ExcellentEmailExperience.ViewModel
                     foreach (var mail in mailHandler.GetFolder(name, false, false))
                     {
                         var inboxMail = new InboxMail();
+                        mailsContent.Add(mail);
+                        mailsContent.Sort((x, y) => -DateTime.Parse(x.date).CompareTo(DateTime.Parse(y.date)));
 
                         inboxMail.from = mail.from;
                         inboxMail.to = mail.to;
@@ -36,8 +38,28 @@ namespace ExcellentEmailExperience.ViewModel
                         {
                             return;
                         }
-                        dispatcherQueue.TryEnqueue(() => mails.Add(inboxMail));
+                        dispatcherQueue.TryEnqueue(() =>
+                        {
+                            int insertIndex = mails.Count;
+
+                            for (int i = 0; i < mails.Count; i++)
+                            {
+                                if (DateTime.Parse(mails[i].date) < DateTime.Parse(inboxMail.date))
+                                {
+                                    insertIndex = i;
+                                    break;
+                                }
+                            }
+
+                            mails.Insert(insertIndex, inboxMail);
+                        });
+
                     }
+                }
+                catch (System.Runtime.InteropServices.COMException)
+                {
+                    // Application probably exited
+                    return;
                 }
                 catch (Exception)
                 {
@@ -50,5 +72,6 @@ namespace ExcellentEmailExperience.ViewModel
 
         string name;
         public ObservableCollection<InboxMail> mails { get; } = new ObservableCollection<InboxMail>();
+        public List<MailContent> mailsContent = new();
     }
 }

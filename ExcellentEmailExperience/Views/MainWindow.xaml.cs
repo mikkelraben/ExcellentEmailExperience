@@ -48,15 +48,10 @@ namespace ExcellentEmailExperience.Views
             Subtitle.Opacity = 0;
 #endif
 
-            //Thread thread = new(() =>
-            //{
-            //    LoadMails();
-            //});
-            //
-            //thread.Start();
-
             currentFolder = new(mailApp.accounts[0].GetMailHandler(), "Inbox", DispatcherQueue);
-
+            Email email = new();
+            email.Initialize();
+            MainFrame.Content = email;
         }
 
         private void Titlebar_Loaded(object sender, Microsoft.UI.Xaml.RoutedEventArgs e)
@@ -104,7 +99,10 @@ namespace ExcellentEmailExperience.Views
 
             if (selectedCount == 1)
             {
-                //MainFrame.Content = new Email(MailList.SelectedItem as InboxMail);
+                var selectedMail = MailList.SelectedItem as InboxMail;
+                MailContent mailContent = currentFolder.mailsContent[MailList.SelectedIndex];
+
+                (MainFrame.Content as Email).ChangeMail(mailContent);
                 MassEditMenu.Visibility = Visibility.Collapsed;
             }
             else if (selectedCount > 1)
@@ -172,10 +170,10 @@ namespace ExcellentEmailExperience.Views
 
         private async void SettingsButton_Click(object sender, RoutedEventArgs e)
         {
-            new Thread(() =>
-            {
-                OpenSettings();
-            }).Start();
+            //new Thread(() =>
+            //{
+            OpenSettings();
+            //}).Start();
         }
 
         bool settingsActive = false;

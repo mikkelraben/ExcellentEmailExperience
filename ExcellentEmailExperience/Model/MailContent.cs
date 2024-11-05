@@ -7,6 +7,12 @@ using System.Threading.Tasks;
 
 namespace ExcellentEmailExperience.Model
 {
+    public enum BodyType
+    {
+        Plain,
+        Html
+    }
+
     public class MailContent
     {
         public MailAddress from { get; set; }
@@ -15,6 +21,7 @@ namespace ExcellentEmailExperience.Model
         public MailAddress[] cc { get; set; }
         public string subject { get; set; }
         public string body { get; set; }
+        public BodyType bodyType;
         public string attach_path { get; set; }
         public string date { get; set; }
 
