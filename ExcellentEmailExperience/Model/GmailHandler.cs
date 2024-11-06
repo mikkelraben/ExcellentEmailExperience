@@ -1,10 +1,17 @@
 ﻿using ExcellentEmailExperience.Interfaces;
 using Google.Apis.Auth.OAuth2;
 using Google.Apis.Gmail.v1;
+using Google.Apis.Gmail.v1.Data;
+using Google.Apis.Requests;
+using Google.Apis.Services;
+using MimeKit;
+using Org.BouncyCastle.Asn1.Cmp;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Net.Mail;
 using System.Text;
+using System.Threading;
 
 namespace ExcellentEmailExperience.Model
 {
@@ -32,9 +39,17 @@ namespace ExcellentEmailExperience.Model
             throw new NotImplementedException();
         }
 
-        public void Forward(MailContent content)
+        public void Forward(MailContent content, List<MailAddress> NewTo)
         {
-            throw new NotImplementedException();
+            var Mail = new MailContent();
+            Mail.body = "Forwarded from " + content.from.ToString() + "\n " + content.body + " \n\n Originally sent to:" + content.to.ToString();
+            var profileRequest = service.Users.GetProfile("me");
+            var user = ((IClientServiceRequest<Profile>)profileRequest).Execute();
+            Mail.from = new MailAddress(user.EmailAddress);
+            Mail.to = NewTo;
+            Send(Mail);
+
+            //throw new NotImplementedException();
         }
 
         public IEnumerable<MailContent> GetFolder(string name, bool old, bool refresh)
@@ -139,7 +154,22 @@ namespace ExcellentEmailExperience.Model
 
         public MailContent NewMail(MailAddress reciever, string subject, MailAddress? CC = null, MailAddress? BCC = null, string? body = null, string? attach = null)
         {
-            throw new NotImplementedException();
+
+            var mail = new MailContent();
+            var profileRequest = service.Users.GetProfile("me");
+            var user = ((IClientServiceRequest<Profile>)profileRequest).Execute();
+            mail.from = new MailAddress(user.EmailAddress);
+            mail.to.Add(reciever); // we might need to change the reciver to a list and not just a mailcontent. cause what if you're sending to more people.
+            mail.bcc.Add(BCC); 
+            mail.cc.Add(CC);
+            mail.subject = subject;
+            mail.body = body;
+            mail.attach_path = attach;
+            mail.date = System.DateTime.Now.ToString();
+
+            //throw new NotImplementedException();
+
+            return mail;
         }
 
         public List<MailContent> Refresh(string name)
@@ -159,7 +189,64 @@ namespace ExcellentEmailExperience.Model
 
         public void Send(MailContent content)
         {
-            throw new NotImplementedException();
+            var profileRequest = service.Users.GetProfile("me");
+            var message = new MailMessage
+            {
+                Subject = content.subject,
+                From = content.from
+            };
+            foreach (var recipient in content.to)
+            {
+                message.To.Add(recipient);
+            }
+            var MessageContent = AlternateView.CreateAlternateViewFromString("");
+            if (content.bodyType == BodyType.Html)
+            {
+                MessageContent = AlternateView.CreateAlternateViewFromString(content.body, new System.Net.Mime.ContentType("text/html"));
+                
+            }
+            if (content.bodyType == BodyType.Plain)
+            {
+                MessageContent = AlternateView.CreateAlternateViewFromString(content.body, new System.Net.Mime.ContentType("text/plain"));
+                
+            }
+            MessageContent.ContentType.CharSet = Encoding.UTF8.WebName;
+
+            // this here adds an attachment. but idk if i need to pass the path
+            // as the string or if i have to do some file conversion
+
+            if (content.attach_path != "")
+            {
+                Attachment pdfAttachment = new Attachment(content.attach_path);
+                pdfAttachment.ContentType = new System.Net.Mime.ContentType("application/pdf");
+                message.Attachments.Add(pdfAttachment);
+            }
+
+
+            message.AlternateViews.Add(MessageContent);
+
+            var mimemessage = MimeMessage.CreateFromMailMessage(message);
+
+            using (var memoryStream = new MemoryStream())
+            {
+                mimemessage.WriteTo(memoryStream);
+                var rawMessage = memoryStream.ToArray();
+
+                var encodedMessage = Convert.ToBase64String(rawMessage)
+                    .Replace('+','-')
+                    .Replace('/', '_')
+                    .Replace("=", "");
+
+                var gmailMessage = new Google.Apis.Gmail.v1.Data.Message
+                {
+                    Raw = encodedMessage
+                };
+                var sendRequest = service.Users.Messages.Send(gmailMessage, "me");
+                sendRequest.Execute();
+            }
+
+            //add mailcontent to 'sent' mails folder. 
+
         }
     }
 }

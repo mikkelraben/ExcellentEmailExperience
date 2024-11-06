@@ -12,7 +12,7 @@ namespace ExcellentEmailExperience.Interfaces
     {
         List<MailAddress> flaggedMails { get; set; }
         bool CheckSpam(MailContent content);
-        void Forward(MailContent content);
+        void Forward(MailContent content, List<MailAddress> NewTo);
         void Reply(MailContent content);
         void ReplyAll(MailContent content);
         void Send(MailContent content);
