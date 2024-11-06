@@ -19,6 +19,7 @@ namespace ExcellentEmailExperience.Model
         public MailAddress[] to;
         public MailAddress[] bcc;
         public MailAddress[] cc;
+        public BodyType type;
         public string subject;
         public string body;
         public string attach_path;

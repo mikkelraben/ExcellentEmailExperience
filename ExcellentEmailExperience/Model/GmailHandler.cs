@@ -145,7 +145,20 @@ namespace ExcellentEmailExperience.Model
 
         public MailContent NewMail(MailAddress reciever, string subject, MailAddress? CC = null, MailAddress? BCC = null, string? body = null, string? attach = null)
         {
-            throw new NotImplementedException();
+
+            var mail = new MailContent();
+            mail.from = service.Users.GetProfile("me");
+            mail.to = reciever;
+            mail.bcc = BCC;
+            mail.cc = CC;
+            mail.subject = subject;
+            mail.body = body;
+            mail.attach_path = attach;
+            mail.date = System.DateTime.Now;
+
+            //throw new NotImplementedException();
+
+            return mail;
         }
 
         public List<MailContent> Refresh(string name)
@@ -211,6 +224,8 @@ namespace ExcellentEmailExperience.Model
                 var sendRequest = service.Users.Messages.Send(gmailMessage, "me");
                 sendRequest.Execute();
             }
+
+            //add mailcontent to 'sent' mails folder. 
 
         }
     }
