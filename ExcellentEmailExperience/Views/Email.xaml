@@ -19,9 +19,20 @@
                 <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition/>
+                <RowDefinition/>
+            </Grid.RowDefinitions>
+            <TextBlock Margin="12,4" Grid.Column="0" Grid.Row="0">
+                From
+            </TextBlock>
 
-            <TextBlock Text="From: Totally-Not-A-Scam Car Warranty Services, Inc." IsTextSelectionEnabled="True" Margin="12,12" Name="From" Grid.Column="0"/>
-            
+            <TextBlock Margin="12,4" Grid.Column="1" Grid.Row="0" IsTextSelectionEnabled="True" ToolTipService.ToolTip="{x:Bind viewModel.From,Mode=OneWay}">
+                <Run Text="{x:Bind viewModel.From.DisplayName,Mode=OneWay}" FontSize="14"/>
+                <Run Text="{x:Bind viewModel.From.Address,Mode=OneWay}" FontSize="12" Foreground="{ThemeResource TextFillColorDisabledBrush}"/>
+            </TextBlock>
+            <TextBlock Text="To" Margin="12,4" Grid.Column="0" Grid.Row="1"/>
+            <ItemsView ItemsSource="{x:Bind viewModel.To,Mode=OneWay}" Margin="12,4" SelectionMode="None" ItemInvoked="FromAddress_ItemInvoked" Grid.Column="1" Grid.Row="1"/>
         </Grid>
         <ScrollView Grid.Row="1" x:Name="ScrollView" VerticalScrollBarVisibility="Auto">
             <TextBlock TextWrapping="Wrap" IsTextSelectionEnabled="True" Margin="12,12" Name="MailContent" Visibility="Collapsed">

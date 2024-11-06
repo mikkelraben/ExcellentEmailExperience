@@ -14,9 +14,21 @@
         /// </summary>
         /// <param name="username">The username</param>
         /// <param name="secret">Either a token or password</param>
-        /// <returns>Returns if </returns>
+        /// <returns>Returns true if login was successful</returns>
         bool TryLogin(string username, string secret);
         void Logout();
         IMailHandler GetMailHandler();
+
+        /// <summary>
+        /// Returns the display name of the account
+        /// </summary>
+        /// <returns></returns>
+        string GetName();
+
+        /// <summary>
+        /// Sets the display name of the account
+        /// </summary>
+        /// <param name="name">The name to be displayed</param>
+        void SetName(string name);
     }
 }

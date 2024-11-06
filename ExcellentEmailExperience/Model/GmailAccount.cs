@@ -7,6 +7,7 @@ namespace ExcellentEmailExperience.Model
     public class GmailAccount : IAccount
     {
         private UserCredential userCredential;
+        private string accountName;
 
 
         // Yes this is relatively safe, as this only allows an application permission to read and send emails. Any one can create these credentials and use them to access their own emails.
@@ -36,6 +37,10 @@ namespace ExcellentEmailExperience.Model
                 ["https://mail.google.com/"],
                 username,
                 System.Threading.CancellationToken.None, credentialHandlerGoogleShim).Result;
+
+
+            //TODO: Remove this line since the account name is set on setup or in settings, but this is not implemented yet.
+            accountName = username;
         }
 
         public void Logout()
@@ -60,6 +65,16 @@ namespace ExcellentEmailExperience.Model
                 System.Threading.CancellationToken.None, credentialHandlerGoogleShim).Result;
 
             return userCredential != null;
+        }
+
+        public string GetName()
+        {
+            return accountName;
+        }
+
+        public void SetName(string name)
+        {
+            accountName = name;
         }
     }
 }

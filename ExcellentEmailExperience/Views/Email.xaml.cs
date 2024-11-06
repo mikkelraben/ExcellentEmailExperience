@@ -1,4 +1,6 @@
+using CommunityToolkit.Mvvm.ComponentModel;
 using ExcellentEmailExperience.Model;
+using ExcellentEmailExperience.ViewModel;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Controls.Primitives;
@@ -26,6 +28,7 @@ namespace ExcellentEmailExperience.Views
     /// </summary>
     public sealed partial class Email : Page
     {
+        MailContentViewModel viewModel = new();
         public Email()
         {
             this.InitializeComponent();
@@ -65,6 +68,8 @@ namespace ExcellentEmailExperience.Views
 
         public void ChangeMail(MailContent mail)
         {
+            viewModel.Update(mail);
+
             EmptyMail.Visibility = Visibility.Collapsed;
             switch (mail.bodyType)
             {
@@ -80,6 +85,16 @@ namespace ExcellentEmailExperience.Views
                     HTMLViewer.NavigateToString(mail.body);
                     break;
             }
+        }
+
+        private void ClickFrom(object sender, PointerRoutedEventArgs e)
+        {
+
+        }
+
+        private void FromAddress_ItemInvoked(ItemsView sender, ItemsViewItemInvokedEventArgs args)
+        {
+
         }
     }
 }

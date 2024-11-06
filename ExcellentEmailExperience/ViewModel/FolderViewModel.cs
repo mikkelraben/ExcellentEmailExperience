@@ -18,7 +18,7 @@ namespace ExcellentEmailExperience.ViewModel
         /// <param name="mailHandler">Mailhandler for the account which contains a certain folder</param>
         /// <param name="name">The name of the folder</param>
         /// <param name="dispatcherQueue"></param>
-        public FolderViewModel(IMailHandler mailHandler, string name, DispatcherQueue dispatcherQueue)
+        public FolderViewModel(IMailHandler mailHandler, string name, DispatcherQueue dispatcherQueue, CancellationToken cancellationToken)
         {
             this.name = name;
 
@@ -28,6 +28,10 @@ namespace ExcellentEmailExperience.ViewModel
                 {
                     foreach (var mail in mailHandler.GetFolder(name, false, false))
                     {
+                        if (cancellationToken.IsCancellationRequested)
+                        {
+                            return;
+                        }
                         var inboxMail = new InboxMail();
                         mailsContent.Add(mail);
                         mailsContent.Sort((x, y) => -DateTime.Parse(x.date).CompareTo(DateTime.Parse(y.date)));
@@ -70,7 +74,7 @@ namespace ExcellentEmailExperience.ViewModel
             thread.Start();
         }
 
-        string name;
+        public string name;
 
         /// <summary>
         /// Collection of mails in the folder used to display in the UI

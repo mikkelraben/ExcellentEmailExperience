@@ -64,17 +64,20 @@ namespace ExcellentEmailExperience.Views
 
         private void GetStartedButton_Click(object sender, RoutedEventArgs e)
         {
-            IAccount account = new GmailAccount();
-
-            account.Login("user");
-
-            mailApp.NewAccount(account);
-
-            FirstAccountCreated.Invoke(this, new EventArgs());
-            DispatcherQueue.TryEnqueue(() =>
+            new Thread(() =>
             {
-                Close();
-            });
+                IAccount account = new GmailAccount();
+
+                account.Login("user");
+
+                mailApp.NewAccount(account);
+
+                FirstAccountCreated.Invoke(this, new EventArgs());
+                DispatcherQueue.TryEnqueue(() =>
+                {
+                    Close();
+                });
+            }).Start();
         }
     }
 }

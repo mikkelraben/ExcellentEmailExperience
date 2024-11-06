@@ -96,10 +96,22 @@
 
             </Grid.ColumnDefinitions>
             <StackPanel Name="Siderbar" Width="0" Grid.Column="0">
-                <Button Content="Inbox" Click="Folder_Click"/>
-                <Button Content="Sent" Click="Folder_Click"/>
-                <Button Content="Drafts" Click="Folder_Click"/>
-                <Button Content="Trash" Click="Folder_Click"/>
+                <ListView ItemsSource="{x:Bind mailHandlers}" SelectionMode="None" >
+                    <ListView.ItemTemplate>
+                        <DataTemplate x:DataType="viewmodel:MailHandlerViewModel">
+                            <StackPanel>
+                                <TextBlock Text="{x:Bind name}" FontSize="16" Margin="8,8,8,8"/>
+                                <ListView ItemsSource="{x:Bind folders}" ItemClick="ListView_ItemClick" IsItemClickEnabled="True" SelectionChanged="ListView_SelectionChanged" SelectionMode="Single">
+                                    <ListView.ItemTemplate>
+                                        <DataTemplate x:DataType="viewmodel:FolderViewModel">
+                                            <TextBlock Text="{x:Bind name}" VerticalAlignment="Stretch"/>
+                                        </DataTemplate>
+                                    </ListView.ItemTemplate>
+                                </ListView>
+                            </StackPanel>
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                </ListView>
             </StackPanel>
             <Grid Name="Sidebar" Width="270" Grid.Column="1">
                 <Grid.Transitions>
@@ -117,7 +129,7 @@
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="auto"/>
                     </Grid.ColumnDefinitions>
-                    <TextBlock Text="Inbox" FontSize="24" Grid.Column="0" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap" Grid.Row="0" Style="{ThemeResource SubtitleTextBlockStyle}" />
+                    <TextBlock Name="FolderName" Text="Inbox" FontSize="24" Grid.Column="0" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap" Grid.Row="0" Style="{ThemeResource SubtitleTextBlockStyle}" />
                     <Button x:Name="RefreshButton" Opacity="0" Grid.Column="1" Background="Transparent" BorderBrush="Transparent" Padding="4,4" Click="RefreshButton_Click">
                         <Button.OpacityTransition>
                             <ScalarTransition />
@@ -134,10 +146,11 @@
                     SelectionMode="Extended" 
                     Name="MailList" 
                     ItemTemplate="{StaticResource ListMailTemplate}" 
-                    ItemsSource="{x:Bind currentFolder.mails}"
                     Margin="4,0,4,0" 
                     Padding="0,0,10,0"
-                    SelectionChanged="MailList_SelectionChanged">
+                    SelectionChanged="MailList_SelectionChanged"
+                    IsItemClickEnabled="True"
+                    ItemClick="ListView_ItemClick">
                     <ListView.Transitions>
                         <RepositionThemeTransition/>
                     </ListView.Transitions>
