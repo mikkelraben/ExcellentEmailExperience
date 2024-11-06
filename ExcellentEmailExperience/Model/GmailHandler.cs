@@ -5,6 +5,7 @@ using Google.Apis.Gmail.v1.Data;
 using Google.Apis.Requests;
 using Google.Apis.Services;
 using MimeKit;
+using Org.BouncyCastle.Asn1.Cmp;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -198,21 +199,30 @@ namespace ExcellentEmailExperience.Model
             {
                 message.To.Add(recipient);
             }
-
-            var MessageContent = AlternateView.CreateAlternateViewFromString(content.body, new System.Net.Mime.ContentType("text/html"));
+            var MessageContent = AlternateView.CreateAlternateViewFromString("");
+            if (content.bodyType == BodyType.Html)
+            {
+                MessageContent = AlternateView.CreateAlternateViewFromString(content.body, new System.Net.Mime.ContentType("text/html"));
+                
+            }
+            if (content.bodyType == BodyType.Plain)
+            {
+                MessageContent = AlternateView.CreateAlternateViewFromString(content.body, new System.Net.Mime.ContentType("text/plain"));
+                
+            }
             MessageContent.ContentType.CharSet = Encoding.UTF8.WebName;
 
             // this here adds an attachment. but idk if i need to pass the path
             // as the string or if i have to do some file conversion
 
-            if(content.attach_path != "")
+            if (content.attach_path != "")
             {
                 Attachment pdfAttachment = new Attachment(content.attach_path);
                 pdfAttachment.ContentType = new System.Net.Mime.ContentType("application/pdf");
                 message.Attachments.Add(pdfAttachment);
             }
 
-            
+
             message.AlternateViews.Add(MessageContent);
 
             var mimemessage = MimeMessage.CreateFromMailMessage(message);
