@@ -29,13 +29,13 @@ namespace ExcellentEmailExperience.ViewModel
         public MailAddress from;
 
         [ObservableProperty]
-        public MailAddress[] to;
+        public List<MailAddress> to;
 
         [ObservableProperty]
-        public MailAddress[] bcc;
+        public List<MailAddress> bcc;
 
         [ObservableProperty]
-        public MailAddress[] cc;
+        public List<MailAddress> cc;
 
         [ObservableProperty]
         public string subject;
