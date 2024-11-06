@@ -26,8 +26,8 @@
             <local:SelectedToOpacity x:Key="SelectedToOpacity"/>
             <local:DateToNiceString x:Key="DateToNiceString"/>
             <DataTemplate x:Key="ListMailTemplate" x:DataType="viewmodel:InboxMail">
-                <Grid Margin="-12,0,-12,0">
-                    <Button IsHitTestVisible="False" Background="Transparent" Width="242" Opacity="{Binding Selected, Converter={StaticResource SelectedToOpacity}, Mode=OneWay}" Height="51" IsTabStop="False"/>
+                <Grid Margin="-12,0">
+                    <Button IsHitTestVisible="False" Background="Transparent" HorizontalAlignment="Stretch" Margin="0,0,4,0" Opacity="{Binding Selected, Converter={StaticResource SelectedToOpacity}, Mode=OneWay}" Height="51" IsTabStop="False"/>
                     <StackPanel Orientation="Vertical" Padding="12,8">
                         <Grid>
                             <Grid.ColumnDefinitions>

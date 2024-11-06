@@ -7,6 +7,12 @@ using System.Threading.Tasks;
 
 namespace ExcellentEmailExperience.Model
 {
+    public enum BodyType
+    {
+        Plain,
+        Html
+    }
+
     public class MailContent
     {
         public MailAddress from;
