@@ -9,14 +9,14 @@ namespace ExcellentEmailExperience.Model
 {
     public class MailContent
     {
-        public MailAddress from { get; set; }
-        public MailAddress[] to { get; set; }
-        public MailAddress[] bcc { get; set; }
-        public MailAddress[] cc { get; set; }
-        public string subject { get; set; }
-        public string body { get; set; }
-        public string attach_path { get; set; }
-        public string date { get; set; }
+        public MailAddress from;
+        public MailAddress[] to;
+        public MailAddress[] bcc;
+        public MailAddress[] cc;
+        public string subject;
+        public string body;
+        public string attach_path;
+        public string date;
 
     }
 }
