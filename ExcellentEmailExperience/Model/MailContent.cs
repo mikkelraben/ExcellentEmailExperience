@@ -16,10 +16,10 @@ namespace ExcellentEmailExperience.Model
     public class MailContent
     {
         public MailAddress from;
-        public MailAddress[] to;
-        public MailAddress[] bcc;
-        public MailAddress[] cc;
-        public BodyType type;
+        public List<MailAddress> to;
+        public List<MailAddress> bcc;
+        public List<MailAddress> cc;
+        public BodyType bodyType;
         public string subject;
         public string body;
         public string attach_path;

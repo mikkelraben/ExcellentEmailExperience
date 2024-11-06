@@ -38,9 +38,17 @@ namespace ExcellentEmailExperience.Model
             throw new NotImplementedException();
         }
 
-        public void Forward(MailContent content)
+        public void Forward(MailContent content, List<MailAddress> NewTo)
         {
-            throw new NotImplementedException();
+            var Mail = new MailContent();
+            Mail.body = "Forwarded from " + content.from.ToString() + "\n " + content.body + " \n\n Originally sent to:" + content.to.ToString();
+            var profileRequest = service.Users.GetProfile("me");
+            var user = ((IClientServiceRequest<Profile>)profileRequest).Execute();
+            Mail.from = new MailAddress(user.EmailAddress);
+            Mail.to = NewTo;
+            Send(Mail);
+
+            //throw new NotImplementedException();
         }
 
         public IEnumerable<MailContent> GetFolder(string name, bool old, bool refresh)
@@ -147,14 +155,16 @@ namespace ExcellentEmailExperience.Model
         {
 
             var mail = new MailContent();
-            mail.from = service.Users.GetProfile("me");
-            mail.to = reciever;
-            mail.bcc = BCC;
-            mail.cc = CC;
+            var profileRequest = service.Users.GetProfile("me");
+            var user = ((IClientServiceRequest<Profile>)profileRequest).Execute();
+            mail.from = new MailAddress(user.EmailAddress);
+            mail.to.Add(reciever); // we might need to change the reciver to a list and not just a mailcontent. cause what if you're sending to more people.
+            mail.bcc.Add(BCC); 
+            mail.cc.Add(CC);
             mail.subject = subject;
             mail.body = body;
             mail.attach_path = attach;
-            mail.date = System.DateTime.Now;
+            mail.date = System.DateTime.Now.ToString();
 
             //throw new NotImplementedException();
 
