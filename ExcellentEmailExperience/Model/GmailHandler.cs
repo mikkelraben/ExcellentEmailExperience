@@ -180,7 +180,8 @@ namespace ExcellentEmailExperience.Model
 
         public void Reply(MailContent content)
         {
-            MailContent reply = content;
+            MailContent reply = new MailContent();
+            reply = content;
             MailAddress temp = content.from;
             reply.ThreadId = content.ThreadId;
             reply.to = new List<MailAddress> { temp };
