@@ -1,4 +1,5 @@
 ﻿using ExcellentEmailExperience.Interfaces;
+using ExcellentEmailExperience.Views;
 using Google.Apis.Auth.OAuth2;
 using Google.Apis.Gmail.v1;
 using Google.Apis.Gmail.v1.Data;
@@ -42,6 +43,7 @@ namespace ExcellentEmailExperience.Model
         public void Forward(MailContent content, List<MailAddress> NewTo)
         {
             var Mail = new MailContent();
+            Mail.subject = "Forward: " + Mail.subject;
             Mail.body = "Forwarded from " + content.from.ToString() + "\n " + content.body + " \n\n Originally sent to:" + content.to.ToString();
             var profileRequest = service.Users.GetProfile("me");
             var user = ((IClientServiceRequest<Profile>)profileRequest).Execute();
@@ -62,7 +64,7 @@ namespace ExcellentEmailExperience.Model
                 {
                     var msg = service.Users.Messages.Get("me", message.Id).Execute();
                     MailContent mailContent = new();
-
+                    mailContent.ThreadId = msg.ThreadId;
 
                     //Change all this to support e-boks messages / other weird message types
                     switch (msg.Payload.MimeType)
@@ -166,7 +168,6 @@ namespace ExcellentEmailExperience.Model
             mail.body = body;
             mail.attach_path = attach;
             mail.date = System.DateTime.Now.ToString();
-
             //throw new NotImplementedException();
 
             return mail;
@@ -179,7 +180,24 @@ namespace ExcellentEmailExperience.Model
 
         public void Reply(MailContent content)
         {
-            throw new NotImplementedException();
+            MailContent reply = content;
+            MailAddress temp = content.from;
+            reply.ThreadId = content.ThreadId;
+            reply.to = new List<MailAddress> { temp };
+            var profileRequest = service.Users.GetProfile("me");
+            var user = ((IClientServiceRequest<Profile>)profileRequest).Execute();
+            reply.from = new MailAddress(user.EmailAddress);
+            reply.subject = "Re: " + reply.subject;
+
+            /*
+                i have no clue how were gonna append a reply to the actual email.
+                
+                so far what this does is it takes the email we want to reply to
+                and flips sender and receiver. and makes sure that the reply gets sent to the same thread
+                as the received email. 
+             
+            */
+
         }
 
         public void ReplyAll(MailContent content)
@@ -189,7 +207,6 @@ namespace ExcellentEmailExperience.Model
 
         public void Send(MailContent content)
         {
-            var profileRequest = service.Users.GetProfile("me");
             var message = new MailMessage
             {
                 Subject = content.subject,
@@ -224,7 +241,7 @@ namespace ExcellentEmailExperience.Model
 
 
             message.AlternateViews.Add(MessageContent);
-
+            
             var mimemessage = MimeMessage.CreateFromMailMessage(message);
 
             using (var memoryStream = new MemoryStream())
@@ -241,6 +258,11 @@ namespace ExcellentEmailExperience.Model
                 {
                     Raw = encodedMessage
                 };
+                if(content.ThreadId != null)
+                {
+                    gmailMessage.ThreadId = content.ThreadId;
+                }
+                
                 var sendRequest = service.Users.Messages.Send(gmailMessage, "me");
                 sendRequest.Execute();
             }
