@@ -197,15 +197,6 @@ namespace ExcellentEmailExperience.Model
             var user = ((IClientServiceRequest<Profile>)profileRequest).Execute();
             reply.from = new MailAddress(user.EmailAddress);
             reply.subject = "Re: " + reply.subject;
-
-            /*
-                i have no clue how were gonna append a reply to the actual email.
-                
-                so far what this does is it takes the email we want to reply to
-                and flips sender and receiver. and makes sure that the reply gets sent to the same thread
-                as the received email. 
-             
-            */
             Send(reply);
         }
 
