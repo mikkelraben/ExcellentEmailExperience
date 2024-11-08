@@ -8,6 +8,7 @@ using Microsoft.UI.Xaml.Data;
 using Microsoft.UI.Xaml.Media;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -27,6 +28,8 @@ namespace ExcellentEmailExperience.Views
     {
         MailApp mailApp;
         FolderViewModel currentFolder;
+        ObservableCollection<MailHandlerViewModel> mailHandlers = new();
+        CancellationTokenSource cancellationToken = new();
 
         public MainWindow(MailApp mailApp)
         {
@@ -46,17 +49,23 @@ namespace ExcellentEmailExperience.Views
             //if the the app is not in debug mode then collapse the subtitle
 #if !DEBUG
             Subtitle.Opacity = 0;
-#endif
+#endif      
 
-            //Thread thread = new(() =>
-            //{
-            //    LoadMails();
-            //});
-            //
-            //thread.Start();
 
-            currentFolder = new(mailApp.accounts[0].GetMailHandler(), "Inbox", DispatcherQueue);
+            mailApp.accounts.ForEach(account =>
+            {
+                mailHandlers.Add(new MailHandlerViewModel(account.GetName(), account.GetMailHandler(), DispatcherQueue, cancellationToken.Token));
+            });
 
+            Closed += (s, e) => cancellationToken.Cancel();
+
+            currentFolder = mailHandlers[0].folders[0];
+            FolderName.Text = currentFolder.name;
+            MailList.ItemsSource = currentFolder.mails;
+
+            Email email = new();
+            email.Initialize();
+            MainFrame.Content = email;
         }
 
         private void Titlebar_Loaded(object sender, Microsoft.UI.Xaml.RoutedEventArgs e)
@@ -104,7 +113,10 @@ namespace ExcellentEmailExperience.Views
 
             if (selectedCount == 1)
             {
-                //MainFrame.Content = new Email(MailList.SelectedItem as InboxMail);
+                var selectedMail = MailList.SelectedItem as InboxMail;
+                MailContent mailContent = currentFolder.mailsContent[MailList.SelectedIndex];
+
+                (MainFrame.Content as Email).ChangeMail(mailContent);
                 MassEditMenu.Visibility = Visibility.Collapsed;
             }
             else if (selectedCount > 1)
@@ -162,20 +174,12 @@ namespace ExcellentEmailExperience.Views
             }
         }
 
-        private void Folder_Click(object sender, RoutedEventArgs e)
-        {
-            if (SidebarLarge)
-            {
-                SidebarLarge = false;
-            }
-        }
-
         private async void SettingsButton_Click(object sender, RoutedEventArgs e)
         {
-            new Thread(() =>
-            {
-                OpenSettings();
-            }).Start();
+            //new Thread(() =>
+            //{
+            OpenSettings();
+            //}).Start();
         }
 
         bool settingsActive = false;
@@ -201,6 +205,25 @@ namespace ExcellentEmailExperience.Views
             settingsActive = true;
             settings.Closed += (s, e) => settingsActive = false;
             Closed += (s, e) => settings.Close();
+        }
+
+
+        private void ListView_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            currentFolder = (e.AddedItems[0] as FolderViewModel);
+            FolderName.Text = currentFolder.name;
+            MailList.ItemsSource = currentFolder.mails;
+            SidebarLarge = false;
+        }
+
+        private void StackPanel_PointerReleased(object sender, Microsoft.UI.Xaml.Input.PointerRoutedEventArgs e)
+        {
+            SidebarLarge = false;
+        }
+
+        private void ListView_ItemClick(object sender, ItemClickEventArgs e)
+        {
+            SidebarLarge = false;
         }
     }
 

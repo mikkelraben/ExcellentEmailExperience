@@ -2,19 +2,8 @@ using ExcellentEmailExperience.Interfaces;
 using ExcellentEmailExperience.Model;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Controls.Primitives;
-using Microsoft.UI.Xaml.Data;
-using Microsoft.UI.Xaml.Input;
-using Microsoft.UI.Xaml.Media;
-using Microsoft.UI.Xaml.Navigation;
 using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
 using System.Threading;
-using Windows.Foundation;
-using Windows.Foundation.Collections;
 using WinUIEx;
 
 // To learn more about WinUI, the WinUI project structure,
@@ -64,17 +53,21 @@ namespace ExcellentEmailExperience.Views
 
         private void GetStartedButton_Click(object sender, RoutedEventArgs e)
         {
-            IAccount account = new GmailAccount();
-
-            account.Login();
-
-            mailApp.NewAccount(account);
-
-            FirstAccountCreated.Invoke(this, new EventArgs());
-            DispatcherQueue.TryEnqueue(() =>
+            new Thread(() =>
             {
-                Close();
-            });
+                IAccount account = new GmailAccount();
+
+                account.Login("user");
+
+                mailApp.NewAccount(account);
+
+                DispatcherQueue.TryEnqueue(() =>
+                {
+                    FirstAccountCreated.Invoke(this, new EventArgs());
+                    Close();
+                });
+            }).Start();
+            ProgressRing.IsActive = true;
         }
     }
 }

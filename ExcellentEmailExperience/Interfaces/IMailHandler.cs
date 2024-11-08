@@ -12,7 +12,14 @@ namespace ExcellentEmailExperience.Interfaces
     {
         List<MailAddress> flaggedMails { get; set; }
         bool CheckSpam(MailContent content);
-        void Forward(MailContent content);
+
+        /// <summary>
+        /// takes an email that you received and sends it to someone else with some modifications to indicate its a 
+        /// forward
+        /// </summary>
+        /// <param name="content"></param> this is the mail that we received, the one we want to forward
+        /// <param name="NewTo"></param> this is the list of people to whom we want to forward to. 
+        void Forward(MailContent content, List<MailAddress> NewTo);
         void Reply(MailContent content);
         void ReplyAll(MailContent content);
         void Send(MailContent content);
