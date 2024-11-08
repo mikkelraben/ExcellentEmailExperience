@@ -146,7 +146,7 @@ namespace ExcellentEmailExperience.Model
                     {
                         DateTimeOffset date;
                         MimeKit.Utils.DateUtils.TryParse(header.Value, out date);
-                        mailContent.date = date.ToString();
+                        mailContent.date = date.UtcDateTime;
                     }
                 }
                 yield return mailContent;
@@ -174,7 +174,7 @@ namespace ExcellentEmailExperience.Model
             mail.subject = subject;
             mail.body = body;
             mail.attach_path = attach;
-            mail.date = System.DateTime.Now.ToString();
+            
             //throw new NotImplementedException();
 
             return mail;
@@ -191,9 +191,8 @@ namespace ExcellentEmailExperience.Model
         {
             MailContent reply = new MailContent();
             reply = content;
-            MailAddress temp = content.from;
             reply.ThreadId = content.ThreadId;
-            reply.to = new List<MailAddress> { temp };
+            reply.to = new List<MailAddress> { content.from };
             var profileRequest = service.Users.GetProfile("me");
             var user = ((IClientServiceRequest<Profile>)profileRequest).Execute();
             reply.from = new MailAddress(user.EmailAddress);
@@ -208,6 +207,7 @@ namespace ExcellentEmailExperience.Model
 
         public void Send(MailContent content)
         {
+            content.date = DateTime.Now;
             // creates a new mailmessage object, these are the ones that we need to setup before sending
             var message = new MailMessage
             {
