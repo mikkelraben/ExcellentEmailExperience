@@ -62,96 +62,97 @@ namespace ExcellentEmailExperience.Model
 
         public IEnumerable<MailContent> GetFolder(string name, bool old, bool refresh)
         {
-            if (name == "Inbox")
+
+            string allcaps = name.ToUpper();
+
+            var request = service.Users.Messages.List("me");
+            request.LabelIds = allcaps;
+            IList<Google.Apis.Gmail.v1.Data.Message> messages = request.Execute().Messages;
+
+            if(messages == null)
             {
-                IList<Google.Apis.Gmail.v1.Data.Message> messages = service.Users.Messages.List("me").Execute().Messages;
+                yield break;
+            }
 
-                foreach (var message in messages)
+            foreach (var message in messages)
+            {
+                var msg = service.Users.Messages.Get("me", message.Id).Execute();
+                MailContent mailContent = new();
+                mailContent.ThreadId = msg.ThreadId;
+
+                //Change all this to support e-boks messages / other weird message types
+                switch (msg.Payload.MimeType)
                 {
-                    var msg = service.Users.Messages.Get("me", message.Id).Execute();
-                    MailContent mailContent = new();
-                    mailContent.ThreadId = msg.ThreadId;
+                    case "text/plain":
+                        mailContent.body = Encoding.UTF8.GetString(Convert.FromBase64String(msg.Payload.Body.Data.Replace('-', '+').Replace('_', '/')));
+                        mailContent.bodyType = BodyType.Plain;
+                        break;
+                    case "text/html":
+                        mailContent.body = Encoding.UTF8.GetString(Convert.FromBase64String(msg.Payload.Body.Data.Replace('-', '+').Replace('_', '/')));
+                        mailContent.bodyType = BodyType.Html;
+                        break;
+                    case "multipart/alternative":
 
-                    //Change all this to support e-boks messages / other weird message types
-                    switch (msg.Payload.MimeType)
-                    {
-                        case "text/plain":
-                            mailContent.body = Encoding.UTF8.GetString(Convert.FromBase64String(msg.Payload.Body.Data.Replace('-', '+').Replace('_', '/')));
-                            mailContent.bodyType = BodyType.Plain;
-                            break;
-                        case "text/html":
-                            mailContent.body = Encoding.UTF8.GetString(Convert.FromBase64String(msg.Payload.Body.Data.Replace('-', '+').Replace('_', '/')));
-                            mailContent.bodyType = BodyType.Html;
-                            break;
-                        case "multipart/alternative":
-
-                            bool containsHtml = false;
-                            foreach (var part in msg.Payload.Parts)
+                        bool containsHtml = false;
+                        foreach (var part in msg.Payload.Parts)
+                        {
+                            if (part.MimeType == "text/html")
                             {
-                                if (part.MimeType == "text/html")
-                                {
-                                    containsHtml = true;
+                                containsHtml = true;
+                                break;
+                            }
+                        }
+
+                        foreach (var part in msg.Payload.Parts)
+                        {
+                            switch (part.MimeType)
+                            {
+                                case "text/plain":
+                                    if (containsHtml)
+                                    {
+                                        continue;
+                                    }
+                                    mailContent.body = Encoding.UTF8.GetString(Convert.FromBase64String(part.Body.Data.Replace('-', '+').Replace('_', '/')));
+                                    mailContent.bodyType = BodyType.Plain;
                                     break;
-                                }
+                                case "text/html":
+                                    mailContent.body = Encoding.UTF8.GetString(Convert.FromBase64String(part.Body.Data.Replace('-', '+').Replace('_', '/')));
+                                    mailContent.bodyType = BodyType.Html;
+                                    break;
                             }
-
-                            foreach (var part in msg.Payload.Parts)
-                            {
-                                switch (part.MimeType)
-                                {
-                                    case "text/plain":
-                                        if (containsHtml)
-                                        {
-                                            continue;
-                                        }
-                                        mailContent.body = Encoding.UTF8.GetString(Convert.FromBase64String(part.Body.Data.Replace('-', '+').Replace('_', '/')));
-                                        mailContent.bodyType = BodyType.Plain;
-                                        break;
-                                    case "text/html":
-                                        mailContent.body = Encoding.UTF8.GetString(Convert.FromBase64String(part.Body.Data.Replace('-', '+').Replace('_', '/')));
-                                        mailContent.bodyType = BodyType.Html;
-                                        break;
-                                }
-                            }
-                            break;
-                        default:
-                            //TODO: Emit a warning
-                            break;
-
-                    }
-
-                    foreach (var header in msg.Payload.Headers)
-                    {
-                        if (header.Name == "From")
-                        {
-                            mailContent.from = new MailAddress(header.Value);
                         }
-                        else if (header.Name == "To")
-                        {
-                            mailContent.to = [new MailAddress(header.Value)];
-                        }
-                        else if (header.Name == "Subject")
-                        {
-                            mailContent.subject = header.Value;
-                        }
-                        else if (header.Name == "Date")
-                        {
-                            DateTimeOffset date;
-                            MimeKit.Utils.DateUtils.TryParse(header.Value, out date);
-                            mailContent.date = date.ToString();
-                        }
-                    }
-                    yield return mailContent;
+                        break;
+                    default:
+                        //TODO: Emit a warning
+                        break;
 
                 }
-                yield break;
+
+                foreach (var header in msg.Payload.Headers)
+                {
+                    if (header.Name == "From")
+                    {
+                        mailContent.from = new MailAddress(header.Value);
+                    }
+                    else if (header.Name == "To")
+                    {
+                        mailContent.to = [new MailAddress(header.Value)];
+                    }
+                    else if (header.Name == "Subject")
+                    {
+                        mailContent.subject = header.Value;
+                    }
+                    else if (header.Name == "Date")
+                    {
+                        DateTimeOffset date;
+                        MimeKit.Utils.DateUtils.TryParse(header.Value, out date);
+                        mailContent.date = date.ToString();
+                    }
+                }
+                yield return mailContent;
 
             }
-            else
-            {
-                throw new NotImplementedException();
-
-            }
+            yield break;
         }
 
 
