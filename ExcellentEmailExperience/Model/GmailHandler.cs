@@ -124,6 +124,7 @@ namespace ExcellentEmailExperience.Model
                         break;
                     default:
                         //TODO: Emit a warning
+                        Console.WriteLine("cry");
                         break;
 
                 }
@@ -202,6 +203,18 @@ namespace ExcellentEmailExperience.Model
 
         public void ReplyAll(MailContent content)
         {
+            MailContent reply = new MailContent();
+            reply = content;
+            reply.ThreadId = content.ThreadId;
+            reply.to = new List<MailAddress> { content.from };
+            reply.to.AddRange(content.to);
+            var profileRequest = service.Users.GetProfile("me");
+            var user = ((IClientServiceRequest<Profile>)profileRequest).Execute();
+            reply.from = new MailAddress(user.EmailAddress);
+
+            reply.to.Remove(reply.from);
+            reply.subject = "Re: " + reply.subject;
+            Send(reply);
             throw new NotImplementedException();
         }
 
