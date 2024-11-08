@@ -159,7 +159,21 @@ namespace ExcellentEmailExperience.Model
 
         public string[] GetFolderNames()
         {
-            return ["Inbox", "Sent", "Drafts", "Spam", "Trash"];
+            var labelsListRequest = service.Users.Labels.List("me");
+            IList<Label> labels = (labelsListRequest.Execute()).Labels;
+            List<string> labelNames = new List<string>();
+
+            if (labels != null && labels.Count > 0)
+            {
+                foreach (var labelItem in labels)
+                {
+                    labelNames.Add(labelItem.Name);
+                }
+            }
+
+            string[] labelString = labelNames.ToArray();
+
+            return labelString;
         }
 
         public MailContent NewMail(MailAddress reciever, string subject, MailAddress? CC = null, MailAddress? BCC = null, string? body = null, string? attach = null)
