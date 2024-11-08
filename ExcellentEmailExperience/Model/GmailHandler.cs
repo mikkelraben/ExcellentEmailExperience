@@ -198,7 +198,7 @@ namespace ExcellentEmailExperience.Model
                 as the received email. 
              
             */
-
+            Send(reply);
         }
 
         public void ReplyAll(MailContent content)
