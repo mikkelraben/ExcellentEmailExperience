@@ -34,5 +34,10 @@ namespace ExcellentEmailExperience.Views
 
             Version.Text = "Version: " + AppInfo.Current.Package.Id.Version.Major + "." + AppInfo.Current.Package.Id.Version.Minor + "." + AppInfo.Current.Package.Id.Version.Build + "." + AppInfo.Current.Package.Id.Version.Revision;
         }
+
+        public void AddAccountButton_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
     }
 }

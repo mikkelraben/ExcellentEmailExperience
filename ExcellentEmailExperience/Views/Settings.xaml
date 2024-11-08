@@ -36,6 +36,17 @@
                 <ComboBoxItem Content="Dark"/>
             </ComboBox>
         </Grid>
+
+        <Grid Background="{ThemeResource LayerFillColorDefaultBrush}" BorderThickness="1" BorderBrush="{ThemeResource CardStrokeColorDefault}" Margin="16,16" Padding="16,16" CornerRadius="8">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            
+            <TextBlock Text="Add another account" Grid.Column="0" VerticalAlignment="Center"/>
+
+            <Button x:Name="AddAccountButton" Style="{ThemeResource AccentButtonStyle}" Content="Add Account" Grid.Column="1" MinWidth="150" Click="AddAccountButton_Click"/>
+        </Grid>
         <TextBlock Name="Version" HorizontalAlignment="Right" Margin="32,16" Style="{StaticResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
     </StackPanel>
 </winex:WindowEx>

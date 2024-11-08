@@ -12,7 +12,7 @@ namespace ExcellentEmailExperience.ViewModel
     internal partial class InboxMail
     {
         public MailAddress from { get; set; }
-        public MailAddress[] to { get; set; }
+        public List<MailAddress> to { get; set; }
         public string subject { get; set; }
         public string date { get; set; }
 
