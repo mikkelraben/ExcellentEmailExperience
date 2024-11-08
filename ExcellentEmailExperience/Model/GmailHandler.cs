@@ -40,14 +40,20 @@ namespace ExcellentEmailExperience.Model
             throw new NotImplementedException();
         }
 
+        // this function creates a new mailcontent and sends this one
+        // so the original message wont be modified. 
         public void Forward(MailContent content, List<MailAddress> NewTo)
         {
             var Mail = new MailContent();
             Mail.subject = "Forward: " + Mail.subject;
             Mail.body = "Forwarded from " + content.from.ToString() + "\n " + content.body + " \n\n Originally sent to:" + content.to.ToString();
+            
+            //making the currect account the sender. 
             var profileRequest = service.Users.GetProfile("me");
             var user = ((IClientServiceRequest<Profile>)profileRequest).Execute();
             Mail.from = new MailAddress(user.EmailAddress);
+
+            //changes the receiver to the person who is being forwarded to. 
             Mail.to = NewTo;
             Send(Mail);
 
@@ -161,7 +167,7 @@ namespace ExcellentEmailExperience.Model
             var profileRequest = service.Users.GetProfile("me");
             var user = ((IClientServiceRequest<Profile>)profileRequest).Execute();
             mail.from = new MailAddress(user.EmailAddress);
-            mail.to.Add(reciever); // we might need to change the reciver to a list and not just a mailcontent. cause what if you're sending to more people.
+            mail.to.Add(reciever); // we might need to change the receiver to a list and not just a mailcontent. cause what if you're sending to more people.
             mail.bcc.Add(BCC); 
             mail.cc.Add(CC);
             mail.subject = subject;
@@ -208,11 +214,14 @@ namespace ExcellentEmailExperience.Model
 
         public void Send(MailContent content)
         {
+            // creates a new mailmessage object, these are the ones that we need to setup before sending
             var message = new MailMessage
             {
                 Subject = content.subject,
                 From = content.from
             };
+
+            // adds bcc,cc,and recipient.
             foreach (var recipient in content.to)
             {
                 message.To.Add(recipient);
@@ -225,6 +234,8 @@ namespace ExcellentEmailExperience.Model
             {
                 message.CC.Add(recipient);
             }
+
+            // this part creates the main text to the message as either plaintext or html
             var MessageContent = AlternateView.CreateAlternateViewFromString("");
             if (content.bodyType == BodyType.Html)
             {
@@ -248,13 +259,17 @@ namespace ExcellentEmailExperience.Model
                 message.Attachments.Add(pdfAttachment);
             }
 
-
+            //after creating the maintext we need to add it to the mailmessage object
             message.AlternateViews.Add(MessageContent);
             
+            // convert to mimemessage, this is necessary for sending
             var mimemessage = MimeMessage.CreateFromMailMessage(message);
 
+            // making memory stream. 
             using (var memoryStream = new MemoryStream())
             {
+
+                // we need to convert our message to a base64 string. 
                 mimemessage.WriteTo(memoryStream);
                 var rawMessage = memoryStream.ToArray();
 
@@ -263,20 +278,27 @@ namespace ExcellentEmailExperience.Model
                     .Replace('/', '_')
                     .Replace("=", "");
 
+                // convert to gmailMessage
                 var gmailMessage = new Google.Apis.Gmail.v1.Data.Message
                 {
                     Raw = encodedMessage
                 };
+                // apply the thread id, in case this is a reply. 
+                // if you are just calling send, and not from reply. the ThreadId should be 0
+                // it will  be given an id by google when sending.
+                // this is also why we shouldnt give it a threadid in the newmail function
                 if(content.ThreadId != null)
                 {
                     gmailMessage.ThreadId = content.ThreadId;
                 }
                 
+                // send it.
                 var sendRequest = service.Users.Messages.Send(gmailMessage, "me");
                 sendRequest.Execute();
             }
 
-            //add mailcontent to 'sent' mails folder. 
+            // add mailcontent to 'sent' mails folder. 
+            // for this we actually need to impliment a folder system.
 
         }
     }
