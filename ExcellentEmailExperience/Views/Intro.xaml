@@ -33,6 +33,7 @@
                     <ScalarTransition Duration="0:0:1"/>
                 </Button.OpacityTransition>
             </Button>
+            <ProgressRing Name="ProgressRing" IsActive="False" HorizontalAlignment="Center" Margin="36,36"/>
         </StackPanel>
 
     </Grid>
