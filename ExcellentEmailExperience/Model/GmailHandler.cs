@@ -184,6 +184,8 @@ namespace ExcellentEmailExperience.Model
             throw new NotImplementedException();
         }
 
+        // when calling reply. it is important that you give it the exact mailcontent you want to reply to
+        // dont change the (to) and (from) fields beforehand, the code will handle that for you. you can change the body. 
         public void Reply(MailContent content)
         {
             MailContent reply = new MailContent();
