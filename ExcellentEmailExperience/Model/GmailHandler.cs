@@ -217,6 +217,14 @@ namespace ExcellentEmailExperience.Model
             {
                 message.To.Add(recipient);
             }
+            foreach (var recipient in content.bcc)
+            {
+                message.Bcc.Add(recipient);
+            }
+            foreach(var recipient in content.cc)
+            {
+                message.CC.Add(recipient);
+            }
             var MessageContent = AlternateView.CreateAlternateViewFromString("");
             if (content.bodyType == BodyType.Html)
             {
