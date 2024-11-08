@@ -303,10 +303,6 @@ namespace ExcellentEmailExperience.Model
                 var sendRequest = service.Users.Messages.Send(gmailMessage, "me");
                 sendRequest.Execute();
             }
-
-            // add mailcontent to 'sent' mails folder. 
-            // for this we actually need to impliment a folder system.
-
         }
     }
 }
