@@ -28,15 +28,49 @@ namespace Test
             string validBody = "Hello, how are you?";
             string validAttachment = "C:/Users/Downloads"; //valid attachment path maybe
             string invalidAttachment = "C:/Users/Downloads"; //invalid attachment path maybe
+            string username1 = "lillekatemil6@gmail.com";
+            string username2 = "postmanpergruppe1@gmail.com";
+
+            //instanciating an account with IAccount object
+            IAccount account1 = new GmailAccount();
+            IAccount account2 = new GmailAccount();
+
+            
+
+            //accessing the refresh tokens from the environment variables in github
+            string? REFRESHTOKEN1 = Environment.GetEnvironmentVariable("REFRESHTOKEN1");
+
+            string? REFRESHTOKEN2 = Environment.GetEnvironmentVariable("REFRESHTOKEN2");
+
+            //creating a token response object with the refresh token
+            Google.Apis.Auth.OAuth2.Responses.TokenResponse tokenResponse1 = new Google.Apis.Auth.OAuth2.Responses.TokenResponse();
+            tokenResponse1.RefreshToken = REFRESHTOKEN1;
+
+            Google.Apis.Auth.OAuth2.Responses.TokenResponse tokenResponse2 = new Google.Apis.Auth.OAuth2.Responses.TokenResponse();
+            tokenResponse2.RefreshToken = REFRESHTOKEN2;
+
+            //creating a file data store object and storing the token response in it (seperate for the accounts)
+            Google.Apis.Util.Store.FileDataStore fileDataStore = new("Google.Apis.Auth");
+
+
+            fileDataStore.StoreAsync<Google.Apis.Auth.OAuth2.Responses.TokenResponse>(username1,tokenResponse1);
+
+            fileDataStore.StoreAsync<Google.Apis.Auth.OAuth2.Responses.TokenResponse>(username2,tokenResponse2);
+
+
+            //logging in to the account
+            account1.Login(username1);
+            account2.Login(username2);
+
 
             //instantiating a GmailHandler object
-            IMailHandler mailHandler = new GmailHandler();
+            IMailHandler mailHandler1 = account1.GetMailHandler();
+            IMailHandler mailHandler2 = account2.GetMailHandler();
 
             //accessing the password from the environment variables in github?
-            string? password = Environment.GetEnvironmentVariable("password");
 
             //creating a new mail object and sending it to the current mail address? checking for recieving mail
-            MailContent validMail =mailHandler.NewMail(validAddress,validSubject,validAddress3,validAddress2,validBody,null);
+            MailContent validMail =mailHandler1.NewMail(validAddress,validSubject,validAddress3,validAddress2,validBody,null);
             
             int inboxLength = mailHandler.GetInbox().Length;
 

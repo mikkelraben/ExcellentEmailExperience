@@ -1,4 +1,5 @@
 ﻿using ExcellentEmailExperience.Interfaces;
+using ExcellentEmailExperience.ViewModel;
 using Google.Apis.Auth.OAuth2;
 using Google.Apis.Gmail.v1;
 using System;
