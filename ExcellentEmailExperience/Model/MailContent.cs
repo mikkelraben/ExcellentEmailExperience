@@ -23,7 +23,8 @@ namespace ExcellentEmailExperience.Model
         public string subject;
         public string body;
         public string attach_path;
-        public string date;
+        public DateTime date;
+        public string ThreadId;
 
     }
 }

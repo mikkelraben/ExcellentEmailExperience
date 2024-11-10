@@ -1,14 +1,11 @@
-﻿using Google.Apis.Util.Store;
-using System;
-using System.Collections.Generic;
+﻿using System;
 using System.Linq;
-using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace ExcellentEmailExperience.Model
 {
-    internal class CredentialHandler
+    public class CredentialHandler
     {
         readonly static Windows.Security.Credentials.PasswordVault vault = new Windows.Security.Credentials.PasswordVault();
 
