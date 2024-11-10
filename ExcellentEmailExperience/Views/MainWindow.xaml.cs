@@ -178,10 +178,10 @@ namespace ExcellentEmailExperience.Views
 
         private async void SettingsButton_Click(object sender, RoutedEventArgs e)
         {
-            //new Thread(() =>
-            //{
-            OpenSettings();
-            //}).Start();
+            new Thread(() =>
+            {
+                OpenSettings();
+            }).Start();
         }
 
         bool settingsActive = false;
@@ -189,24 +189,27 @@ namespace ExcellentEmailExperience.Views
 
         private async void OpenSettings()
         {
-            if (settingsActive)
+            DispatcherQueue.TryEnqueue(() =>
             {
-                if (settings.Visible)
-                    settings.BringToFront();
-                return;
-            }
+                if (settingsActive)
+                {
+                    if (settings.Visible)
+                        settings.BringToFront();
+                    return;
+                }
 
-            settings = new(mailApp);
+                settings = new(mailApp);
 
-            settings.SetIsMaximizable(false);
-            settings.SetIsMinimizable(false);
+                settings.SetIsMaximizable(false);
+                settings.SetIsMinimizable(false);
 
-            settings.MoveAndResize(AppWindow.Position.X + 32, AppWindow.Position.Y + 32, Width - 64, Height - 64);
+                settings.MoveAndResize(AppWindow.Position.X + 32, AppWindow.Position.Y + 32, Width - 64, Height - 64);
 
-            settings.Activate();
-            settingsActive = true;
-            settings.Closed += (s, e) => settingsActive = false;
-            Closed += (s, e) => settings.Close();
+                settings.Activate();
+                settingsActive = true;
+                settings.Closed += (s, e) => settingsActive = false;
+                Closed += (s, e) => settings.Close();
+            });
         }
 
 
@@ -245,15 +248,7 @@ namespace ExcellentEmailExperience.Views
     {
         public object Convert(object value, Type targetType, object parameter, string language)
         {
-            DateTime date;
-            try
-            {
-                date = DateTime.Parse(value as string);
-            }
-            catch (FormatException)
-            {
-                return "Unknown";
-            }
+            var date = (DateTime)value;
 
             if (date.Date == DateTime.Now.Date)
             {

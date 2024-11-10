@@ -48,7 +48,7 @@ namespace ExcellentEmailExperience.ViewModel
         public string attach_path;
 
         [ObservableProperty]
-        public string date;
+        public DateTime date;
 
     }
 }

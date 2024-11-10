@@ -36,5 +36,11 @@ namespace ExcellentEmailExperience.Interfaces
         /// </summary>
         /// <param name="name">The name to be displayed</param>
         void SetName(string name);
+
+        /// <summary>
+        /// Returns the email address of the account
+        /// </summary>
+        /// <returns></returns>
+        string GetEmail();
     }
 }

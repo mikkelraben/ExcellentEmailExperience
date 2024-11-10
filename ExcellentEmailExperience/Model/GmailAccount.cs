@@ -111,5 +111,10 @@ namespace ExcellentEmailExperience.Model
         {
             accountName = name;
         }
+
+        public string GetEmail()
+        {
+            return mailAddress.Address;
+        }
     }
 }
