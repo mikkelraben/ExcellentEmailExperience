@@ -11,11 +11,11 @@ namespace ExcellentEmailExperience.Model
 
         protected CredentialHandler() { }
 
-        public static string GetCredential(string username)
+        public static string GetCredential(string email)
         {
             try
             {
-                return vault.Retrieve("SoftwareGroup1.ExcellentEmailExperience", username).Password;
+                return vault.Retrieve("SoftwareGroup1.ExcellentEmailExperience", email).Password;
             }
             catch (Exception)
             {
@@ -23,14 +23,14 @@ namespace ExcellentEmailExperience.Model
             }
         }
 
-        public static void AddCredential(string username, string secret)
+        public static void AddCredential(string email, string secret)
         {
-            vault.Add(new Windows.Security.Credentials.PasswordCredential("SoftwareGroup1.ExcellentEmailExperience", username, secret));
+            vault.Add(new Windows.Security.Credentials.PasswordCredential("SoftwareGroup1.ExcellentEmailExperience", email, secret));
         }
 
-        public static void RemoveCredential(string username)
+        public static void RemoveCredential(string email)
         {
-            var credential = vault.FindAllByUserName(username).FirstOrDefault();
+            var credential = vault.FindAllByUserName(email).FirstOrDefault();
             if (credential != null)
             {
                 vault.Remove(credential);

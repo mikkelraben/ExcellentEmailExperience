@@ -1,3 +1,5 @@
+using ExcellentEmailExperience.Model;
+using ExcellentEmailExperience.ViewModel;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Controls.Primitives;
@@ -24,13 +26,26 @@ namespace ExcellentEmailExperience.Views
     /// </summary>
     public sealed partial class SettingsWindow : WinUIEx.WindowEx
     {
-        public SettingsWindow()
+        List<AccountViewModel> accounts = new();
+        MailApp mailApp;
+
+        public SettingsWindow(MailApp mailApp)
         {
             this.InitializeComponent();
             this.ExtendsContentIntoTitleBar = true;
 
             this.MinWidth = 500;
             this.MinHeight = 300;
+
+            this.mailApp = mailApp;
+
+            mailApp.Accounts.ForEach(account =>
+            {
+                if (account is GmailAccount)
+                {
+                    accounts.Add(new GmailAccountViewModel(account as GmailAccount));
+                }
+            });
 
             Version.Text = "Version: " + AppInfo.Current.Package.Id.Version.Major + "." + AppInfo.Current.Package.Id.Version.Minor + "." + AppInfo.Current.Package.Id.Version.Build + "." + AppInfo.Current.Package.Id.Version.Revision;
         }

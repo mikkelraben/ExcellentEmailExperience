@@ -47,6 +47,14 @@ namespace ExcellentEmailExperience.Views
             HTMLViewer.CoreWebView2.Settings.AreDevToolsEnabled = false;
             HTMLViewer.CoreWebView2.Settings.IsPasswordAutosaveEnabled = false;
             HTMLViewer.CoreWebView2.NavigationStarting += CoreWebView2_NavigationStarting;
+            HTMLViewer.CoreWebView2.NewWindowRequested += CoreWebView2_NewWindowRequested;
+        }
+
+        private void CoreWebView2_NewWindowRequested(CoreWebView2 sender, CoreWebView2NewWindowRequestedEventArgs args)
+        {
+            Uri uri = new Uri(args.Uri);
+            args.Handled = true;
+            Windows.System.Launcher.LaunchUriAsync(uri);
         }
 
         private void CoreWebView2_NavigationStarting(CoreWebView2 sender, CoreWebView2NavigationStartingEventArgs args)
