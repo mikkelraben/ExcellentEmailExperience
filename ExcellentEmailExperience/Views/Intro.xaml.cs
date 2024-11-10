@@ -68,13 +68,13 @@ namespace ExcellentEmailExperience.Views
             {
                 IAccount account = new GmailAccount();
 
-                account.Login("user");
+                account.Login(null);
 
                 mailApp.NewAccount(account);
 
-                FirstAccountCreated.Invoke(this, new EventArgs());
                 DispatcherQueue.TryEnqueue(() =>
                 {
+                    FirstAccountCreated.Invoke(this, new EventArgs());
                     Close();
                 });
             }).Start();

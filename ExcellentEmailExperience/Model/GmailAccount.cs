@@ -1,13 +1,23 @@
 ﻿using ExcellentEmailExperience.Interfaces;
 using Google.Apis.Auth.OAuth2;
+using Google.Apis.Gmail.v1;
+using Google.Apis.Gmail.v1.Data;
+using Google.Apis.Requests;
 using System;
+using System.Net.Mail;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace ExcellentEmailExperience.Model
 {
     public class GmailAccount : IAccount
     {
         private UserCredential userCredential;
-        private string accountName;
+
+        [JsonInclude]
+        public string accountName;
+        [JsonInclude]
+        public MailAddress mailAddress;
 
 
         // Yes this is relatively safe, as this only allows an application permission to read and send emails. Any one can create these credentials and use them to access their own emails.
@@ -22,7 +32,7 @@ namespace ExcellentEmailExperience.Model
             return new GmailHandler(userCredential);
         }
 
-        public void Login(string username)
+        public void Login(string email)
         {
             ClientSecrets clientSecrets = new()
             {
@@ -31,16 +41,41 @@ namespace ExcellentEmailExperience.Model
             };
 
             CredentialHandlerGoogleShim credentialHandlerGoogleShim = new();
+            if (email == null)
+            {
+                userCredential = GoogleWebAuthorizationBroker.AuthorizeAsync(
+                    clientSecrets,
+                    ["https://mail.google.com/"],
+                    "This account name cannot be used",
+                    System.Threading.CancellationToken.None, credentialHandlerGoogleShim).Result;
 
-            userCredential = GoogleWebAuthorizationBroker.AuthorizeAsync(
-                clientSecrets,
-                ["https://mail.google.com/"],
-                username,
-                System.Threading.CancellationToken.None, credentialHandlerGoogleShim).Result;
+                CredentialHandler.RemoveCredential("This account name cannot be used");
 
+                GmailService service = new GmailService(new Google.Apis.Services.BaseClientService.Initializer()
+                {
+                    HttpClientInitializer = userCredential,
+                    ApplicationName = "ExcellentEmailExperience",
+                });
 
-            //TODO: Remove this line since the account name is set on setup or in settings, but this is not implemented yet.
-            accountName = username;
+                var profileRequest = service.Users.GetProfile("me");
+                var user = ((IClientServiceRequest<Profile>)profileRequest).Execute();
+                mailAddress = new MailAddress(user.EmailAddress);
+
+                CredentialHandler.AddCredential(mailAddress.Address, JsonSerializer.Serialize(userCredential.Token));
+            }
+            else
+            {
+                userCredential = GoogleWebAuthorizationBroker.AuthorizeAsync(
+                    clientSecrets,
+                    ["https://mail.google.com/"],
+                    email,
+                    System.Threading.CancellationToken.None, credentialHandlerGoogleShim).Result;
+            }
+
+            if (userCredential == null)
+            {
+                throw new Exception("Login failed");
+            }
         }
 
         public void Logout()

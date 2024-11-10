@@ -49,6 +49,7 @@ namespace ExcellentEmailExperience.Model
             Mail.to = NewTo;
             Send(Mail);
 
+            //TODO: Set the from field to the emailAddress of GmailAccount
             //throw new NotImplementedException();
         }
 
@@ -160,7 +161,7 @@ namespace ExcellentEmailExperience.Model
             var user = ((IClientServiceRequest<Profile>)profileRequest).Execute();
             mail.from = new MailAddress(user.EmailAddress);
             mail.to.Add(reciever); // we might need to change the reciver to a list and not just a mailcontent. cause what if you're sending to more people.
-            mail.bcc.Add(BCC); 
+            mail.bcc.Add(BCC);
             mail.cc.Add(CC);
             mail.subject = subject;
             mail.body = body;
@@ -203,12 +204,12 @@ namespace ExcellentEmailExperience.Model
             if (content.bodyType == BodyType.Html)
             {
                 MessageContent = AlternateView.CreateAlternateViewFromString(content.body, new System.Net.Mime.ContentType("text/html"));
-                
+
             }
             if (content.bodyType == BodyType.Plain)
             {
                 MessageContent = AlternateView.CreateAlternateViewFromString(content.body, new System.Net.Mime.ContentType("text/plain"));
-                
+
             }
             MessageContent.ContentType.CharSet = Encoding.UTF8.WebName;
 
@@ -233,7 +234,7 @@ namespace ExcellentEmailExperience.Model
                 var rawMessage = memoryStream.ToArray();
 
                 var encodedMessage = Convert.ToBase64String(rawMessage)
-                    .Replace('+','-')
+                    .Replace('+', '-')
                     .Replace('/', '_')
                     .Replace("=", "");
 
