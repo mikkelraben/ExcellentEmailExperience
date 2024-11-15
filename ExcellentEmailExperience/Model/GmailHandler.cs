@@ -71,10 +71,8 @@ namespace ExcellentEmailExperience.Model
 
         public IEnumerable<MailContent> GetFolder(string name, bool old, bool refresh)
         {
-            string allcaps = name.ToUpper();
-
             var request = service.Users.Messages.List("me");
-            request.LabelIds = allcaps;
+            request.LabelIds = name;
             IList<Google.Apis.Gmail.v1.Data.Message> messages = request.Execute().Messages;
 
             if (messages == null)
@@ -195,6 +193,7 @@ namespace ExcellentEmailExperience.Model
             {
                 foreach (var labelItem in labels)
                 {
+                    // TODO: maybe use labelNames.Add(labelItem.Id); but we will think about this after implementing mailkit
                     labelNames.Add(labelItem.Name);
                 }
             }
