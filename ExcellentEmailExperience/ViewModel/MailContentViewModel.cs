@@ -50,5 +50,8 @@ namespace ExcellentEmailExperience.ViewModel
         [ObservableProperty]
         public DateTime date;
 
+        [ObservableProperty]
+        public bool isEditable = false;
+
     }
 }

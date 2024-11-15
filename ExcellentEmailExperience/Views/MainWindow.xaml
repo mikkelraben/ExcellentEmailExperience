@@ -78,7 +78,7 @@
             <FontIcon Glyph="&#xEA3A;" FontSize="16"/>
             <TextBlock Text="Excellent Email Experience" FontSize="12" Margin="16,10,8,10" VerticalAlignment="Center" />
             <TextBlock Text="Debug" Name="Subtitle" FontSize="12" Margin="0,10,0,10" VerticalAlignment="Center" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
-            <AppBarButton Icon="Mail" LabelPosition="Collapsed" Margin="2,0,0,0" Padding="0,0" Width="40" ToolTipService.ToolTip="New Mail"/>
+            <AppBarButton Icon="Mail" Click="NewMail_Click" LabelPosition="Collapsed" Margin="2,0,0,0" Padding="0,0" Width="40" ToolTipService.ToolTip="New Mail"/>
             <AppBarButton Icon="MailReply" LabelPosition="Collapsed" Width="40" ToolTipService.ToolTip="Reply"/>
             <AppBarButton Icon="MailReplyAll" LabelPosition="Collapsed" Width="40" ToolTipService.ToolTip="Reply All"/>
             <AppBarButton Icon="MailForward" LabelPosition="Collapsed" Width="40" ToolTipService.ToolTip="Forward"/>
@@ -91,112 +91,126 @@
         <Grid Grid.Row="1">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="auto"/>
-                <ColumnDefinition Width="auto"/>
                 <ColumnDefinition Width="*"/>
-
             </Grid.ColumnDefinitions>
-            <StackPanel Name="Siderbar" Width="0" Grid.Column="0">
-                <ListView ItemsSource="{x:Bind mailHandlers}" SelectionMode="None" >
+
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="52"/>
+            </Grid.RowDefinitions>
+
+            <Grid Name="Siderbars">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="auto"/>
+                    <ColumnDefinition Width="270"/>
+                </Grid.ColumnDefinitions>
+
+                <!--This should be changed to a tree or something-->
+                <ListView Name="Siderbar" Width="0" ItemsSource="{x:Bind accounts}" SelectionMode="None">
                     <ListView.ItemTemplate>
-                        <DataTemplate x:DataType="viewmodel:MailHandlerViewModel">
+                        <DataTemplate x:DataType="viewmodel:GmailAccountViewModel">
                             <StackPanel>
-                                <TextBlock Text="{x:Bind name}" FontSize="16" Margin="8,8,8,8"/>
-                                <ListView ItemsSource="{x:Bind folders}" ItemClick="ListView_ItemClick" IsItemClickEnabled="True" SelectionChanged="ListView_SelectionChanged" SelectionMode="Single">
-                                    <ListView.ItemTemplate>
-                                        <DataTemplate x:DataType="viewmodel:FolderViewModel">
-                                            <TextBlock Text="{x:Bind name}" VerticalAlignment="Stretch"/>
-                                        </DataTemplate>
-                                    </ListView.ItemTemplate>
-                                </ListView>
+                                <Expander HorizontalAlignment="Stretch">
+                                    <Expander.Header>
+                                        <TextBlock Text="{x:Bind Name, Mode=OneWay}" Style="{ThemeResource SubtitleTextBlockStyle}" Margin="8,8,8,8"/>
+                                    </Expander.Header>
+                                    <ListView ItemsSource="{x:Bind mailHandlerViewModel.folders}" ItemClick="ListView_ItemClick" IsItemClickEnabled="True" SelectionChanged="ListView_SelectionChanged" SelectionMode="Single">
+                                        <ListView.ItemTemplate>
+                                            <DataTemplate x:DataType="viewmodel:FolderViewModel">
+                                                <TextBlock Text="{x:Bind name}" VerticalAlignment="Stretch"/>
+                                            </DataTemplate>
+                                        </ListView.ItemTemplate>
+                                    </ListView>
+                                </Expander>
                             </StackPanel>
                         </DataTemplate>
                     </ListView.ItemTemplate>
                 </ListView>
-            </StackPanel>
-            <Grid Name="Sidebar" Width="270" Grid.Column="1">
-                <Grid.Transitions>
-                    <RepositionThemeTransition/>
-                </Grid.Transitions>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="auto"/>
-                    <RowDefinition Height="auto"/>
-                    <RowDefinition Height="auto"/>
-                    <RowDefinition Height="*"/>
-                    <RowDefinition Height="52"/>
-                </Grid.RowDefinitions>
-                <Grid Margin="16,0,8,0" PointerEntered="MailBox_PointerEntered" PointerExited="MailBox_PointerExited">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="auto"/>
-                    </Grid.ColumnDefinitions>
-                    <TextBlock Name="FolderName" Text="Inbox" FontSize="24" Grid.Column="0" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap" Grid.Row="0" Style="{ThemeResource SubtitleTextBlockStyle}" />
-                    <Button x:Name="RefreshButton" Opacity="0" Grid.Column="1" Background="Transparent" BorderBrush="Transparent" Padding="4,4" Click="RefreshButton_Click">
-                        <Button.OpacityTransition>
-                            <ScalarTransition />
-                        </Button.OpacityTransition>
-                        <FontIcon Glyph="&#xE72C;" FontSize="16"/>
-                    </Button>
-                </Grid>
-                <AutoSuggestBox PlaceholderText="Search" Grid.Row="1" Margin="8,0,8,16" QueryIcon="Find"/>
-                <StackPanel Orientation="Horizontal" Grid.Row="2" Name="MassEditMenu" Visibility="Collapsed">
-                    <Button Margin="8,0,0,0" Padding="8,4" Content="Delete??"/>
-                </StackPanel>
-                <ListView 
-                    Grid.Row="3" 
-                    SelectionMode="Extended" 
-                    Name="MailList" 
-                    ItemTemplate="{StaticResource ListMailTemplate}" 
-                    Margin="4,0,4,0" 
-                    Padding="0,0,10,0"
-                    SelectionChanged="MailList_SelectionChanged"
-                    IsItemClickEnabled="True"
-                    ItemClick="ListView_ItemClick">
-                    <ListView.Transitions>
+                <Grid Name="Sidebar" Grid.Column="1">
+                    <Grid.Transitions>
                         <RepositionThemeTransition/>
-                    </ListView.Transitions>
-                    <ListView.Resources>
-                        <ResourceDictionary>
-                            <!--<StaticResource x:Key="ListViewItemBackground" ResourceKey="ControlFillColorDefaultBrush"/>-->
-                            <StaticResource x:Key="ListViewItemBackgroundPointerOver" ResourceKey="ControlFillColorDefaultBrush"/>
-                            <StaticResource x:Key="ListViewItemBackgroundSelected" ResourceKey="CardBackgroundFillColorDefaultBrush"/>
-                            <StaticResource x:Key="ListViewItemBackgroundSelectedPointerOver" ResourceKey="ControlFillColorSecondaryBrush"/>
-                        </ResourceDictionary>
-                    </ListView.Resources>
-                </ListView>
-                <Grid Grid.Row="4" Height="52" Margin="5,0,5,0" BorderThickness="0,1,0,0" BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}">
-                    <Button  x:Name="SettingsButton" Height="40"  Padding="8,4,160,4" AnimatedIcon.State="Normal" Click="SettingsButton_Click">
-                        <Button.Resources>
+                    </Grid.Transitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="auto"/>
+                        <RowDefinition Height="auto"/>
+                        <RowDefinition Height="auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    <Grid Margin="16,0,8,0" PointerEntered="MailBox_PointerEntered" PointerExited="MailBox_PointerExited">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Name="FolderName" Text="Inbox" FontSize="24" Grid.Column="0" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap" Grid.Row="0" Style="{ThemeResource SubtitleTextBlockStyle}" />
+                        <Button x:Name="RefreshButton" Opacity="0" Grid.Column="1" Background="Transparent" BorderBrush="Transparent" Padding="4,4" Click="RefreshButton_Click">
+                            <Button.OpacityTransition>
+                                <ScalarTransition />
+                            </Button.OpacityTransition>
+                            <FontIcon Glyph="&#xE72C;" FontSize="16"/>
+                        </Button>
+                    </Grid>
+                    <AutoSuggestBox PlaceholderText="Search" Grid.Row="1" Margin="8,0,8,16" QueryIcon="Find"/>
+                    <StackPanel Orientation="Horizontal" Grid.Row="2" Name="MassEditMenu" Visibility="Collapsed">
+                        <Button Margin="8,0,0,0" Padding="8,4" Content="Delete??"/>
+                    </StackPanel>
+                    <ListView 
+                        Grid.Row="3" 
+                        SelectionMode="Extended" 
+                        Name="MailList" 
+                        ItemTemplate="{StaticResource ListMailTemplate}" 
+                        Margin="4,0,4,0" 
+                        Padding="0,0,10,0"
+                        SelectionChanged="MailList_SelectionChanged"
+                        IsItemClickEnabled="True"
+                        ItemClick="ListView_ItemClick">
+                        <ListView.Transitions>
+                            <RepositionThemeTransition/>
+                        </ListView.Transitions>
+                        <ListView.Resources>
                             <ResourceDictionary>
-                                <!-- Button resources -->
-                                <StaticResource x:Key="ButtonBackground" ResourceKey="SubtleFillColorTransparentBrush"/>
-                                <StaticResource x:Key="ButtonBackgroundPointerOver" ResourceKey="SubtleFillColorSecondaryBrush"/>
-                                <StaticResource x:Key="ButtonBackgroundPressed" ResourceKey="SubtleFillColorTertiaryBrush"/>
-
-                                <StaticResource x:Key="ButtonBorderBrush" ResourceKey="SubtleFillColorTransparentBrush" />
-                                <StaticResource x:Key="ButtonBorderBrushPointerOver" ResourceKey="SubtleFillColorTransparentBrush" />
-                                <StaticResource x:Key="ButtonBorderBrushPressed" ResourceKey="SubtleFillColorTransparentBrush" />
+                                <!--<StaticResource x:Key="ListViewItemBackground" ResourceKey="ControlFillColorDefaultBrush"/>-->
+                                <StaticResource x:Key="ListViewItemBackgroundPointerOver" ResourceKey="ControlFillColorDefaultBrush"/>
+                                <StaticResource x:Key="ListViewItemBackgroundSelected" ResourceKey="CardBackgroundFillColorDefaultBrush"/>
+                                <StaticResource x:Key="ListViewItemBackgroundSelectedPointerOver" ResourceKey="ControlFillColorSecondaryBrush"/>
                             </ResourceDictionary>
-                        </Button.Resources>
-                        <StackPanel Orientation="Horizontal" Height="20">
-                            <AnimatedIcon x:Name="SettingsAnimatedIcon" Width="18">
-                                <AnimatedIcon.Source>
-                                    <animatedvisuals:AnimatedSettingsVisualSource/>
-                                </AnimatedIcon.Source>
-                                <AnimatedIcon.FallbackIconSource>
-                                    <SymbolIconSource Symbol="Setting"/>
-                                </AnimatedIcon.FallbackIconSource>
-                            </AnimatedIcon>
-                            <TextBlock Margin="14,0,0,0" Style="{ThemeResource BodyStrongTextBlockStyle}">Settings</TextBlock>
-                        </StackPanel>
-                    </Button>
-                    
+                        </ListView.Resources>
+                    </ListView>
                 </Grid>
             </Grid>
-            <Frame Name="MainFrame" Grid.Column="2" Background="{ThemeResource LayerFillColorDefaultBrush}" BorderThickness="1,1,0,0" BorderBrush="{ThemeResource CardStrokeColorDefault}" CornerRadius="8,0,0,0">
+            <Frame Name="MainFrame" Grid.Column="1" Grid.RowSpan="2" Background="{ThemeResource LayerFillColorDefaultBrush}" BorderThickness="1,1,0,0" BorderBrush="{ThemeResource CardStrokeColorDefault}" CornerRadius="8,0,0,0">
                 <Frame.Transitions>
                     <RepositionThemeTransition/>
                 </Frame.Transitions>
             </Frame>
+            <Grid HorizontalAlignment="Stretch" Grid.Row="1" Margin="5,0,5,0" BorderThickness="0,1,0,0" BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}">
+                <Button  x:Name="SettingsButton" Height="40" AnimatedIcon.State="Normal" Click="SettingsButton_Click">
+                    <Button.Resources>
+                        <ResourceDictionary>
+                            <!-- Button resources -->
+                            <StaticResource x:Key="ButtonBackground" ResourceKey="SubtleFillColorTransparentBrush"/>
+                            <StaticResource x:Key="ButtonBackgroundPointerOver" ResourceKey="SubtleFillColorSecondaryBrush"/>
+                            <StaticResource x:Key="ButtonBackgroundPressed" ResourceKey="SubtleFillColorTertiaryBrush"/>
+
+                            <StaticResource x:Key="ButtonBorderBrush" ResourceKey="SubtleFillColorTransparentBrush" />
+                            <StaticResource x:Key="ButtonBorderBrushPointerOver" ResourceKey="SubtleFillColorTransparentBrush" />
+                            <StaticResource x:Key="ButtonBorderBrushPressed" ResourceKey="SubtleFillColorTransparentBrush" />
+                        </ResourceDictionary>
+                    </Button.Resources>
+                    <StackPanel Orientation="Horizontal" Height="20">
+                        <AnimatedIcon x:Name="SettingsAnimatedIcon" Width="18">
+                            <AnimatedIcon.Source>
+                                <animatedvisuals:AnimatedSettingsVisualSource/>
+                            </AnimatedIcon.Source>
+                            <AnimatedIcon.FallbackIconSource>
+                                <SymbolIconSource Symbol="Setting"/>
+                            </AnimatedIcon.FallbackIconSource>
+                        </AnimatedIcon>
+                        <TextBlock Margin="14,0,0,0" Style="{ThemeResource BodyStrongTextBlockStyle}">Settings</TextBlock>
+                    </StackPanel>
+                </Button>
+
+            </Grid>
+
         </Grid>
 
     </Grid>

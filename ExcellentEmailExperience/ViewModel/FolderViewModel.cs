@@ -10,7 +10,7 @@ using System.Threading;
 namespace ExcellentEmailExperience.ViewModel
 {
     [ObservableObject]
-    internal partial class FolderViewModel
+    public partial class FolderViewModel
     {
         /// <summary>
         /// Constructor for FolderViewModel
@@ -74,6 +74,7 @@ namespace ExcellentEmailExperience.ViewModel
             thread.Start();
         }
 
+        [ObservableProperty]
         public string name;
 
         /// <summary>

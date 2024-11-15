@@ -47,7 +47,7 @@ namespace ExcellentEmailExperience.Model
             var Mail = new MailContent();
             Mail.subject = "Forward: " + Mail.subject;
             Mail.body = "Forwarded from " + content.from.ToString() + "\n " + content.body + " \n\n Originally sent to:" + content.to.ToString();
-            
+
             //making the currect account the sender. 
             var profileRequest = service.Users.GetProfile("me");
             var user = ((IClientServiceRequest<Profile>)profileRequest).Execute();
@@ -70,7 +70,7 @@ namespace ExcellentEmailExperience.Model
             request.LabelIds = allcaps;
             IList<Google.Apis.Gmail.v1.Data.Message> messages = request.Execute().Messages;
 
-            if(messages == null)
+            if (messages == null)
             {
                 yield break;
             }
@@ -136,6 +136,7 @@ namespace ExcellentEmailExperience.Model
                     {
                         mailContent.from = new MailAddress(header.Value);
                     }
+                    // TODO: Add support for multiple recipients
                     else if (header.Name == "To")
                     {
                         mailContent.to = [new MailAddress(header.Value)];
@@ -185,12 +186,12 @@ namespace ExcellentEmailExperience.Model
             var user = ((IClientServiceRequest<Profile>)profileRequest).Execute();
             mail.from = new MailAddress(user.EmailAddress);
             mail.to.Add(reciever); // we might need to change the receiver to a list and not just a mailcontent. cause what if you're sending to more people.
-            mail.bcc.Add(BCC); 
+            mail.bcc.Add(BCC);
             mail.cc.Add(CC);
             mail.subject = subject;
             mail.body = body;
             mail.attach_path = attach;
-            
+
             //throw new NotImplementedException();
 
             return mail;
@@ -252,7 +253,7 @@ namespace ExcellentEmailExperience.Model
             {
                 message.Bcc.Add(recipient);
             }
-            foreach(var recipient in content.cc)
+            foreach (var recipient in content.cc)
             {
                 message.CC.Add(recipient);
             }
@@ -283,7 +284,7 @@ namespace ExcellentEmailExperience.Model
 
             //after creating the maintext we need to add it to the mailmessage object
             message.AlternateViews.Add(MessageContent);
-            
+
             // convert to mimemessage, this is necessary for sending
             var mimemessage = MimeMessage.CreateFromMailMessage(message);
 
@@ -309,11 +310,11 @@ namespace ExcellentEmailExperience.Model
                 // if you are just calling send, and not from reply. the ThreadId should be 0
                 // it will  be given an id by google when sending.
                 // this is also why we shouldnt give it a threadid in the newmail function
-                if(content.ThreadId != null)
+                if (content.ThreadId != null)
                 {
                     gmailMessage.ThreadId = content.ThreadId;
                 }
-                
+
                 // send it.
                 var sendRequest = service.Users.Messages.Send(gmailMessage, "me");
                 sendRequest.Execute();

@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 namespace ExcellentEmailExperience.ViewModel
 {
     [ObservableObject]
-    internal partial class InboxMail
+    public partial class InboxMail
     {
         public MailAddress from { get; set; }
         public List<MailAddress> to { get; set; }
