@@ -22,8 +22,8 @@ namespace Test
         MailAddress Address1 = new MailAddress("lillekatemil6@gmail.com", "bias");
         MailAddress Address2 = new MailAddress("postmanpergruppe1@gmail.com");
         MailAddress Address3 = new MailAddress("postmandpersbil@gmail.com"); //PENDING new real account
-        string validSubject = "Hello";
-        string validBody = "Hello, how are you?";
+        string validSubject = "For kitty";
+        string validBody = "Hello sweetpeach, i have a new buiscuit waiting for you \n love grandma";
         string validAttachment = "C:/Users/Downloads"; //valid attachment path maybe
         string invalidAttachment = "C:/Users/Downloads"; //invalid attachment path maybe
         string username1 = "lillekatemil6@gmail.com";
@@ -49,13 +49,13 @@ namespace Test
 
             CredentialHandler.AddCredential(username2, REFRESHTOKEN2);
 
-            CredentialHandler.AddCredential(username3, REFRESHTOKEN3); //PENDING new real account
+            //CredentialHandler.AddCredential(username3, REFRESHTOKEN3); //PENDING new real account
 
 
             //logging in to the account
             account1.Login(username1);
             account2.Login(username2);
-            account3.Login(username3); //PENDING new real account
+            //account3.Login(username3); //PENDING new real account
         }
 
 
@@ -92,10 +92,10 @@ namespace Test
 
 
             //folder is index in ["Inbox", "Sent", "Drafts", "Spam", "Trash"];
-            List<MailContent> Inboxlist2 =GetInbox(mailHandler2, 0);
+            List<MailContent> Inboxlist2 =GetInbox(mailHandler2, "INBOX");
 
 
-            List<MailContent> Sentlist1 =GetInbox(mailHandler1, 1);
+            List<MailContent> Sentlist1 =GetInbox(mailHandler1, "SENT");
 
             TimeSpan diff=Inboxlist2[0].date.Subtract(Sentlist1[0].date);
 
@@ -139,10 +139,10 @@ namespace Test
 
 
             //folder is index in ["Inbox", "Sent", "Drafts", "Spam", "Trash"];
-            List<MailContent> Inboxlist2 = GetInbox(mailHandler2, 0);
+            List<MailContent> Inboxlist2 = GetInbox(mailHandler2, "INBOX");
 
 
-            List<MailContent> Sentlist1 = GetInbox(mailHandler1, 1);
+            List<MailContent> Sentlist1 = GetInbox(mailHandler1, "SENT");
 
             TimeSpan diff = Inboxlist2[0].date.Subtract(Sentlist1[0].date);
 
@@ -152,7 +152,7 @@ namespace Test
             Sentlist1[0].date = time;
 
 
-            Assert.IsTrue(Inboxlist2[0] == Sentlist1[0]);
+            Assert.IsTrue(Inboxlist2[0].Mess == Sentlist1[0]);
         }
 
         [TestMethod]
@@ -200,23 +200,18 @@ namespace Test
 
 
 
-        private static List<MailContent> GetInbox(IMailHandler mailHandler,int folder)
+        private static List<MailContent> GetInbox(IMailHandler mailHandler,string folder)
         {
 
             //TODO: change amount of requests when api is changed
 
-            string[] folderNames;
             List<MailContent> inbox = new(); 
 
-            //returns string with ["Inbox", "Sent", "Drafts", "Spam", "Trash"];
-            folderNames = mailHandler.GetFolderNames();
-            
 
-
-            foreach (var mail in mailHandler.GetFolder(folderNames[folder], false, false))
+            foreach (var mail in mailHandler.GetFolder(folder, false, false))
             {
                 inbox.Add(mail);
-                inbox.Sort((x, y) => x.date.CompareTo(y.date));
+                inbox.Sort((x, y) =>- x.date.CompareTo(y.date));
             };
             return inbox;
         }
