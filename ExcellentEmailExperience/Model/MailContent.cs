@@ -15,16 +15,16 @@ namespace ExcellentEmailExperience.Model
 
     public class MailContent
     {
-        public MailAddress from;
+        public MailAddress? from;
         public List<MailAddress> to = new();
         public List<MailAddress> bcc = new();
         public List<MailAddress> cc = new();
-        public BodyType bodyType;
-        public string subject;
-        public string body;
-        public string attach_path;
-        public DateTime date;
-        public string ThreadId;
+        public BodyType bodyType = new();
+        public string subject = "";
+        public string body = "";
+        public string attach_path = "";
+        public DateTime date = new();
+        public string ThreadId = "";
 
     }
 }
