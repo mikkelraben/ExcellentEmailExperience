@@ -92,6 +92,7 @@ namespace ExcellentEmailExperience.Model
             {
                 var msg = service.Users.Messages.Get("me", message.Id).Execute();
                 MailContent mailContent = new();
+                mailContent.MessageId = message.Id;
                 mailContent.ThreadId = msg.ThreadId;
 
                 //Change all this to support e-boks messages / other weird message types
@@ -289,7 +290,6 @@ namespace ExcellentEmailExperience.Model
             if (content.bodyType == BodyType.Plain)
             {
                 MessageContent = AlternateView.CreateAlternateViewFromString(content.body, new System.Net.Mime.ContentType("text/plain"));
-
             }
             MessageContent.ContentType.CharSet = Encoding.UTF8.WebName;
 
