@@ -39,7 +39,7 @@ namespace ExcellentEmailExperience.ViewModel
                         inboxMail.from = mail.from;
                         inboxMail.to = mail.to;
                         inboxMail.subject = mail.subject;
-                        inboxMail.date = mail.date;
+                        inboxMail.date = mail.date.ToString();
                         if (dispatcherQueue != null)
                         {
                             dispatcherQueue.TryEnqueue(() =>

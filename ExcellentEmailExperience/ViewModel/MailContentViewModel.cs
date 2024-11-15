@@ -21,7 +21,7 @@ namespace ExcellentEmailExperience.ViewModel
             Subject = mailContent.subject;
             Body = mailContent.body;
             Attach_path = mailContent.attach_path;
-            Date = mailContent.date;
+            Date = mailContent.date.ToString();
             bodyType = mailContent.bodyType;
         }
 
