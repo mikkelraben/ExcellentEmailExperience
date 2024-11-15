@@ -15,6 +15,7 @@ using System.Text;
 using System.Threading;
 using System.Runtime.Caching;
 using Windows.Storage.Pickers;
+using System.Diagnostics;
 
 namespace ExcellentEmailExperience.Model
 {
@@ -153,10 +154,12 @@ namespace ExcellentEmailExperience.Model
                     {
                         mailContent.from = new MailAddress(header.Value);
                     }
-                    // TODO: Add support for multiple recipients
                     else if (header.Name == "To")
                     {
-                        mailContent.to = [new MailAddress(header.Value)];
+                        foreach (var address in header.Value.Split(','))
+                        {
+                            mailContent.to.Add(new MailAddress(address));
+                        }
                     }
                     else if (header.Name == "Subject")
                     {
@@ -204,25 +207,6 @@ namespace ExcellentEmailExperience.Model
             return labelString;
         }
 
-        public MailContent NewMail(MailAddress reciever, string subject, MailAddress? CC = null, MailAddress? BCC = null, string? body = null, string? attach = null)
-        {
-
-            var mail = new MailContent();
-            var profileRequest = service.Users.GetProfile("me");
-            var user = ((IClientServiceRequest<Profile>)profileRequest).Execute();
-            mail.from = new MailAddress(user.EmailAddress);
-            mail.to.Add(reciever); // we might need to change the receiver to a list and not just a mailcontent. cause what if you're sending to more people.
-            mail.bcc.Add(BCC);
-            mail.cc.Add(CC);
-            mail.subject = subject;
-            mail.body = body;
-            mail.attach_path = attach;
-
-            //throw new NotImplementedException();
-
-            return mail;
-        }
-
         public List<MailContent> Refresh(string name)
         {
             throw new NotImplementedException();
@@ -230,6 +214,8 @@ namespace ExcellentEmailExperience.Model
 
         // when calling reply. it is important that you give it the exact mailcontent you want to reply to
         // dont change the (to) and (from) fields beforehand, the code will handle that for you. you can change the body. 
+
+        // call this with the mailcontent currently being displayed. should only be called when a mail is displayed
         public void Reply(MailContent content)
         {
             MailContent reply = new MailContent();
@@ -243,6 +229,7 @@ namespace ExcellentEmailExperience.Model
             Send(reply);
         }
 
+        // call this with the mailcontent currently being displayed. should only be called when a mail is displayed
         public void ReplyAll(MailContent content)
         {
             MailContent reply = new MailContent();
@@ -275,13 +262,29 @@ namespace ExcellentEmailExperience.Model
             {
                 message.To.Add(recipient);
             }
-            foreach (var recipient in content.bcc)
+
+            // this is bad but we will fix later. this is only for testing purposes. 
+            try
             {
-                message.Bcc.Add(recipient);
+                foreach (var recipient in content.bcc)
+                {
+                    message.Bcc.Add(recipient);
+                }
             }
-            foreach (var recipient in content.cc)
+            catch (Exception ex)
             {
-                message.CC.Add(recipient);
+                Debug.WriteLine("error in bcc field" + ex);
+            }
+            try
+            {
+                foreach (var recipient in content.cc)
+                {
+                    message.CC.Add(recipient);
+                }
+            }
+            catch(Exception ex)
+            {
+                Debug.WriteLine("error in cc field" + ex);
             }
 
             // this part creates the main text to the message as either plaintext or html
