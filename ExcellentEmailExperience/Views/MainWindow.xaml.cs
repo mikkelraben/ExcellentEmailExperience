@@ -70,6 +70,12 @@ namespace ExcellentEmailExperience.Views
             Email email = new();
             email.Initialize();
             MainFrame.Content = email;
+            SizeChanged += MainWindow_SizeChanged;
+        }
+
+        private void MainWindow_SizeChanged(object sender, WindowSizeChangedEventArgs args)
+        {
+            SetPassthroughRegion();
         }
 
         private void Titlebar_Loaded(object sender, Microsoft.UI.Xaml.RoutedEventArgs e)
@@ -180,10 +186,7 @@ namespace ExcellentEmailExperience.Views
 
         private void SettingsButton_Click(object sender, RoutedEventArgs e)
         {
-            //new Thread(() =>
-            //{
             OpenSettings();
-            //}).Start();
         }
 
         bool settingsActive = false;
@@ -191,8 +194,7 @@ namespace ExcellentEmailExperience.Views
 
         private void OpenSettings()
         {
-            //DispatcherQueue.TryEnqueue(() =>
-            //{
+
             if (settingsActive)
             {
                 if (settings.Visible)
@@ -201,7 +203,6 @@ namespace ExcellentEmailExperience.Views
             }
 
             settings = new(mailApp, accounts, cancellationToken.Token);
-
             settings.SetIsMaximizable(false);
             settings.SetIsMinimizable(false);
 
@@ -211,7 +212,6 @@ namespace ExcellentEmailExperience.Views
             settingsActive = true;
             settings.Closed += (s, e) => settingsActive = false;
             Closed += (s, e) => settings.Close();
-            //});
         }
 
 
