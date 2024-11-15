@@ -13,19 +13,29 @@ using System.IO;
 using System.Net.Mail;
 using System.Text;
 using System.Threading;
+using System.Runtime.Caching;
+using Windows.Storage.Pickers;
 
 namespace ExcellentEmailExperience.Model
 {
     public class GmailHandler : IMailHandler
     {
+        private ObjectCache cache;
+        private double cacheTTL;
+        private string? oldCacheKey;
+
         public List<MailAddress> flaggedMails { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
 
         private UserCredential userCredential;
         private GmailService service;
 
 
-        public GmailHandler(UserCredential credential)
+        public GmailHandler(UserCredential credential) //, ObjectCache cache, double TTL)
         {
+            //this.cache = cache;
+            //cacheTTL = TTL;
+            cache = MemoryCache.Default;
+            cacheTTL = 30;
             userCredential = credential;
 
             service = new GmailService(new Google.Apis.Services.BaseClientService.Initializer()
@@ -57,107 +67,140 @@ namespace ExcellentEmailExperience.Model
             Mail.to = NewTo;
             Send(Mail);
 
+            //TODO: Set the from field to the emailAddress of GmailAccount
             //throw new NotImplementedException();
         }
 
         public IEnumerable<MailContent> GetFolder(string name, bool old, bool refresh)
         {
-            if (name == "Inbox")
+            string allcaps = name.ToUpper();
+
+            var request = service.Users.Messages.List("me");
+            request.LabelIds = allcaps;
+            IList<Google.Apis.Gmail.v1.Data.Message> messages = request.Execute().Messages;
+
+            if(messages == null)
             {
-                IList<Google.Apis.Gmail.v1.Data.Message> messages = service.Users.Messages.List("me").Execute().Messages;
+                yield break;
+            }
 
-                foreach (var message in messages)
+            string CacheKey = messages[0].Id;
+
+            // retrieve mail from cache if it is up to date
+            if (CacheKey == oldCacheKey)
+            {
+                yield return (MailContent)cache.Get(CacheKey);
+            }
+
+            foreach (var message in messages)
+            {
+                var msg = service.Users.Messages.Get("me", message.Id).Execute();
+                MailContent mailContent = new();
+                mailContent.ThreadId = msg.ThreadId;
+
+                //Change all this to support e-boks messages / other weird message types
+                switch (msg.Payload.MimeType)
                 {
-                    var msg = service.Users.Messages.Get("me", message.Id).Execute();
-                    MailContent mailContent = new();
-                    mailContent.ThreadId = msg.ThreadId;
+                    case "text/plain":
+                        mailContent.body = Encoding.UTF8.GetString(Convert.FromBase64String(msg.Payload.Body.Data.Replace('-', '+').Replace('_', '/')));
+                        mailContent.bodyType = BodyType.Plain;
+                        break;
+                    case "text/html":
+                        mailContent.body = Encoding.UTF8.GetString(Convert.FromBase64String(msg.Payload.Body.Data.Replace('-', '+').Replace('_', '/')));
+                        mailContent.bodyType = BodyType.Html;
+                        break;
+                    case "multipart/alternative":
 
-                    //Change all this to support e-boks messages / other weird message types
-                    switch (msg.Payload.MimeType)
-                    {
-                        case "text/plain":
-                            mailContent.body = Encoding.UTF8.GetString(Convert.FromBase64String(msg.Payload.Body.Data.Replace('-', '+').Replace('_', '/')));
-                            mailContent.bodyType = BodyType.Plain;
-                            break;
-                        case "text/html":
-                            mailContent.body = Encoding.UTF8.GetString(Convert.FromBase64String(msg.Payload.Body.Data.Replace('-', '+').Replace('_', '/')));
-                            mailContent.bodyType = BodyType.Html;
-                            break;
-                        case "multipart/alternative":
-
-                            bool containsHtml = false;
-                            foreach (var part in msg.Payload.Parts)
+                        bool containsHtml = false;
+                        foreach (var part in msg.Payload.Parts)
+                        {
+                            if (part.MimeType == "text/html")
                             {
-                                if (part.MimeType == "text/html")
-                                {
-                                    containsHtml = true;
+                                containsHtml = true;
+                                break;
+                            }
+                        }
+
+                        foreach (var part in msg.Payload.Parts)
+                        {
+                            switch (part.MimeType)
+                            {
+                                case "text/plain":
+                                    if (containsHtml)
+                                    {
+                                        continue;
+                                    }
+                                    mailContent.body = Encoding.UTF8.GetString(Convert.FromBase64String(part.Body.Data.Replace('-', '+').Replace('_', '/')));
+                                    mailContent.bodyType = BodyType.Plain;
                                     break;
-                                }
+                                case "text/html":
+                                    mailContent.body = Encoding.UTF8.GetString(Convert.FromBase64String(part.Body.Data.Replace('-', '+').Replace('_', '/')));
+                                    mailContent.bodyType = BodyType.Html;
+                                    break;
                             }
-
-                            foreach (var part in msg.Payload.Parts)
-                            {
-                                switch (part.MimeType)
-                                {
-                                    case "text/plain":
-                                        if (containsHtml)
-                                        {
-                                            continue;
-                                        }
-                                        mailContent.body = Encoding.UTF8.GetString(Convert.FromBase64String(part.Body.Data.Replace('-', '+').Replace('_', '/')));
-                                        mailContent.bodyType = BodyType.Plain;
-                                        break;
-                                    case "text/html":
-                                        mailContent.body = Encoding.UTF8.GetString(Convert.FromBase64String(part.Body.Data.Replace('-', '+').Replace('_', '/')));
-                                        mailContent.bodyType = BodyType.Html;
-                                        break;
-                                }
-                            }
-                            break;
-                        default:
-                            //TODO: Emit a warning
-                            break;
-
-                    }
-
-                    foreach (var header in msg.Payload.Headers)
-                    {
-                        if (header.Name == "From")
-                        {
-                            mailContent.from = new MailAddress(header.Value);
                         }
-                        else if (header.Name == "To")
-                        {
-                            mailContent.to = [new MailAddress(header.Value)];
-                        }
-                        else if (header.Name == "Subject")
-                        {
-                            mailContent.subject = header.Value;
-                        }
-                        else if (header.Name == "Date")
-                        {
-                            DateTimeOffset date;
-                            MimeKit.Utils.DateUtils.TryParse(header.Value, out date);
-                            mailContent.date = date.ToString();
-                        }
-                    }
-                    yield return mailContent;
+                        break;
+                    default:
+                        //TODO: Emit a warning
+                        Console.WriteLine("cry");
+                        break;
 
                 }
-                yield break;
+
+                foreach (var header in msg.Payload.Headers)
+                {
+                    if (header.Name == "From")
+                    {
+                        mailContent.from = new MailAddress(header.Value);
+                    }
+                    else if (header.Name == "To")
+                    {
+                        mailContent.to = [new MailAddress(header.Value)];
+                    }
+                    else if (header.Name == "Subject")
+                    {
+                        mailContent.subject = header.Value;
+                    }
+                    else if (header.Name == "Date")
+                    {
+                        DateTimeOffset date;
+                        MimeKit.Utils.DateUtils.TryParse(header.Value, out date);
+                        mailContent.date = date.UtcDateTime;
+                    }
+                }
+
+                // cache the retrieved mailcontent and delete old cache
+                cache.Set(CacheKey, mailContent, DateTimeOffset.Now.AddMinutes(cacheTTL));
+                if (oldCacheKey != null)
+                {
+                    cache.Remove(oldCacheKey);
+                }
+                oldCacheKey = CacheKey;
+
+                yield return mailContent;
 
             }
-            else
-            {
-                throw new NotImplementedException();
-
-            }
+            yield break;
         }
 
 
         public string[] GetFolderNames()
         {
-            return ["Inbox", "Sent", "Drafts", "Spam", "Trash"];
+            var labelsListRequest = service.Users.Labels.List("me");
+            IList<Label> labels = (labelsListRequest.Execute()).Labels;
+            List<string> labelNames = new List<string>();
+
+            if (labels != null && labels.Count > 0)
+            {
+                foreach (var labelItem in labels)
+                {
+                    labelNames.Add(labelItem.Name);
+                }
+            }
+
+            string[] labelString = labelNames.ToArray();
+
+            return labelString;
         }
 
         public MailContent NewMail(MailAddress reciever, string subject, MailAddress? CC = null, MailAddress? BCC = null, string? body = null, string? attach = null)
@@ -173,7 +216,7 @@ namespace ExcellentEmailExperience.Model
             mail.subject = subject;
             mail.body = body;
             mail.attach_path = attach;
-            mail.date = System.DateTime.Now.ToString();
+            
             //throw new NotImplementedException();
 
             return mail;
@@ -190,32 +233,35 @@ namespace ExcellentEmailExperience.Model
         {
             MailContent reply = new MailContent();
             reply = content;
-            MailAddress temp = content.from;
             reply.ThreadId = content.ThreadId;
-            reply.to = new List<MailAddress> { temp };
+            reply.to = new List<MailAddress> { content.from };
             var profileRequest = service.Users.GetProfile("me");
             var user = ((IClientServiceRequest<Profile>)profileRequest).Execute();
             reply.from = new MailAddress(user.EmailAddress);
             reply.subject = "Re: " + reply.subject;
-
-            /*
-                i have no clue how were gonna append a reply to the actual email.
-                
-                so far what this does is it takes the email we want to reply to
-                and flips sender and receiver. and makes sure that the reply gets sent to the same thread
-                as the received email. 
-             
-            */
             Send(reply);
         }
 
         public void ReplyAll(MailContent content)
         {
-            throw new NotImplementedException();
+            MailContent reply = new MailContent();
+            reply = content;
+            reply.ThreadId = content.ThreadId;
+            reply.to = new List<MailAddress> { content.from };
+            reply.to.AddRange(content.to);
+            var profileRequest = service.Users.GetProfile("me");
+            var user = ((IClientServiceRequest<Profile>)profileRequest).Execute();
+            reply.from = new MailAddress(user.EmailAddress);
+
+            reply.to.Remove(reply.from);
+            reply.subject = "Re: " + reply.subject;
+            Send(reply);
+            //throw new NotImplementedException();
         }
 
         public void Send(MailContent content)
         {
+            content.date = DateTime.Now;
             // creates a new mailmessage object, these are the ones that we need to setup before sending
             var message = new MailMessage
             {
@@ -242,12 +288,12 @@ namespace ExcellentEmailExperience.Model
             if (content.bodyType == BodyType.Html)
             {
                 MessageContent = AlternateView.CreateAlternateViewFromString(content.body, new System.Net.Mime.ContentType("text/html"));
-                
+
             }
             if (content.bodyType == BodyType.Plain)
             {
                 MessageContent = AlternateView.CreateAlternateViewFromString(content.body, new System.Net.Mime.ContentType("text/plain"));
-                
+
             }
             MessageContent.ContentType.CharSet = Encoding.UTF8.WebName;
 
@@ -276,7 +322,7 @@ namespace ExcellentEmailExperience.Model
                 var rawMessage = memoryStream.ToArray();
 
                 var encodedMessage = Convert.ToBase64String(rawMessage)
-                    .Replace('+','-')
+                    .Replace('+', '-')
                     .Replace('/', '_')
                     .Replace("=", "");
 
@@ -298,10 +344,6 @@ namespace ExcellentEmailExperience.Model
                 var sendRequest = service.Users.Messages.Send(gmailMessage, "me");
                 sendRequest.Execute();
             }
-
-            // add mailcontent to 'sent' mails folder. 
-            // for this we actually need to impliment a folder system.
-
         }
     }
 }

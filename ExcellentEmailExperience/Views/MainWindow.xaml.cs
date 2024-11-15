@@ -52,7 +52,7 @@ namespace ExcellentEmailExperience.Views
 #endif      
 
 
-            mailApp.accounts.ForEach(account =>
+            mailApp.Accounts.ForEach(account =>
             {
                 mailHandlers.Add(new MailHandlerViewModel(account.GetName(), account.GetMailHandler(), DispatcherQueue, cancellationToken.Token));
             });
@@ -62,6 +62,8 @@ namespace ExcellentEmailExperience.Views
             currentFolder = mailHandlers[0].folders[0];
             FolderName.Text = currentFolder.name;
             MailList.ItemsSource = currentFolder.mails;
+
+            mailApp.SaveAccounts();
 
             Email email = new();
             email.Initialize();
@@ -194,7 +196,7 @@ namespace ExcellentEmailExperience.Views
                 return;
             }
 
-            settings = new();
+            settings = new(mailApp);
 
             settings.SetIsMaximizable(false);
             settings.SetIsMinimizable(false);

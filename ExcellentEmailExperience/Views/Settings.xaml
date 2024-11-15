@@ -7,6 +7,7 @@
     xmlns:local="using:ExcellentEmailExperience.Views"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:viewmodel="using:ExcellentEmailExperience.ViewModel"
     mc:Ignorable="d"
     Title="Settings"
     Width="1024" 
@@ -42,10 +43,33 @@
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
             
-            <TextBlock Text="Add another account" Grid.Column="0" VerticalAlignment="Center"/>
+            <TextBlock Text="Accounts" Grid.Column="0" VerticalAlignment="Center"/>
 
             <Button x:Name="AddAccountButton" Style="{ThemeResource AccentButtonStyle}" Content="Add Account" Grid.Column="1" MinWidth="150" Click="AddAccountButton_Click"/>
+
+            <StackPanel Grid.Row="1" Grid.ColumnSpan="2">
+                <ListView x:Name="AccountsListView" SelectionMode="None" ItemsSource="{x:Bind accounts}">
+                    <ListView.ItemTemplate>
+                        <DataTemplate x:DataType="viewmodel:GmailAccountViewModel">
+                            <Expander
+                                Header="{x:Bind Name, Mode=OneWay}"
+                                HorizontalAlignment="Stretch">
+ 
+                                <StackPanel>
+                                    <TextBlock Text="{x:Bind emailAddress}"/>
+                                    <TextBox Text="{x:Bind Name, Mode=TwoWay}" Style="{StaticResource SubtitleTextBlockStyle}"/>
+                                </StackPanel>
+
+                            </Expander>
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                </ListView>
+            </StackPanel>
         </Grid>
         <TextBlock Name="Version" HorizontalAlignment="Right" Margin="32,16" Style="{StaticResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
     </StackPanel>

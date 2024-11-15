@@ -57,7 +57,7 @@ namespace ExcellentEmailExperience.Views
             {
                 IAccount account = new GmailAccount();
 
-                account.Login("user");
+                account.Login(null);
 
                 mailApp.NewAccount(account);
 
