@@ -54,7 +54,7 @@ namespace ExcellentEmailExperience.Views
         {
             Uri uri = new Uri(args.Uri);
             args.Handled = true;
-            Windows.System.Launcher.LaunchUriAsync(uri);
+            _ = Windows.System.Launcher.LaunchUriAsync(uri);
         }
 
         private void CoreWebView2_NavigationStarting(CoreWebView2 sender, CoreWebView2NavigationStartingEventArgs args)
@@ -65,7 +65,7 @@ namespace ExcellentEmailExperience.Views
                 {
                     Uri uri = new Uri(args.Uri);
                     args.Cancel = true;
-                    Windows.System.Launcher.LaunchUriAsync(uri);
+                    _ = Windows.System.Launcher.LaunchUriAsync(uri);
                 }
             }
             catch (UriFormatException)
@@ -74,9 +74,10 @@ namespace ExcellentEmailExperience.Views
             }
         }
 
-        public void ChangeMail(MailContent mail)
+        public void ChangeMail(MailContent mail, bool editable)
         {
             viewModel.Update(mail);
+            viewModel.IsEditable = editable;
 
             EmptyMail.Visibility = Visibility.Collapsed;
             switch (mail.bodyType)

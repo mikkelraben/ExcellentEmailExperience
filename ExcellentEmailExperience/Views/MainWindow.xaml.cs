@@ -11,6 +11,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
+using System.Net.Mail;
 using System.Threading;
 using Windows.Foundation;
 using Windows.Graphics;
@@ -28,7 +29,7 @@ namespace ExcellentEmailExperience.Views
     {
         MailApp mailApp;
         FolderViewModel currentFolder;
-        ObservableCollection<MailHandlerViewModel> mailHandlers = new();
+        ObservableCollection<AccountViewModel> accounts = new();
         CancellationTokenSource cancellationToken = new();
 
         public MainWindow(MailApp mailApp)
@@ -51,16 +52,20 @@ namespace ExcellentEmailExperience.Views
             Subtitle.Opacity = 0;
 #endif      
 
-
             mailApp.Accounts.ForEach(account =>
             {
-                mailHandlers.Add(new MailHandlerViewModel(account.GetName(), account.GetMailHandler(), DispatcherQueue, cancellationToken.Token));
+                if (account is GmailAccount)
+                {
+                    accounts.Add(new GmailAccountViewModel(account as GmailAccount, DispatcherQueue, cancellationToken.Token));
+                }
             });
 
             Closed += (s, e) => cancellationToken.Cancel();
 
-            currentFolder = mailHandlers[0].folders[0];
-            FolderName.Text = currentFolder.name;
+            currentFolder = accounts[0].mailHandlerViewModel.folders[0];
+
+            FolderName.Text = currentFolder.Name;
+
             MailList.ItemsSource = currentFolder.mails;
 
             mailApp.SaveAccounts();
@@ -118,7 +123,7 @@ namespace ExcellentEmailExperience.Views
                 var selectedMail = MailList.SelectedItem as InboxMail;
                 MailContent mailContent = currentFolder.mailsContent[MailList.SelectedIndex];
 
-                (MainFrame.Content as Email).ChangeMail(mailContent);
+                (MainFrame.Content as Email).ChangeMail(mailContent, false);
                 MassEditMenu.Visibility = Visibility.Collapsed;
             }
             else if (selectedCount > 1)
@@ -176,7 +181,7 @@ namespace ExcellentEmailExperience.Views
             }
         }
 
-        private async void SettingsButton_Click(object sender, RoutedEventArgs e)
+        private void SettingsButton_Click(object sender, RoutedEventArgs e)
         {
             //new Thread(() =>
             //{
@@ -187,8 +192,10 @@ namespace ExcellentEmailExperience.Views
         bool settingsActive = false;
         SettingsWindow settings;
 
-        private async void OpenSettings()
+        private void OpenSettings()
         {
+            //DispatcherQueue.TryEnqueue(() =>
+            //{
             if (settingsActive)
             {
                 if (settings.Visible)
@@ -196,7 +203,7 @@ namespace ExcellentEmailExperience.Views
                 return;
             }
 
-            settings = new(mailApp);
+            settings = new(mailApp, accounts, cancellationToken.Token);
 
             settings.SetIsMaximizable(false);
             settings.SetIsMinimizable(false);
@@ -207,13 +214,19 @@ namespace ExcellentEmailExperience.Views
             settingsActive = true;
             settings.Closed += (s, e) => settingsActive = false;
             Closed += (s, e) => settings.Close();
+            //});
         }
 
 
         private void ListView_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
+            if (e.AddedItems.Count == 0)
+            {
+                return;
+            }
             currentFolder = (e.AddedItems[0] as FolderViewModel);
-            FolderName.Text = currentFolder.name;
+            (sender as ListView).SelectedItem = null;
+            FolderName.Text = currentFolder.Name;
             MailList.ItemsSource = currentFolder.mails;
             SidebarLarge = false;
         }
@@ -226,6 +239,16 @@ namespace ExcellentEmailExperience.Views
         private void ListView_ItemClick(object sender, ItemClickEventArgs e)
         {
             SidebarLarge = false;
+        }
+
+        private void NewMail_Click(object sender, RoutedEventArgs e)
+        {
+            MailContent mailContent = new MailContent();
+
+            mailContent.from = new MailAddress(mailApp.Accounts[0].GetEmail());
+
+            (MainFrame.Content as Email).ChangeMail(mailContent, true);
+
         }
     }
 
@@ -245,15 +268,7 @@ namespace ExcellentEmailExperience.Views
     {
         public object Convert(object value, Type targetType, object parameter, string language)
         {
-            DateTime date;
-            try
-            {
-                date = DateTime.Parse(value as string);
-            }
-            catch (FormatException)
-            {
-                return "Unknown";
-            }
+            var date = (DateTime)value;
 
             if (date.Date == DateTime.Now.Date)
             {

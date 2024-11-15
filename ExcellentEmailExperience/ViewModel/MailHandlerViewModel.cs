@@ -12,18 +12,14 @@ using System.Threading.Tasks;
 namespace ExcellentEmailExperience.ViewModel
 {
     [ObservableObject]
-    internal partial class MailHandlerViewModel
+    public partial class MailHandlerViewModel
     {
-        private readonly IMailHandler mailHandler;
-        public MailHandlerViewModel(string accountName, IMailHandler mailHandler, DispatcherQueue dispatcherQueue, CancellationToken cancellationToken)
+        public MailHandlerViewModel(IAccount account, DispatcherQueue dispatcherQueue, CancellationToken cancellationToken)
         {
-            this.mailHandler = mailHandler;
-            mailHandler.GetFolderNames().ToList().ForEach(folder => folders.Add(new FolderViewModel(mailHandler, folder, dispatcherQueue, cancellationToken)));
-            name = accountName;
+            account.GetMailHandler().GetFolderNames().ToList().ForEach(folder => folders.Add(new FolderViewModel(account.GetMailHandler(), folder, dispatcherQueue, cancellationToken)));
         }
 
         public ObservableCollection<FolderViewModel> folders = new();
-        public string name;
 
     }
 }
