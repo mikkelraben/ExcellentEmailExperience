@@ -170,12 +170,12 @@ namespace ExcellentEmailExperience.Model
                 }
 
                 // cache the retrieved mailcontent and delete old cache
-                Cache.Set(CacheKey, mailContent, DateTimeOffset.Now.AddMinutes(CacheTTLMinutes));
-                if (OldCacheKey != null)
+                cache.Set(CacheKey, mailContent, DateTimeOffset.Now.AddMinutes(cacheTTL));
+                if (oldCacheKey != null)
                 {
-                    Cache.Remove(OldCacheKey);
+                    cache.Remove(oldCacheKey);
                 }
-                OldCacheKey = CacheKey;
+                oldCacheKey = CacheKey;
 
                 yield return mailContent;
 
