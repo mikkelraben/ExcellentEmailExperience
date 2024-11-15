@@ -70,7 +70,13 @@ namespace Test
 
 
             //creating a new mail object and sending it to the current mail address? checking for recieving mail
-            MailContent validMail = mailHandler1.NewMail(Address2, validSubject, null, null, null, null);
+            MailContent validMail = new();
+
+            validMail.subject = validSubject;
+
+            validMail.to = new List<MailAddress> { Address2 };
+
+            validMail.from = Address1;
 
             mailHandler1.Send(validMail);
 
@@ -88,29 +94,6 @@ namespace Test
 
             Assert.IsTrue(diff.TotalSeconds < 1);
 
-            ////checking recieved mail for spam mail
-            //Assert.IsFalse(mailHandler.CheckSpam(mailHandler.GetInbox()[0]));
-
-            ////forwarding the recieved mail to the current mail address?
-            //mailHandler.Forward(mailHandler.GetInbox()[inboxLength+1]);
-
-            //Assert.IsTrue(mailHandler.GetInbox().Length == inboxLength + 2);
-
-            ////testing that the recieved mail and the forwarded mail are the same
-            //Assert.IsTrue(mailHandler.GetInbox()[inboxLength + 1] == mailHandler.GetInbox()[inboxLength + 1]);
-
-            ////replying to the recieved mail and checking the reply is recieved
-            //mailHandler.Reply(mailHandler.GetInbox()[inboxLength + 1]);
-
-            //Assert.IsTrue(mailHandler.GetInbox().Length == inboxLength + 3);
-
-
-
-            ////replying to all the recieved mail and checking the reply is recieved
-            //mailHandler.ReplyAll(mailHandler.GetInbox()[inboxLength + 1]);
-
-            //Assert.IsTrue(mailHandler.GetInbox().Length == inboxLength + 4);
-
         }
 
         [TestMethod]
@@ -123,7 +106,14 @@ namespace Test
 
 
             //creating a new mail object and sending it to the current mail address? checking for recieving mail
-            MailContent validMail = mailHandler1.NewMail(Address2, validSubject, null, null, null, null);
+            MailContent validMail = new();
+
+            validMail.subject = validSubject;
+
+            validMail.to = new List<MailAddress> { Address2 };
+
+            validMail.from = Address1;
+
 
             mailHandler1.Send(validMail);
 
@@ -146,6 +136,50 @@ namespace Test
 
             Assert.IsTrue(Inboxlist2[0] == Sentlist1[0]);
         }
+
+        [TestMethod]
+        [ExpectedException(typeof(ArgumentException),
+        "A reciever of null was inappropriately allowed.")]
+        public void TestMethod_invalid_receiver()
+        {
+
+            //instantiating a GmailHandler object
+            IMailHandler mailHandler1 = account1.GetMailHandler();
+            IMailHandler mailHandler2 = account2.GetMailHandler();
+
+            // creating a new mail object and sending it to the current mail address? checking for recieving mail
+            MailContent UnvalidMail = new();
+
+            UnvalidMail.subject = validSubject;
+
+            UnvalidMail.from = Address1;
+            mailHandler1.Send(UnvalidMail);
+            
+
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(ArgumentException),
+        "A subject of null was inappropriately allowed.")]
+        public void TestMethod_invalid_subject()
+        {
+
+            //instantiating a GmailHandler object
+            IMailHandler mailHandler1 = account1.GetMailHandler();
+            IMailHandler mailHandler2 = account2.GetMailHandler();
+
+            // creating a new mail object and sending it to the current mail address? checking for recieving mail
+            MailContent UnvalidMail = new();
+
+            UnvalidMail.to = new List<MailAddress> { Address2 };
+
+            UnvalidMail.from = Address1;
+            mailHandler1.Send(UnvalidMail);
+
+
+        }
+
+
 
 
         private static List<MailContent> GetInbox(IMailHandler mailHandler,int folder)
