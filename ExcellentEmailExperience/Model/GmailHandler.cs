@@ -29,15 +29,17 @@ namespace ExcellentEmailExperience.Model
 
         private UserCredential userCredential;
         private GmailService service;
+        private MailAddress mailAddress;
 
 
-        public GmailHandler(UserCredential credential) //, ObjectCache cache, double TTL)
+        public GmailHandler(UserCredential credential, MailAddress mailAddress) //, ObjectCache cache, double TTL)
         {
             //this.cache = cache;
             //cacheTTL = TTL;
             cache = MemoryCache.Default;
             cacheTTL = 30;
             userCredential = credential;
+            this.mailAddress = mailAddress;
 
             service = new GmailService(new Google.Apis.Services.BaseClientService.Initializer()
             {
@@ -60,16 +62,11 @@ namespace ExcellentEmailExperience.Model
             Mail.body = "Forwarded from " + content.from.ToString() + "\n " + content.body + " \n\n Originally sent to:" + content.to.ToString();
 
             //making the currect account the sender. 
-            var profileRequest = service.Users.GetProfile("me");
-            var user = ((IClientServiceRequest<Profile>)profileRequest).Execute();
-            Mail.from = new MailAddress(user.EmailAddress);
+            Mail.from = mailAddress;
 
             //changes the receiver to the person who is being forwarded to. 
             Mail.to = NewTo;
             Send(Mail);
-
-            //TODO: Set the from field to the emailAddress of GmailAccount
-            //throw new NotImplementedException();
         }
 
         public IEnumerable<MailContent> GetFolder(string name, bool old, bool refresh)
@@ -222,9 +219,7 @@ namespace ExcellentEmailExperience.Model
             reply = content;
             reply.ThreadId = content.ThreadId;
             reply.to = new List<MailAddress> { content.from };
-            var profileRequest = service.Users.GetProfile("me");
-            var user = ((IClientServiceRequest<Profile>)profileRequest).Execute();
-            reply.from = new MailAddress(user.EmailAddress);
+            reply.from = mailAddress;
             reply.subject = "Re: " + reply.subject;
             Send(reply);
         }
@@ -237,9 +232,7 @@ namespace ExcellentEmailExperience.Model
             reply.ThreadId = content.ThreadId;
             reply.to = new List<MailAddress> { content.from };
             reply.to.AddRange(content.to);
-            var profileRequest = service.Users.GetProfile("me");
-            var user = ((IClientServiceRequest<Profile>)profileRequest).Execute();
-            reply.from = new MailAddress(user.EmailAddress);
+            reply.from = mailAddress;
 
             reply.to.Remove(reply.from);
             reply.subject = "Re: " + reply.subject;
