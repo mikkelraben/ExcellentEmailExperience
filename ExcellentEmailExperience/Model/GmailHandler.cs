@@ -87,9 +87,9 @@ namespace ExcellentEmailExperience.Model
             string CacheKey = messages[0].Id;
 
             // retrieve mail from cache if it is up to date
-            if (CacheKey == OldCacheKey)
+            if (CacheKey == oldCacheKey)
             {
-                yield return (MailContent)Cache.Get(CacheKey);
+                yield return (MailContent)cache.Get(CacheKey);
             }
 
             foreach (var message in messages)
