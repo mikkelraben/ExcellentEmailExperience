@@ -77,7 +77,7 @@ namespace ExcellentEmailExperience.Model
             {
                 throw new Exception("Login failed");
             }
-            handler = new GmailHandler(userCredential);
+            handler = new GmailHandler(userCredential, mailAddress);
         }
 
         public void Logout()
@@ -103,7 +103,7 @@ namespace ExcellentEmailExperience.Model
 
             if (userCredential != null)
             {
-                handler = new GmailHandler(userCredential);
+                handler = new GmailHandler(userCredential, mailAddress);
             }
 
             return userCredential != null;
@@ -121,7 +121,7 @@ namespace ExcellentEmailExperience.Model
 
         public MailAddress GetEmail()
         {
-            return new(mailAddress.Address);
+            return mailAddress;
         }
     }
 }

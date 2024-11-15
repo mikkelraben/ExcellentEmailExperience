@@ -60,7 +60,7 @@ namespace ExcellentEmailExperience.Model
                 JsonSerializer.Deserialize<List<IAccount>>(FileIO.ReadTextAsync(file)
                     .AsTask().Result, options).ForEach(account =>
                 {
-                    account.Login(account.GetEmail());
+                    account.Login(account.GetEmail().Address);
                     accounts.Add(account);
 
                 });
