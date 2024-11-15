@@ -1,4 +1,5 @@
 ﻿using ExcellentEmailExperience.Model;
+using System.Net.Mail;
 using System.Text.Json.Serialization;
 
 namespace ExcellentEmailExperience.Interfaces
@@ -41,6 +42,6 @@ namespace ExcellentEmailExperience.Interfaces
         /// Returns the email address of the account
         /// </summary>
         /// <returns></returns>
-        string GetEmail();
+        MailAddress GetEmail();
     }
 }
