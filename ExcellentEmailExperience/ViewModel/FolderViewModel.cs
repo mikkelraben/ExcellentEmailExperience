@@ -34,7 +34,7 @@ namespace ExcellentEmailExperience.ViewModel
                         }
                         var inboxMail = new InboxMail();
                         mailsContent.Add(mail);
-                        mailsContent.Sort((x, y) => -DateTime.Parse(x.date).CompareTo(DateTime.Parse(y.date)));
+                        mailsContent.Sort((x, y) => -DateTime.Parse(x.date.ToString()).CompareTo(DateTime.Parse(y.date.ToString())));
 
                         inboxMail.from = mail.from;
                         inboxMail.to = mail.to;
