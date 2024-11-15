@@ -61,7 +61,7 @@ namespace Test
 
 
         [TestMethod]
-        public void TestMethod_send()
+        public void TestMethod_send_speed()
         {
 
             //instantiating a GmailHandler object
@@ -83,9 +83,10 @@ namespace Test
 
             List<MailContent> Sentlist1 =GetInbox(mailHandler1, 1);
 
-            Inboxlist2[0].date - Sentlist1[0].date;
+            TimeSpan diff=Inboxlist2[0].date.Subtract(Sentlist1[0].date);
 
-            Assert.IsTrue( == );
+
+            Assert.IsTrue(diff.TotalSeconds < 1);
 
             ////checking recieved mail for spam mail
             //Assert.IsFalse(mailHandler.CheckSpam(mailHandler.GetInbox()[0]));
@@ -112,6 +113,41 @@ namespace Test
 
         }
 
+        [TestMethod]
+        public void TestMethod_send_content()
+        {
+
+            //instantiating a GmailHandler object
+            IMailHandler mailHandler1 = account1.GetMailHandler();
+            IMailHandler mailHandler2 = account2.GetMailHandler();
+
+
+            //creating a new mail object and sending it to the current mail address? checking for recieving mail
+            MailContent validMail = mailHandler1.NewMail(Address2, validSubject, null, null, null, null);
+
+            mailHandler1.Send(validMail);
+
+            //TODO: change amount of requests when api is changed
+
+
+            //folder is index in ["Inbox", "Sent", "Drafts", "Spam", "Trash"];
+            List<MailContent> Inboxlist2 = GetInbox(mailHandler2, 0);
+
+
+            List<MailContent> Sentlist1 = GetInbox(mailHandler1, 1);
+
+            TimeSpan diff = Inboxlist2[0].date.Subtract(Sentlist1[0].date);
+
+            DateTime time = DateTime.Now;
+
+            Inboxlist2[0].date = time;
+            Sentlist1[0].date = time;
+
+
+            Assert.IsTrue(Inboxlist2[0] == Sentlist1[0]);
+        }
+
+
         private static List<MailContent> GetInbox(IMailHandler mailHandler,int folder)
         {
 
@@ -128,7 +164,7 @@ namespace Test
             foreach (var mail in mailHandler.GetFolder(folderNames[folder], false, false))
             {
                 inbox.Add(mail);
-                inbox.Sort((x, y) => DateTime.Parse(x.date).CompareTo(DateTime.Parse(y.date)));
+                inbox.Sort((x, y) => x.date.CompareTo(y.date));
             };
             return inbox;
         }
