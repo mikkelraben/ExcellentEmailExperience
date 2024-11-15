@@ -16,9 +16,9 @@ namespace ExcellentEmailExperience.Model
     public class MailContent
     {
         public MailAddress from;
-        public List<MailAddress> to;
-        public List<MailAddress> bcc;
-        public List<MailAddress> cc;
+        public List<MailAddress> to = new();
+        public List<MailAddress> bcc = new();
+        public List<MailAddress> cc = new();
         public BodyType bodyType;
         public string subject;
         public string body;

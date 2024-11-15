@@ -15,6 +15,7 @@ using System.Text;
 using System.Threading;
 using System.Runtime.Caching;
 using Windows.Storage.Pickers;
+using System.Diagnostics;
 
 namespace ExcellentEmailExperience.Model
 {
@@ -153,10 +154,12 @@ namespace ExcellentEmailExperience.Model
                     {
                         mailContent.from = new MailAddress(header.Value);
                     }
-                    // TODO: Add support for multiple recipients
                     else if (header.Name == "To")
                     {
-                        mailContent.to = [new MailAddress(header.Value)];
+                        foreach (var address in header.Value.Split(','))
+                        {
+                            mailContent.to.Add(new MailAddress(address));
+                        }
                     }
                     else if (header.Name == "Subject")
                     {
