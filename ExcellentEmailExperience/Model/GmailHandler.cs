@@ -13,19 +13,29 @@ using System.IO;
 using System.Net.Mail;
 using System.Text;
 using System.Threading;
+using System.Runtime.Caching;
+using Windows.Storage.Pickers;
 
 namespace ExcellentEmailExperience.Model
 {
     public class GmailHandler : IMailHandler
     {
+        private ObjectCache cache;
+        private double cacheTTL;
+        private string? oldCacheKey;
+
         public List<MailAddress> flaggedMails { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
 
         private UserCredential userCredential;
         private GmailService service;
 
 
-        public GmailHandler(UserCredential credential)
+        public GmailHandler(UserCredential credential) //, ObjectCache cache, double TTL)
         {
+            //this.cache = cache;
+            //cacheTTL = TTL;
+            cache = MemoryCache.Default;
+            cacheTTL = 30;
             userCredential = credential;
 
             service = new GmailService(new Google.Apis.Services.BaseClientService.Initializer()
@@ -63,7 +73,6 @@ namespace ExcellentEmailExperience.Model
 
         public IEnumerable<MailContent> GetFolder(string name, bool old, bool refresh)
         {
-
             string allcaps = name.ToUpper();
 
             var request = service.Users.Messages.List("me");
@@ -73,6 +82,14 @@ namespace ExcellentEmailExperience.Model
             if(messages == null)
             {
                 yield break;
+            }
+
+            string CacheKey = messages[0].Id;
+
+            // retrieve mail from cache if it is up to date
+            if (CacheKey == OldCacheKey)
+            {
+                yield return (MailContent)Cache.Get(CacheKey);
             }
 
             foreach (var message in messages)
@@ -151,6 +168,15 @@ namespace ExcellentEmailExperience.Model
                         mailContent.date = date.UtcDateTime;
                     }
                 }
+
+                // cache the retrieved mailcontent and delete old cache
+                Cache.Set(CacheKey, mailContent, DateTimeOffset.Now.AddMinutes(CacheTTLMinutes));
+                if (OldCacheKey != null)
+                {
+                    Cache.Remove(OldCacheKey);
+                }
+                OldCacheKey = CacheKey;
+
                 yield return mailContent;
 
             }
