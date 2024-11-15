@@ -290,7 +290,6 @@ namespace ExcellentEmailExperience.Model
             if (content.bodyType == BodyType.Plain)
             {
                 MessageContent = AlternateView.CreateAlternateViewFromString(content.body, new System.Net.Mime.ContentType("text/plain"));
-
             }
             MessageContent.ContentType.CharSet = Encoding.UTF8.WebName;
 
