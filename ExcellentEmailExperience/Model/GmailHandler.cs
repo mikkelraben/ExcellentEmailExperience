@@ -15,6 +15,7 @@ using System.Text;
 using System.Threading;
 using System.Runtime.Caching;
 using Windows.Storage.Pickers;
+using System.Diagnostics;
 
 namespace ExcellentEmailExperience.Model
 {
@@ -261,19 +262,27 @@ namespace ExcellentEmailExperience.Model
             }
 
             // this is bad but we will fix later. this is only for testing purposes. 
-            if(content.bcc != null)
+            try
             {
                 foreach (var recipient in content.bcc)
                 {
                     message.Bcc.Add(recipient);
                 }
             }
-            if(content.cc != null)
+            catch (Exception ex)
+            {
+                Debug.WriteLine("error in bcc field" + ex);
+            }
+            try
             {
                 foreach (var recipient in content.cc)
                 {
                     message.CC.Add(recipient);
                 }
+            }
+            catch(Exception ex)
+            {
+                Debug.WriteLine("error in cc field" + ex);
             }
 
             // this part creates the main text to the message as either plaintext or html
