@@ -21,22 +21,27 @@ namespace Test
 
         MailAddress Address1 = new MailAddress("lillekatemil6@gmail.com", "bias");
         MailAddress Address2 = new MailAddress("postmanpergruppe1@gmail.com");
-        MailAddress validAddress3 = new MailAddress("thebias@gmail.com");
+        MailAddress Address3 = new MailAddress("postmandpersbil@gmail.com"); //PENDING new real account
         string validSubject = "Hello";
         string validBody = "Hello, how are you?";
         string validAttachment = "C:/Users/Downloads"; //valid attachment path maybe
         string invalidAttachment = "C:/Users/Downloads"; //invalid attachment path maybe
         string username1 = "lillekatemil6@gmail.com";
         string username2 = "postmanpergruppe1@gmail.com";
+        string username3 = "postmandpersbil@gmail.com"; //PENDING new real account
 
         //instanciating an account with IAccount object
         IAccount account1 = new GmailAccount();
         IAccount account2 = new GmailAccount();
+        IAccount account3 = new GmailAccount(); //PENDING new real account
+
         //accessing the refresh tokens from the environment variables stored locally on pc
         string? REFRESHTOKEN1 = Environment.GetEnvironmentVariable("REFRESHTOKEN1");
 
         string? REFRESHTOKEN2 = Environment.GetEnvironmentVariable("REFRESHTOKEN2");
-        
+
+        string? REFRESHTOKEN3 = Environment.GetEnvironmentVariable("REFRESHTOKEN3"); //PENDING new real account
+
         public UnitTest1()
         {
            
@@ -44,10 +49,13 @@ namespace Test
 
             CredentialHandler.AddCredential(username2, REFRESHTOKEN2);
 
+            CredentialHandler.AddCredential(username3, REFRESHTOKEN3); //PENDING new real account
+
 
             //logging in to the account
             account1.Login(username1);
             account2.Login(username2);
+            account3.Login(username3); //PENDING new real account
         }
 
 
@@ -103,6 +111,7 @@ namespace Test
             //instantiating a GmailHandler object
             IMailHandler mailHandler1 = account1.GetMailHandler();
             IMailHandler mailHandler2 = account2.GetMailHandler();
+            IMailHandler mailHandler3 = account3.GetMailHandler(); //PENDING new real account
 
 
             //creating a new mail object and sending it to the current mail address? checking for recieving mail
@@ -113,6 +122,15 @@ namespace Test
             validMail.to = new List<MailAddress> { Address2 };
 
             validMail.from = Address1;
+
+            validMail.body = validBody;
+
+            validMail.cc = new List<MailAddress> { Address1 };
+
+
+            validMail.bcc = new List<MailAddress> { Address3 };
+
+
 
 
             mailHandler1.Send(validMail);
