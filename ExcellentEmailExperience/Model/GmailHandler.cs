@@ -256,7 +256,7 @@ namespace ExcellentEmailExperience.Model
             reply.to.Remove(reply.from);
             reply.subject = "Re: " + reply.subject;
             Send(reply);
-            throw new NotImplementedException();
+            //throw new NotImplementedException();
         }
 
         public void Send(MailContent content)
