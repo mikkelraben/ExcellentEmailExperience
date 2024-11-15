@@ -204,25 +204,6 @@ namespace ExcellentEmailExperience.Model
             return labelString;
         }
 
-        public MailContent NewMail(MailAddress reciever, string subject, MailAddress? CC = null, MailAddress? BCC = null, string? body = null, string? attach = null)
-        {
-
-            var mail = new MailContent();
-            var profileRequest = service.Users.GetProfile("me");
-            var user = ((IClientServiceRequest<Profile>)profileRequest).Execute();
-            mail.from = new MailAddress(user.EmailAddress);
-            mail.to.Add(reciever); // we might need to change the receiver to a list and not just a mailcontent. cause what if you're sending to more people.
-            mail.bcc.Add(BCC);
-            mail.cc.Add(CC);
-            mail.subject = subject;
-            mail.body = body;
-            mail.attach_path = attach;
-
-            //throw new NotImplementedException();
-
-            return mail;
-        }
-
         public List<MailContent> Refresh(string name)
         {
             throw new NotImplementedException();
