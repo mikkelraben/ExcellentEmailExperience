@@ -58,7 +58,8 @@
                         <DataTemplate x:DataType="viewmodel:GmailAccountViewModel">
                             <Expander
                                 Header="{x:Bind Name, Mode=OneWay}"
-                                HorizontalAlignment="Stretch">
+                                HorizontalAlignment="Stretch"
+                                Margin="4,4">
  
                                 <StackPanel>
                                     <TextBlock Text="{x:Bind emailAddress}"/>

@@ -2,10 +2,7 @@
 using ExcellentEmailExperience.Model;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Net.Mail;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ExcellentEmailExperience.ViewModel
 {
@@ -21,7 +18,7 @@ namespace ExcellentEmailExperience.ViewModel
             Subject = mailContent.subject;
             Body = mailContent.body;
             Attach_path = mailContent.attach_path;
-            Date = mailContent.date.ToString();
+            Date = mailContent.date;
             bodyType = mailContent.bodyType;
         }
 
@@ -48,7 +45,10 @@ namespace ExcellentEmailExperience.ViewModel
         public string attach_path;
 
         [ObservableProperty]
-        public string date;
+        public DateTime date;
+
+        [ObservableProperty]
+        public bool isEditable = false;
 
     }
 }

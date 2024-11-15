@@ -9,12 +9,12 @@ using System.Threading.Tasks;
 namespace ExcellentEmailExperience.ViewModel
 {
     [ObservableObject]
-    internal partial class InboxMail
+    public partial class InboxMail
     {
         public MailAddress from { get; set; }
         public List<MailAddress> to { get; set; }
         public string subject { get; set; }
-        public string date { get; set; }
+        public DateTime date { get; set; }
 
         [ObservableProperty]
         public bool selected = false;

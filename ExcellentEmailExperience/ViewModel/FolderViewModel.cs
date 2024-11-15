@@ -10,7 +10,7 @@ using System.Threading;
 namespace ExcellentEmailExperience.ViewModel
 {
     [ObservableObject]
-    internal partial class FolderViewModel
+    public partial class FolderViewModel
     {
         /// <summary>
         /// Constructor for FolderViewModel
@@ -20,7 +20,7 @@ namespace ExcellentEmailExperience.ViewModel
         /// <param name="dispatcherQueue"></param>
         public FolderViewModel(IMailHandler mailHandler, string name, DispatcherQueue dispatcherQueue, CancellationToken cancellationToken)
         {
-            this.name = name;
+            this.name = name.Substring(0, 1).ToUpper() + name.Substring(1).ToLower();
 
             Thread thread = new(() =>
             {
@@ -34,12 +34,12 @@ namespace ExcellentEmailExperience.ViewModel
                         }
                         var inboxMail = new InboxMail();
                         mailsContent.Add(mail);
-                        mailsContent.Sort((x, y) => -DateTime.Parse(x.date).CompareTo(DateTime.Parse(y.date)));
+                        mailsContent.Sort((x, y) => -x.date.CompareTo(y.date));
 
                         inboxMail.from = mail.from;
                         inboxMail.to = mail.to;
                         inboxMail.subject = mail.subject;
-                        inboxMail.date = mail.date.ToString();
+                        inboxMail.date = mail.date;
                         if (dispatcherQueue != null)
                         {
                             dispatcherQueue.TryEnqueue(() =>
@@ -48,7 +48,7 @@ namespace ExcellentEmailExperience.ViewModel
 
                                 for (int i = 0; i < mails.Count; i++)
                                 {
-                                    if (DateTime.Parse(mails[i].date) < DateTime.Parse(inboxMail.date))
+                                    if (mails[i].date < inboxMail.date)
                                     {
                                         insertIndex = i;
                                         break;
@@ -74,6 +74,7 @@ namespace ExcellentEmailExperience.ViewModel
             thread.Start();
         }
 
+        [ObservableProperty]
         public string name;
 
         /// <summary>

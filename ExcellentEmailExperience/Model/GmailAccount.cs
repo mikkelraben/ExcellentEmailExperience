@@ -5,6 +5,7 @@ using Google.Apis.Gmail.v1.Data;
 using Google.Apis.Requests;
 using System;
 using System.Net.Mail;
+using System.Reflection.Metadata;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -26,10 +27,11 @@ namespace ExcellentEmailExperience.Model
         readonly string clientSecret = "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";
 
 
+        GmailHandler handler;
 
         public IMailHandler GetMailHandler()
         {
-            return new GmailHandler(userCredential);
+            return handler;
         }
 
         public void Login(string email)
@@ -76,6 +78,7 @@ namespace ExcellentEmailExperience.Model
             {
                 throw new Exception("Login failed");
             }
+            handler = new GmailHandler(userCredential);
         }
 
         public void Logout()
@@ -99,6 +102,11 @@ namespace ExcellentEmailExperience.Model
                 username,
                 System.Threading.CancellationToken.None, credentialHandlerGoogleShim).Result;
 
+            if (userCredential != null)
+            {
+                handler = new GmailHandler(userCredential);
+            }
+
             return userCredential != null;
         }
 
@@ -110,6 +118,11 @@ namespace ExcellentEmailExperience.Model
         public void SetName(string name)
         {
             accountName = name;
+        }
+
+        public string GetEmail()
+        {
+            return mailAddress.Address;
         }
     }
 }
