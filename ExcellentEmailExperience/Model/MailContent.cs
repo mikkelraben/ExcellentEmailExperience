@@ -25,6 +25,7 @@ namespace ExcellentEmailExperience.Model
         public string attach_path = "";
         public DateTime date = new();
         public string ThreadId = "";
+        public string MessageId = "";
 
     }
 }
