@@ -5,7 +5,6 @@ using Google.Apis.Gmail.v1.Data;
 using Google.Apis.Requests;
 using System;
 using System.Net.Mail;
-using System.Reflection.Metadata;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -120,9 +119,9 @@ namespace ExcellentEmailExperience.Model
             accountName = name;
         }
 
-        public string GetEmail()
+        public MailAddress GetEmail()
         {
-            return mailAddress.Address;
+            return new(mailAddress.Address);
         }
     }
 }

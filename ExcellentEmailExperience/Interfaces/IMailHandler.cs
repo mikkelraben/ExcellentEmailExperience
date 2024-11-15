@@ -23,14 +23,6 @@ namespace ExcellentEmailExperience.Interfaces
         void Reply(MailContent content);
         void ReplyAll(MailContent content);
         void Send(MailContent content);
-        MailContent NewMail(
-                        MailAddress reciever,
-                        string subject,
-                        MailAddress? CC = null,
-                        MailAddress? BCC = null,
-                        string? body = null,
-                        string? attach = null
-                        );
 
         /// <summary>
         /// Retrieves the names for every mail folder the user has made.
