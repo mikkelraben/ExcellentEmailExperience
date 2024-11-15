@@ -16,9 +16,11 @@ namespace Test
     [TestClass]
     public class UnitTest1
     {
+        
+        //creating a new mail address object
 
-        MailAddress validAddress = new MailAddress("bias@gmail.com", "bias");
-        MailAddress validAddress2 = new MailAddress("nobias@gmail.com");
+        MailAddress Address1 = new MailAddress("lillekatemil6@gmail.com", "bias");
+        MailAddress Address2 = new MailAddress("postmanpergruppe1@gmail.com");
         MailAddress validAddress3 = new MailAddress("thebias@gmail.com");
         string validSubject = "Hello";
         string validBody = "Hello, how are you?";
@@ -30,49 +32,60 @@ namespace Test
         //instanciating an account with IAccount object
         IAccount account1 = new GmailAccount();
         IAccount account2 = new GmailAccount();
-        //accessing the refresh tokens from the environment variables in github
+        //accessing the refresh tokens from the environment variables stored locally on pc
         string? REFRESHTOKEN1 = Environment.GetEnvironmentVariable("REFRESHTOKEN1");
 
         string? REFRESHTOKEN2 = Environment.GetEnvironmentVariable("REFRESHTOKEN2");
-
-        [TestMethod]
-        public void TestMethod1()
+        
+        public UnitTest1()
         {
-            Assert.AreEqual(2, 2);
+           
+            CredentialHandler.AddCredential(username1, REFRESHTOKEN1);
 
-            //creating a token response object with the refresh token
-            Google.Apis.Auth.OAuth2.Responses.TokenResponse tokenResponse1 = new Google.Apis.Auth.OAuth2.Responses.TokenResponse();
-            tokenResponse1.RefreshToken = REFRESHTOKEN1;
-
-            Google.Apis.Auth.OAuth2.Responses.TokenResponse tokenResponse2 = new Google.Apis.Auth.OAuth2.Responses.TokenResponse();
-            tokenResponse2.RefreshToken = REFRESHTOKEN2;
-
-            
-
-            CredentialHandler.StoreAsync<Google.Apis.Auth.OAuth2.Responses.TokenResponse>(username1, tokenResponse1);
-
-            CredentialHandler.StoreAsync<Google.Apis.Auth.OAuth2.Responses.TokenResponse>(username2, tokenResponse2);
+            CredentialHandler.AddCredential(username2, REFRESHTOKEN2);
 
 
             //logging in to the account
             account1.Login(username1);
             account2.Login(username2);
+        }
 
+
+        [TestMethod]
+        public void TestMethod_login()
+        {
+            Assert.IsTrue(account1.TryLogin(username1,REFRESHTOKEN1));
+
+        }
+
+
+
+        [TestMethod]
+        public void TestMethod_send()
+        {
 
             //instantiating a GmailHandler object
             IMailHandler mailHandler1 = account1.GetMailHandler();
             IMailHandler mailHandler2 = account2.GetMailHandler();
 
-            //accessing the password from the environment variables in github?
 
             //creating a new mail object and sending it to the current mail address? checking for recieving mail
-            MailContent validMail = mailHandler1.NewMail(validAddress, validSubject, validAddress3, validAddress2, validBody, null);
+            MailContent validMail = mailHandler1.NewMail(Address2, validSubject, null, null, null, null);
 
-            //int inboxLength = mailHandler.GetInbox().Length;
+            mailHandler1.Send(validMail);
 
-            //mailHandler.Send(validMail);
+            //TODO: change amount of requests when api is changed
 
-            //Assert.IsTrue(mailHandler.GetInbox().Length == inboxLength+1);
+
+            //folder is index in ["Inbox", "Sent", "Drafts", "Spam", "Trash"];
+            List<MailContent> Inboxlist2 =GetInbox(mailHandler2, 0);
+
+
+            List<MailContent> Sentlist1 =GetInbox(mailHandler1, 1);
+
+            Inboxlist2[0].date - Sentlist1[0].date;
+
+            Assert.IsTrue( == );
 
             ////checking recieved mail for spam mail
             //Assert.IsFalse(mailHandler.CheckSpam(mailHandler.GetInbox()[0]));
@@ -98,9 +111,26 @@ namespace Test
             //Assert.IsTrue(mailHandler.GetInbox().Length == inboxLength + 4);
 
         }
-        [TestMethod]
-        public void TestMethod2()
+
+        private static List<MailContent> GetInbox(IMailHandler mailHandler,int folder)
         {
+
+            //TODO: change amount of requests when api is changed
+
+            string[] folderNames;
+            List<MailContent> inbox = new(); 
+
+            //returns string with ["Inbox", "Sent", "Drafts", "Spam", "Trash"];
+            folderNames = mailHandler.GetFolderNames();
+            
+
+
+            foreach (var mail in mailHandler.GetFolder(folderNames[folder], false, false))
+            {
+                inbox.Add(mail);
+                inbox.Sort((x, y) => DateTime.Parse(x.date).CompareTo(DateTime.Parse(y.date)));
+            };
+            return inbox;
         }
     }
 }
