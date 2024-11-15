@@ -94,6 +94,7 @@ namespace ExcellentEmailExperience.Model
             {
                 var msg = service.Users.Messages.Get("me", message.Id).Execute();
                 MailContent mailContent = new();
+                mailContent.MessageId = message.Id;
                 mailContent.ThreadId = msg.ThreadId;
 
                 //Change all this to support e-boks messages / other weird message types
