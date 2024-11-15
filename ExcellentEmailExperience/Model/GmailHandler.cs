@@ -214,6 +214,8 @@ namespace ExcellentEmailExperience.Model
 
         // when calling reply. it is important that you give it the exact mailcontent you want to reply to
         // dont change the (to) and (from) fields beforehand, the code will handle that for you. you can change the body. 
+
+        // call this with the mailcontent currently being displayed. should only be called when a mail is displayed
         public void Reply(MailContent content)
         {
             MailContent reply = new MailContent();
@@ -227,6 +229,7 @@ namespace ExcellentEmailExperience.Model
             Send(reply);
         }
 
+        // call this with the mailcontent currently being displayed. should only be called when a mail is displayed
         public void ReplyAll(MailContent content)
         {
             MailContent reply = new MailContent();
@@ -259,13 +262,29 @@ namespace ExcellentEmailExperience.Model
             {
                 message.To.Add(recipient);
             }
-            foreach (var recipient in content.bcc)
+
+            // this is bad but we will fix later. this is only for testing purposes. 
+            try
             {
-                message.Bcc.Add(recipient);
+                foreach (var recipient in content.bcc)
+                {
+                    message.Bcc.Add(recipient);
+                }
             }
-            foreach (var recipient in content.cc)
+            catch (Exception ex)
             {
-                message.CC.Add(recipient);
+                Debug.WriteLine("error in bcc field" + ex);
+            }
+            try
+            {
+                foreach (var recipient in content.cc)
+                {
+                    message.CC.Add(recipient);
+                }
+            }
+            catch(Exception ex)
+            {
+                Debug.WriteLine("error in cc field" + ex);
             }
 
             // this part creates the main text to the message as either plaintext or html
