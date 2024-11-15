@@ -242,7 +242,7 @@ namespace ExcellentEmailExperience.Views
         {
             MailContent mailContent = new MailContent();
 
-            mailContent.from = new MailAddress(mailApp.Accounts[0].GetEmail());
+            mailContent.from = mailApp.Accounts[0].GetEmail();
 
             (MainFrame.Content as Email).ChangeMail(mailContent, true);
 
