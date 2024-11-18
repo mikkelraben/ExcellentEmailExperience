@@ -225,7 +225,7 @@ namespace ExcellentEmailExperience.Model
         }
 
         // call this with the mailcontent currently being displayed. should only be called when a mail is displayed
-        public void ReplyAll(MailContent content string Response)
+        public void ReplyAll(MailContent content, string Response)
         {
             MailContent reply = new MailContent();
             reply.ThreadId = content.ThreadId;
