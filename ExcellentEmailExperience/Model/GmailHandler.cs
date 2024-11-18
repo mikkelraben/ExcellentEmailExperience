@@ -213,29 +213,28 @@ namespace ExcellentEmailExperience.Model
         // dont change the (to) and (from) fields beforehand, the code will handle that for you. you can change the body. 
 
         // call this with the mailcontent currently being displayed. should only be called when a mail is displayed
-        public void Reply(MailContent content)
+        public void Reply(MailContent content, string Response)
         {
             MailContent reply = new MailContent();
-            reply = content;
             reply.ThreadId = content.ThreadId;
             reply.to = new List<MailAddress> { content.from };
             reply.from = mailAddress;
-            reply.subject = "Re: " + reply.subject;
+            reply.subject = "Re: " + content.subject;
+            reply.body = Response;
             Send(reply);
         }
 
         // call this with the mailcontent currently being displayed. should only be called when a mail is displayed
-        public void ReplyAll(MailContent content)
+        public void ReplyAll(MailContent content string Response)
         {
             MailContent reply = new MailContent();
-            reply = content;
             reply.ThreadId = content.ThreadId;
             reply.to = new List<MailAddress> { content.from };
             reply.to.AddRange(content.to);
             reply.from = mailAddress;
-
+            reply.body = Response;
             reply.to.Remove(reply.from);
-            reply.subject = "Re: " + reply.subject;
+            reply.subject = "Re: " + content.subject;
             Send(reply);
             //throw new NotImplementedException();
         }
