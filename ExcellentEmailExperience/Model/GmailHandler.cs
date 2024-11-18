@@ -241,6 +241,15 @@ namespace ExcellentEmailExperience.Model
 
         public void Send(MailContent content)
         {
+            if(content.to.Count == 0)
+            {
+                throw new Exception("no recipient");
+            }
+            if(content.subject == "")
+            {
+                throw new Exception("no subject");
+            }
+
             content.date = DateTime.Now;
             // creates a new mailmessage object, these are the ones that we need to setup before sending
             var message = new MailMessage
