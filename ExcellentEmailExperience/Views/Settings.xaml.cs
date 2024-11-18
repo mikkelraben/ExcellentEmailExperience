@@ -34,23 +34,26 @@ namespace ExcellentEmailExperience.Views
 
         public SettingsWindow(MailApp mailApp, ObservableCollection<AccountViewModel> accounts, CancellationToken appClose)
         {
-            this.InitializeComponent();
-            this.appClose = appClose;
-            this.ExtendsContentIntoTitleBar = true;
-
-            this.MinWidth = 500;
-            this.MinHeight = 300;
-
-            this.accounts = accounts;
-
-            this.mailApp = mailApp;
-
-            //Version.Text = "Version: " + AppInfo.Current.Package.Id.Version.Major + "." + AppInfo.Current.Package.Id.Version.Minor + "." + AppInfo.Current.Package.Id.Version.Build + "." + AppInfo.Current.Package.Id.Version.Revision;
-
-            Closed += (sender, e) =>
+            DispatcherQueue.TryEnqueue(() =>
             {
-                mailApp.SaveAccounts();
-            };
+                this.InitializeComponent();
+                this.appClose = appClose;
+                this.ExtendsContentIntoTitleBar = true;
+
+                this.MinWidth = 500;
+                this.MinHeight = 300;
+                this.accounts = accounts;
+                AccountsListView.ItemsSource = this.accounts;
+
+                this.mailApp = mailApp;
+
+                Version.Text = "Version: " + AppInfo.Current.Package.Id.Version.Major + "." + AppInfo.Current.Package.Id.Version.Minor + "." + AppInfo.Current.Package.Id.Version.Build + "." + AppInfo.Current.Package.Id.Version.Revision;
+
+                Closed += (sender, e) =>
+                {
+                    mailApp.SaveAccounts();
+                };
+            });
         }
 
         public void AddAccountButton_Click(object sender, RoutedEventArgs e)
