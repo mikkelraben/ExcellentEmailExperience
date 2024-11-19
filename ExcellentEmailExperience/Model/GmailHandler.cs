@@ -13,7 +13,6 @@ using System.IO;
 using System.Net.Mail;
 using System.Text;
 using System.Threading;
-using System.Runtime.Caching;
 using Windows.Storage.Pickers;
 using System.Diagnostics;
 
@@ -21,10 +20,6 @@ namespace ExcellentEmailExperience.Model
 {
     public class GmailHandler : IMailHandler
     {
-        private ObjectCache cache;
-        private double cacheTTL;
-        private string? oldCacheKey;
-
         public List<MailAddress> flaggedMails { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
 
         private UserCredential userCredential;
@@ -32,12 +27,8 @@ namespace ExcellentEmailExperience.Model
         private MailAddress mailAddress;
 
 
-        public GmailHandler(UserCredential credential, MailAddress mailAddress) //, ObjectCache cache, double TTL)
+        public GmailHandler(UserCredential credential, MailAddress mailAddress)
         {
-            //this.cache = cache;
-            //cacheTTL = TTL;
-            cache = MemoryCache.Default;
-            cacheTTL = 30;
             userCredential = credential;
             this.mailAddress = mailAddress;
 
@@ -59,7 +50,7 @@ namespace ExcellentEmailExperience.Model
         {
             var Mail = new MailContent();
             Mail.subject = "Forward: " + Mail.subject;
-            Mail.body = "Forwarded from " + content.from.ToString() + "\n " + content.body + " \n\n Originally sent to:" + content.to.ToString();
+            Mail.body = $"Forwarded from {content.from}\n {content.body} \n\n Originally sent to:{content.to}";
 
             //making the currect account the sender. 
             Mail.from = mailAddress;
@@ -78,14 +69,6 @@ namespace ExcellentEmailExperience.Model
             if (messages == null)
             {
                 yield break;
-            }
-
-            string CacheKey = messages[0].Id;
-
-            // retrieve mail from cache if it is up to date
-            if (CacheKey == oldCacheKey)
-            {
-                yield return (MailContent)cache.Get(CacheKey);
             }
 
             foreach (var message in messages)
@@ -168,14 +151,6 @@ namespace ExcellentEmailExperience.Model
                         mailContent.date = date.UtcDateTime;
                     }
                 }
-
-                // cache the retrieved mailcontent and delete old cache
-                cache.Set(CacheKey, mailContent, DateTimeOffset.Now.AddMinutes(cacheTTL));
-                if (oldCacheKey != null)
-                {
-                    cache.Remove(oldCacheKey);
-                }
-                oldCacheKey = CacheKey;
 
                 yield return mailContent;
 
