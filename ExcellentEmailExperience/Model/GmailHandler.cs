@@ -71,10 +71,8 @@ namespace ExcellentEmailExperience.Model
 
         public IEnumerable<MailContent> GetFolder(string name, bool old, bool refresh)
         {
-            string allcaps = name.ToUpper();
-
             var request = service.Users.Messages.List("me");
-            request.LabelIds = allcaps;
+            request.LabelIds = name;
             IList<Google.Apis.Gmail.v1.Data.Message> messages = request.Execute().Messages;
 
             if (messages == null)
@@ -196,6 +194,7 @@ namespace ExcellentEmailExperience.Model
             {
                 foreach (var labelItem in labels)
                 {
+                    // TODO: maybe use labelNames.Add(labelItem.Id); but we will think about this after implementing mailkit
                     labelNames.Add(labelItem.Name);
                 }
             }
@@ -214,35 +213,43 @@ namespace ExcellentEmailExperience.Model
         // dont change the (to) and (from) fields beforehand, the code will handle that for you. you can change the body. 
 
         // call this with the mailcontent currently being displayed. should only be called when a mail is displayed
-        public void Reply(MailContent content)
+        public void Reply(MailContent content, string Response)
         {
             MailContent reply = new MailContent();
-            reply = content;
             reply.ThreadId = content.ThreadId;
             reply.to = new List<MailAddress> { content.from };
             reply.from = mailAddress;
-            reply.subject = "Re: " + reply.subject;
+            reply.subject = "Re: " + content.subject;
+            reply.body = Response;
             Send(reply);
         }
 
         // call this with the mailcontent currently being displayed. should only be called when a mail is displayed
-        public void ReplyAll(MailContent content)
+        public void ReplyAll(MailContent content, string Response)
         {
             MailContent reply = new MailContent();
-            reply = content;
             reply.ThreadId = content.ThreadId;
             reply.to = new List<MailAddress> { content.from };
             reply.to.AddRange(content.to);
             reply.from = mailAddress;
-
+            reply.body = Response;
             reply.to.Remove(reply.from);
-            reply.subject = "Re: " + reply.subject;
+            reply.subject = "Re: " + content.subject;
             Send(reply);
             //throw new NotImplementedException();
         }
 
         public void Send(MailContent content)
         {
+            if(content.to.Count == 0)
+            {
+                throw new Exception("no recipient");
+            }
+            if(content.subject == "")
+            {
+                throw new Exception("no subject");
+            }
+
             content.date = DateTime.Now;
             // creates a new mailmessage object, these are the ones that we need to setup before sending
             var message = new MailMessage
