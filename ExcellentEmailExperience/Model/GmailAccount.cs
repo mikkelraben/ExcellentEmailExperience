@@ -33,7 +33,7 @@ namespace ExcellentEmailExperience.Model
             return handler;
         }
 
-        public void Login(string email)
+        public void Login(string email, string secret = "")
         {
             ClientSecrets clientSecrets = new()
             {
