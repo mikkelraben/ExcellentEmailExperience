@@ -174,9 +174,7 @@ namespace ExcellentEmailExperience.Model
                 }
             }
 
-            string[] labelString = labelNames.ToArray();
-
-            return labelString;
+            return labelNames.ToArray();
         }
 
         public List<MailContent> Refresh(string name)
