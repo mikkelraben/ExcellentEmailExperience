@@ -16,6 +16,8 @@ using System.Threading;
 using System.Runtime.Caching;
 using Windows.Storage.Pickers;
 using System.Diagnostics;
+using WinUIEx.Messaging;
+using Windows.Storage;
 
 namespace ExcellentEmailExperience.Model
 {
@@ -91,83 +93,7 @@ namespace ExcellentEmailExperience.Model
             foreach (var message in messages)
             {
                 var msg = service.Users.Messages.Get("me", message.Id).Execute();
-                MailContent mailContent = new();
-                mailContent.MessageId = message.Id;
-                mailContent.ThreadId = msg.ThreadId;
-
-                //Change all this to support e-boks messages / other weird message types
-                switch (msg.Payload.MimeType)
-                {
-                    case "text/plain":
-                        mailContent.body = Encoding.UTF8.GetString(Convert.FromBase64String(msg.Payload.Body.Data.Replace('-', '+').Replace('_', '/')));
-                        mailContent.bodyType = BodyType.Plain;
-                        break;
-                    case "text/html":
-                        mailContent.body = Encoding.UTF8.GetString(Convert.FromBase64String(msg.Payload.Body.Data.Replace('-', '+').Replace('_', '/')));
-                        mailContent.bodyType = BodyType.Html;
-                        break;
-                    case "multipart/alternative":
-
-                        bool containsHtml = false;
-                        foreach (var part in msg.Payload.Parts)
-                        {
-                            if (part.MimeType == "text/html")
-                            {
-                                containsHtml = true;
-                                break;
-                            }
-                        }
-
-                        foreach (var part in msg.Payload.Parts)
-                        {
-                            switch (part.MimeType)
-                            {
-                                case "text/plain":
-                                    if (containsHtml)
-                                    {
-                                        continue;
-                                    }
-                                    mailContent.body = Encoding.UTF8.GetString(Convert.FromBase64String(part.Body.Data.Replace('-', '+').Replace('_', '/')));
-                                    mailContent.bodyType = BodyType.Plain;
-                                    break;
-                                case "text/html":
-                                    mailContent.body = Encoding.UTF8.GetString(Convert.FromBase64String(part.Body.Data.Replace('-', '+').Replace('_', '/')));
-                                    mailContent.bodyType = BodyType.Html;
-                                    break;
-                            }
-                        }
-                        break;
-                    default:
-                        //TODO: Emit a warning
-                        Console.WriteLine("cry");
-                        break;
-
-                }
-
-                foreach (var header in msg.Payload.Headers)
-                {
-                    if (header.Name == "From")
-                    {
-                        mailContent.from = new MailAddress(header.Value);
-                    }
-                    else if (header.Name == "To")
-                    {
-                        foreach (var address in header.Value.Split(','))
-                        {
-                            mailContent.to.Add(new MailAddress(address));
-                        }
-                    }
-                    else if (header.Name == "Subject")
-                    {
-                        mailContent.subject = header.Value;
-                    }
-                    else if (header.Name == "Date")
-                    {
-                        DateTimeOffset date;
-                        MimeKit.Utils.DateUtils.TryParse(header.Value, out date);
-                        mailContent.date = date.UtcDateTime;
-                    }
-                }
+                MailContent mailContent = BuildMailContent(msg);
 
                 // cache the retrieved mailcontent and delete old cache
                 cache.Set(CacheKey, mailContent, DateTimeOffset.Now.AddMinutes(cacheTTL));
@@ -183,6 +109,125 @@ namespace ExcellentEmailExperience.Model
             yield break;
         }
 
+
+
+        private MailContent BuildMailContent(Google.Apis.Gmail.v1.Data.Message msg)
+        {
+            MailContent mailContent = new();
+            mailContent.MessageId = msg.Id;
+            mailContent.ThreadId = msg.ThreadId;
+
+            HandleMessagePart(msg.Payload, mailContent);
+
+            foreach (var header in msg.Payload.Headers)
+            {
+                if (header.Name == "From")
+                {
+                    mailContent.from = new MailAddress(header.Value);
+                }
+                else if (header.Name == "To")
+                {
+                    foreach (var address in header.Value.Split(','))
+                    {
+                        mailContent.to.Add(new MailAddress(address));
+                    }
+                }
+                else if (header.Name == "Subject")
+                {
+                    mailContent.subject = header.Value;
+                }
+                else if (header.Name == "Date")
+                {
+                    DateTimeOffset date;
+                    MimeKit.Utils.DateUtils.TryParse(header.Value, out date);
+                    mailContent.date = date.UtcDateTime;
+                }
+            }
+
+            return mailContent;
+        }
+
+        private void HandleMessagePart(Google.Apis.Gmail.v1.Data.MessagePart messagePart, MailContent mailContent)
+        {
+            // Sort by MIME type
+            if (messagePart.MimeType.StartsWith("multipart/"))
+            {
+                foreach (var part in messagePart.Parts)
+                {
+                    HandleMessagePart(part, mailContent);
+                }
+            }
+            else if (messagePart.MimeType == "text/plain")
+            {
+                if (mailContent.bodyType == BodyType.Plain)
+                {
+                    mailContent.body = Encoding.UTF8.GetString(Convert.FromBase64String(messagePart.Body.Data.Replace('-', '+').Replace('_', '/')));
+                }
+            }
+            else if (messagePart.MimeType == "text/html")
+            {
+                if (mailContent.bodyType == BodyType.Plain)
+                {
+                    mailContent.body = Encoding.UTF8.GetString(Convert.FromBase64String(messagePart.Body.Data.Replace('-', '+').Replace('_', '/')));
+                    mailContent.bodyType = BodyType.Html;
+                }
+            }
+            else if (messagePart.MimeType.StartsWith("image/"))
+            {
+                StorageFolder folder = ApplicationData.Current.LocalFolder;
+
+                var extension = messagePart.MimeType.Split('/')[1];
+
+                switch (extension)
+                {
+                    case "svg+xml":
+                        extension = "svg";
+                        break;
+                    case "vnd.microsoft.icon":
+                        extension = "ico";
+                        break;
+                }
+
+                var fileName = messagePart.Filename == "" ? $"{messagePart.PartId}.{extension}" : messagePart.Filename;
+
+                var cid = "";
+
+                foreach (var header in messagePart.Headers)
+                {
+                    switch (header.Name.ToLower())
+                    {
+                        case "content-id":
+                            cid = header.Value.Trim(['<', '>']);
+                            if (cid == "")
+                                break;
+                            cid = Convert.ToHexString(Encoding.UTF8.GetBytes(cid));
+                            cid = folder.Path + $"\\attachments\\{mailContent.MessageId}\\{cid}";
+                            break;
+                    }
+                }
+
+
+
+                var filePath = folder.Path + $"\\attachments\\{mailContent.MessageId}\\{fileName}";
+
+                mailContent.attachments.Add(filePath);
+
+                if (File.Exists(filePath))
+                {
+                    return;
+                }
+                var attachment = service.Users.Messages.Attachments.Get("me", mailContent.MessageId, messagePart.Body.AttachmentId).Execute();
+                var attachmentData = Convert.FromBase64String(attachment.Data.Replace('-', '+').Replace('_', '/'));
+
+                Directory.CreateDirectory(folder.Path + $"\\attachments\\{mailContent.MessageId}");
+                File.WriteAllBytes(filePath, attachmentData);
+                if (cid != "")
+                    File.CreateSymbolicLink(cid, $".\\{fileName}");
+            }
+            else if (messagePart.MimeType.StartsWith("application/"))
+            {
+            }
+        }
 
         public string[] GetFolderNames()
         {
@@ -283,7 +328,7 @@ namespace ExcellentEmailExperience.Model
                     message.CC.Add(recipient);
                 }
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 Debug.WriteLine("error in cc field" + ex);
             }
@@ -304,12 +349,12 @@ namespace ExcellentEmailExperience.Model
             // this here adds an attachment. but idk if i need to pass the path
             // as the string or if i have to do some file conversion
 
-            if (content.attach_path != "")
-            {
-                Attachment pdfAttachment = new Attachment(content.attach_path);
-                pdfAttachment.ContentType = new System.Net.Mime.ContentType("application/pdf");
-                message.Attachments.Add(pdfAttachment);
-            }
+            //if (content.attach_path != "")
+            //{
+            //    Attachment pdfAttachment = new Attachment(content.attach_path);
+            //    pdfAttachment.ContentType = new System.Net.Mime.ContentType("application/pdf");
+            //    message.Attachments.Add(pdfAttachment);
+            //}
 
             //after creating the maintext we need to add it to the mailmessage object
             message.AlternateViews.Add(MessageContent);

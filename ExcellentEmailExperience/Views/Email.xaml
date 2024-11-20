@@ -13,7 +13,8 @@
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
-            <RowDefinition/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
         <Grid Height="60">
             <Grid.ColumnDefinitions>
@@ -23,8 +24,9 @@
             <Grid.RowDefinitions>
                 <RowDefinition/>
                 <RowDefinition/>
+
             </Grid.RowDefinitions>
-            <TextBlock Text="{x:Bind viewModel.IsEditable,Mode=OneWay}"/>
+            <!--<TextBlock Text="{x:Bind viewModel.IsEditable,Mode=OneWay}"/>-->
 
             <TextBlock Margin="12,4" Grid.Column="0" Grid.Row="0">
                 From
@@ -37,7 +39,7 @@
             <TextBlock Margin="12,4" Grid.Column="0" Grid.Row="1">
                 To
             </TextBlock>
-            <TextBlock Text="{x:Bind viewModel.To.Count,Mode=OneWay}"/>
+            <!--<TextBlock Text="{x:Bind viewModel.To.Count,Mode=OneWay}"/>-->
             <ItemsView ItemsSource="{x:Bind viewModel.To,Mode=OneWay}" Margin="12,4" SelectionMode="None" ItemInvoked="FromAddress_ItemInvoked" Grid.Column="1" Grid.Row="1">
                 <ItemsView.ItemTemplate>
                     <DataTemplate x:DataType="mail:MailAddress">
@@ -53,8 +55,8 @@
                 </ItemsView.ItemTemplate>
             </ItemsView>
         </Grid>
-        <ScrollView Grid.Row="1" x:Name="ScrollView" VerticalScrollBarVisibility="Auto">
-            <TextBlock TextWrapping="Wrap" IsTextSelectionEnabled="True" Margin="12,12" Name="MailContent" Visibility="Collapsed">
+        <ScrollView Grid.Row="1" x:Name="ScrollView" VerticalScrollBarVisibility="Auto" Visibility="Collapsed">
+            <TextBlock TextWrapping="Wrap" IsTextSelectionEnabled="True" Margin="12,12" Name="MailContent">
                 No mail content.
             </TextBlock>
         </ScrollView>
@@ -62,5 +64,19 @@
             <TextBlock Text="No mail selected." IsTextSelectionEnabled="True" Margin="12,12" VerticalAlignment="Center" HorizontalAlignment="Center"/>
         </Grid>
         <WebView2 Grid.Row="1" x:Name="HTMLViewer" Visibility="Collapsed" CanGoBack="False" CanGoForward="False" CanDrag="False" DefaultBackgroundColor="Transparent" Source="about:blank"/>
+        <GridView Name="Attachments" Grid.Row="2" MaxHeight="260" ItemsSource="{x:Bind viewModel.Attachments,Mode=OneWay}" SelectionMode="None" Padding="0,0">
+            <GridView.ItemContainerStyle>
+                <Style TargetType="GridViewItem" BasedOn="{StaticResource DefaultGridViewItemStyle}">
+                    <Setter Property="Margin" Value="5, 5, 5, 5"/>
+                </Style>
+            </GridView.ItemContainerStyle>
+
+
+            <GridView.ItemTemplate>
+                <DataTemplate x:DataType="x:String">
+                    <Image Source="{x:Bind}" MaxHeight="256" MaxWidth="256"/>
+                </DataTemplate>
+            </GridView.ItemTemplate>
+        </GridView>
     </Grid>
 </Page>
