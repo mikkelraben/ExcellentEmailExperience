@@ -326,6 +326,10 @@ namespace ExcellentEmailExperience.Model
 
             try
             {
+                if(content.attachments.Count == 0)
+                {
+                    throw new Exception("no attachments found");
+                }
                 foreach (var attachment in content.attachments)
                 {
                     if (!File.Exists(attachment)) // does the file exist
@@ -339,10 +343,10 @@ namespace ExcellentEmailExperience.Model
                     string attach = Convert.ToBase64String(attachmentBytes); // interpret it
                     Attachment Attachment = new Attachment(attach); // attach it
                     Attachment.ContentType = new System.Net.Mime.ContentType(Type); // parse with correct type
-                    message.Attachments.Add(Attachment);
+                    message.Attachments.Add(Attachment); // brrrrrrrrrrrr
                 }
             }
-            catch (FileNotFoundException ex)
+            catch (Exception ex)
             {
                 Debug.WriteLine("error in attachments" + ex);
             }
