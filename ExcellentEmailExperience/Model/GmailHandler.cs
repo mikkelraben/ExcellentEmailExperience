@@ -349,5 +349,16 @@ namespace ExcellentEmailExperience.Model
                 sendRequest.Execute();
             }
         }
+        public void DeleteMail(string MessageId)
+        {
+            try
+            {
+                service.Users.Messages.Delete("me", MessageId);
+            }
+            catch(Exception ex)
+            {
+                Console.WriteLine("error deleting email:" + ex.ToString());
+            }
+        }
     }
 }
