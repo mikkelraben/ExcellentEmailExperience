@@ -337,9 +337,9 @@ namespace ExcellentEmailExperience.Model
 
                     byte[] attachmentBytes = File.ReadAllBytes(attachment); // read it
                     string attach = Convert.ToBase64String(attachmentBytes); // interpret it
-                    Attachment pdfAttachment = new Attachment(attach); // attach it
-                    pdfAttachment.ContentType = new System.Net.Mime.ContentType(Type); // parse with correct type
-                    message.Attachments.Add(pdfAttachment);
+                    Attachment Attachment = new Attachment(attach); // attach it
+                    Attachment.ContentType = new System.Net.Mime.ContentType(Type); // parse with correct type
+                    message.Attachments.Add(Attachment);
                 }
             }
             catch (FileNotFoundException ex)
