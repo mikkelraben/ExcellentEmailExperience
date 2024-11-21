@@ -12,11 +12,13 @@ using System.Collections.Generic;
 using System.IO;
 using System.Net.Mail;
 using System.Text;
+using System.Web;
 using System.Threading;
 using Windows.Storage.Pickers;
 using System.Diagnostics;
 using WinUIEx.Messaging;
 using Windows.Storage;
+
 
 namespace ExcellentEmailExperience.Model
 {
@@ -330,14 +332,17 @@ namespace ExcellentEmailExperience.Model
                     {
                         throw new FileNotFoundException("attachment not found", attachment);
                     }
+
+                    string Type = MimeKit.MimeTypes.GetMimeType(attachment);// defines what type of attachment it is
+
                     byte[] attachmentBytes = File.ReadAllBytes(attachment); // read it
                     string attach = Convert.ToBase64String(attachmentBytes); // interpret it
                     Attachment pdfAttachment = new Attachment(attach); // attach it
-                    pdfAttachment.ContentType = new System.Net.Mime.ContentType("application/pdf");
+                    pdfAttachment.ContentType = new System.Net.Mime.ContentType(Type); // parse with correct type
                     message.Attachments.Add(pdfAttachment);
                 }
             }
-            catch (Exception ex)
+            catch (FileNotFoundException ex)
             {
                 Debug.WriteLine("error in attachments" + ex);
             }
