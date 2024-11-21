@@ -60,9 +60,12 @@
                                 Margin="4,4"
                                 HorizontalContentAlignment="Left">
                                 <Expander.Header>
-                                    <StackPanel>
-                                        <TextBlock Text="{x:Bind Name, Mode=OneWay}" />
-                                        <TextBlock Text="{x:Bind emailAddress}" Style="{ThemeResource CaptionTextBlockStyle}" Foreground="Gray"/>
+                                    <StackPanel Orientation="Horizontal">
+                                        <ImageIcon Source="/Assets/GmailLogo.png" Width="20" Height="20" Margin="0,0,8,0"/>
+                                        <StackPanel>
+                                            <TextBlock Text="{x:Bind Name, Mode=OneWay}" />
+                                            <TextBlock Text="{x:Bind emailAddress}" Style="{ThemeResource CaptionTextBlockStyle}" Foreground="Gray"/>
+                                        </StackPanel>
                                     </StackPanel>
                                 </Expander.Header>
 

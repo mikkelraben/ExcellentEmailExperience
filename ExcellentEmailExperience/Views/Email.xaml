@@ -64,7 +64,7 @@
             <TextBlock Text="No mail selected." IsTextSelectionEnabled="True" Margin="12,12" VerticalAlignment="Center" HorizontalAlignment="Center"/>
         </Grid>
         <WebView2 Grid.Row="1" x:Name="HTMLViewer" Visibility="Collapsed" CanGoBack="False" CanGoForward="False" CanDrag="False" DefaultBackgroundColor="Transparent" Source="about:blank"/>
-        <GridView Name="Attachments" Grid.Row="2" MaxHeight="260" ItemsSource="{x:Bind viewModel.Attachments,Mode=OneWay}" SelectionMode="None" Padding="0,0">
+        <GridView Name="Attachments" Grid.Row="2" MaxHeight="266" ItemsSource="{x:Bind viewModel.Attachments,Mode=OneWay}" SelectionMode="None" Padding="0,0">
             <GridView.ItemContainerStyle>
                 <Style TargetType="GridViewItem" BasedOn="{StaticResource DefaultGridViewItemStyle}">
                     <Setter Property="Margin" Value="5, 5, 5, 5"/>
