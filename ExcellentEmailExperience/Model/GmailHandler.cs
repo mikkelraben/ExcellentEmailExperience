@@ -322,12 +322,25 @@ namespace ExcellentEmailExperience.Model
             // this here adds an attachment. but idk if i need to pass the path
             // as the string or if i have to do some file conversion
 
-            //if (content.attach_path != "")
-            //{
-            //    Attachment pdfAttachment = new Attachment(content.attach_path);
-            //    pdfAttachment.ContentType = new System.Net.Mime.ContentType("application/pdf");
-            //    message.Attachments.Add(pdfAttachment);
-            //}
+            try
+            {
+                foreach (var attachment in content.attachments)
+                {
+                    if (!File.Exists(attachment)) // does the file exist
+                    {
+                        throw new FileNotFoundException("attachment not found", attachment);
+                    }
+                    byte[] attachmentBytes = File.ReadAllBytes(attachment); // read it
+                    string attach = Convert.ToBase64String(attachmentBytes); // interpret it
+                    Attachment pdfAttachment = new Attachment(attach); // attach it
+                    pdfAttachment.ContentType = new System.Net.Mime.ContentType("application/pdf");
+                    message.Attachments.Add(pdfAttachment);
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine("error in attachments" + ex);
+            }
 
             //after creating the maintext we need to add it to the mailmessage object
             message.AlternateViews.Add(MessageContent);
@@ -377,6 +390,7 @@ namespace ExcellentEmailExperience.Model
             {
                 Console.WriteLine("error deleting email:" + ex.ToString());
             }
+            
         }
     }
 }
