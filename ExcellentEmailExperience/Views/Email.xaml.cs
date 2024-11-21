@@ -14,9 +14,11 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
+using System.Text;
 using System.Threading.Tasks;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
+using Windows.Storage;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -40,14 +42,39 @@ namespace ExcellentEmailExperience.Views
             HTMLViewer.CanGoForward = false;
             await HTMLViewer.EnsureCoreWebView2Async();
 
+#if !DEBUG
             HTMLViewer.CoreWebView2.Settings.AreDefaultContextMenusEnabled = false;
+            HTMLViewer.CoreWebView2.Settings.AreDevToolsEnabled = false;
+#endif
             HTMLViewer.CoreWebView2.Settings.AreBrowserAcceleratorKeysEnabled = false;
+            HTMLViewer.CoreWebView2.Settings.IsScriptEnabled = false;
             HTMLViewer.CoreWebView2.Settings.IsSwipeNavigationEnabled = false;
             HTMLViewer.CoreWebView2.Settings.IsGeneralAutofillEnabled = false;
-            HTMLViewer.CoreWebView2.Settings.AreDevToolsEnabled = false;
             HTMLViewer.CoreWebView2.Settings.IsPasswordAutosaveEnabled = false;
             HTMLViewer.CoreWebView2.NavigationStarting += CoreWebView2_NavigationStarting;
             HTMLViewer.CoreWebView2.NewWindowRequested += CoreWebView2_NewWindowRequested;
+            HTMLViewer.CoreWebView2.WebResourceRequested += CoreWebView2_WebResourceRequested;
+
+            HTMLViewer.CoreWebView2.AddWebResourceRequestedFilter("cid:*", CoreWebView2WebResourceContext.All);
+        }
+
+        private async void CoreWebView2_WebResourceRequested(CoreWebView2 sender, CoreWebView2WebResourceRequestedEventArgs args)
+        {
+            try
+            {
+                StorageFolder folder = ApplicationData.Current.LocalFolder;
+                var cid = args.Request.Uri.Replace("cid:", "");
+                var path = @$"{folder.Path}\attachments\{viewModel.messageId}\{Convert.ToHexString(Encoding.UTF8.GetBytes(cid))}";
+
+                FileStream fileStream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+                CoreWebView2WebResourceResponse response = HTMLViewer.CoreWebView2.Environment.CreateWebResourceResponse(fileStream.AsRandomAccessStream(), 200, "OK", "image/png");
+                args.Response = response;
+            }
+            catch (Exception)
+            {
+                CoreWebView2WebResourceResponse response = HTMLViewer.CoreWebView2.Environment.CreateWebResourceResponse(null, 404, "OK", "");
+                args.Response = response;
+            }
         }
 
         private void CoreWebView2_NewWindowRequested(CoreWebView2 sender, CoreWebView2NewWindowRequestedEventArgs args)
