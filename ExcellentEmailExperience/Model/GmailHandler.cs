@@ -271,7 +271,7 @@ namespace ExcellentEmailExperience.Model
             var message = new MailMessage
             {
                 Subject = content.subject,
-                From = content.from
+                From = mailAddress
             };
 
             // adds bcc,cc,and recipient.
