@@ -13,7 +13,7 @@ namespace ExcellentEmailExperience.Interfaces
         /// Logs in the user this function may throw an exception if the login fails
         /// </summary>
         /// <param name="email"></param>
-        void Login(string email);
+        void Login(string email, string secret = "");
 
         /// <summary>
         /// Tries to login with the given credentials
