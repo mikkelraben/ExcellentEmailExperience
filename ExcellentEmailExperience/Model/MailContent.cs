@@ -19,10 +19,12 @@ namespace ExcellentEmailExperience.Model
         public List<MailAddress> to = new();
         public List<MailAddress> bcc = new();
         public List<MailAddress> cc = new();
-        public BodyType bodyType = new();
+        public BodyType bodyType = BodyType.Plain;
         public string subject = "";
         public string body = "";
-        public string attach_path = "";
+
+        // List of paths to attachments
+        public List<string> attachments = new();
         public DateTime date = new();
         public string ThreadId = "";
         public string MessageId = "";

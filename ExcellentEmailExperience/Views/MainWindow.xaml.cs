@@ -46,7 +46,7 @@ namespace ExcellentEmailExperience.Views
 
             //if the the app is not in debug mode then collapse the subtitle
 #if !DEBUG
-            Subtitle.Opacity = 0;
+            Subtitle.Visibility = Visibility.Collapsed;
 #endif      
 
             mailApp.Accounts.ForEach(account =>
