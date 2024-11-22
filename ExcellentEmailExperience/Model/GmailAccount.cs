@@ -71,6 +71,17 @@ namespace ExcellentEmailExperience.Model
                     ["https://mail.google.com/"],
                     email,
                     System.Threading.CancellationToken.None, credentialHandlerGoogleShim).Result;
+
+                GmailService service = new GmailService(new Google.Apis.Services.BaseClientService.Initializer()
+                {
+                    HttpClientInitializer = userCredential,
+                    ApplicationName = "ExcellentEmailExperience",
+                });
+
+                var profileRequest = service.Users.GetProfile("me");
+                var user = ((IClientServiceRequest<Profile>)profileRequest).Execute();
+                mailAddress = new MailAddress(user.EmailAddress);
+
             }
 
             if (userCredential == null)
