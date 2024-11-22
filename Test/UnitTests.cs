@@ -23,7 +23,7 @@ namespace Test
         MailAddress Address2 = new MailAddress("postmanpergruppe1@gmail.com");
         MailAddress Address3 = new MailAddress("postmandpersbil@gmail.com"); //PENDING new real account
         string validSubject = "For kitty";
-        string validAttachment = "C:/Users/Downloads"; //valid attachment path maybe
+        string validAttachment = "C:/Users/Downloads/Untitled_Artwork (3).png"; //valid attachment path maybe
         string invalidAttachment = "C:/Users/Downloads"; //invalid attachment path maybe
         string username1 = "lillekatemil6@gmail.com";
         string username2 = "postmanpergruppe1@gmail.com";
@@ -118,6 +118,8 @@ namespace Test
 
             //TODO: change amount of requests when api is changed
 
+            //let the program sleep for 2 second to make sure the mail is recieved
+            System.Threading.Thread.Sleep(2000);
 
             List<MailContent> Inboxlist2 = GetInbox(mailHandler2, "INBOX");
 
@@ -129,7 +131,7 @@ namespace Test
                 Assert.Fail("no messages were sent!");
             }
 
-            //checking if the time difference between the sent mail and recieved mail is less than 1 second??
+            //checking if the time difference between the sent mail and recieved mail is less than 2 second??
 
             TimeSpan diff = Inboxlist2[0].date.Subtract(Sentlist1[0].date);
 
@@ -173,6 +175,8 @@ namespace Test
 
             //TODO: change amount of requests when api is changed
 
+            //let the program sleep for 2 second to make sure the mail is recieved
+            System.Threading.Thread.Sleep(2000);
 
             List<MailContent> Inboxlist2 = GetInbox(mailHandler2, "INBOX");
 
@@ -263,6 +267,9 @@ namespace Test
 
             mailHandler1.Send(validMail);
 
+            //let the program sleep for 2 second to make sure the mail is recieved
+            System.Threading.Thread.Sleep(2000);
+
             List<MailContent> Inboxlist3 = GetInbox(mailHandler3, "INBOX");
 
 
@@ -310,6 +317,9 @@ namespace Test
 
             mailHandler1.Send(validMail);
 
+            //let the program sleep for 2 second to make sure the mail is recieved
+            System.Threading.Thread.Sleep(2000);
+
             List<MailContent> Inboxlist3 = GetInbox(mailHandler3, "INBOX");
 
 
@@ -356,6 +366,9 @@ namespace Test
 
             mailHandler1.Send(validMail);
 
+            //let the program sleep for 2 second to make sure the mail is recieved
+            System.Threading.Thread.Sleep(2000);
+
             List<MailContent> Inboxlist3 = GetInbox(mailHandler3, "INBOX");
             
         }
@@ -382,7 +395,8 @@ namespace Test
 
             mailHandler1.Send(validMail);
 
-
+            //let the program sleep for 2 second to make sure the mail is recieved
+            System.Threading.Thread.Sleep(2000);
 
             List<MailContent> Inboxlist2 = GetInbox(mailHandler2, "INBOX");
 
@@ -394,6 +408,9 @@ namespace Test
             {
                 Assert.Fail("no messages were sent!");
             }
+
+            //let the program sleep for 2 second to make sure the mail is recieved
+            System.Threading.Thread.Sleep(2000);
 
             List<MailContent> Inboxlist3 = GetInbox(mailHandler3, "INBOX");
 
