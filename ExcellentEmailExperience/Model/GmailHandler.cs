@@ -309,7 +309,6 @@ namespace ExcellentEmailExperience.Model
             if (content.bodyType == BodyType.Html)
             {
                 MessageContent = AlternateView.CreateAlternateViewFromString(content.body, new System.Net.Mime.ContentType("text/html"));
-
             }
             if (content.bodyType == BodyType.Plain)
             {
