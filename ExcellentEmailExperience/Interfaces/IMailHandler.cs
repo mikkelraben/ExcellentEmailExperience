@@ -24,7 +24,7 @@ namespace ExcellentEmailExperience.Interfaces
         void ReplyAll(MailContent content, string Response);
         void Send(MailContent content);
 
-        void DeleteMail(string MessageId);
+        void TrashMail(string MessageId);
 
         /// <summary>
         /// Retrieves the names for every mail folder the user has made.

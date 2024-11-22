@@ -384,11 +384,11 @@ namespace ExcellentEmailExperience.Model
                 sendRequest.Execute();
             }
         }
-        public void DeleteMail(string MessageId)
+        public void TrashMail(string MessageId)
         {
             try
             {
-                service.Users.Messages.Delete("me", MessageId);
+                service.Users.Messages.Trash("me", MessageId);
             }
             catch (Exception ex)
             {
