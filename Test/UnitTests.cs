@@ -27,7 +27,7 @@ namespace Test
         string invalidAttachment = "C:/Users/Downloads"; //invalid attachment path maybe
         string username1 = "lillekatemil6@gmail.com";
         string username2 = "postmanpergruppe1@gmail.com";
-        string username3 = "postmandpersbil@gmail.com"; //PENDING new real account
+        string username3 = "postmandpersbil@gmail.com"; //PENDING new real account 
 
         //instanciating an account with IAccount object
         IAccount account1 = new GmailAccount();
@@ -42,6 +42,10 @@ namespace Test
         string? REFRESHTOKEN3 = Environment.GetEnvironmentVariable("REFRESHTOKEN3"); //PENDING new real account
 
         string? validBody;
+
+        IMailHandler? mailHandler1;
+        IMailHandler? mailHandler2;
+        IMailHandler? mailHandler3;
 
         private string validBody_gen()
         {
@@ -75,13 +79,19 @@ namespace Test
 
             CredentialHandler.AddCredential(username2, REFRESHTOKEN2);
 
-            //CredentialHandler.AddCredential(username3, REFRESHTOKEN3); //PENDING new real account
+            CredentialHandler.AddCredential(username3, REFRESHTOKEN3); //PENDING new real account
 
 
             //logging in to the account
             account1.Login(username1);
             account2.Login(username2);
-            //account3.Login(username3); //PENDING new real account
+            account3.Login(username3); //PENDING new real account
+
+
+            //instantiating a GmailHandler object
+            mailHandler1 = account1.GetMailHandler();
+            mailHandler2 = account2.GetMailHandler();
+            mailHandler3 = account3.GetMailHandler();
         }
 
 
@@ -98,9 +108,6 @@ namespace Test
         public void TestMethod_send_speed()
         {
 
-            //instantiating a GmailHandler object
-            IMailHandler mailHandler1 = account1.GetMailHandler();
-            IMailHandler mailHandler2 = account2.GetMailHandler();
 
 
             //creating a new mail object and sending it to the current mail address? checking for recieving mail
@@ -146,10 +153,6 @@ namespace Test
         public void TestMethod_send_content()
         {
 
-            //instantiating a GmailHandler object
-            IMailHandler mailHandler1 = account1.GetMailHandler();
-            IMailHandler mailHandler2 = account2.GetMailHandler();
-            IMailHandler mailHandler3 = account3.GetMailHandler();
 
 
             //creating a new mail object and sending it to the current mail address? checking for recieving mail
@@ -207,9 +210,6 @@ namespace Test
         public void TestMethod_invalid_receiver()
         {
 
-            //instantiating a GmailHandler object
-            IMailHandler mailHandler1 = account1.GetMailHandler();
-            IMailHandler mailHandler2 = account2.GetMailHandler();
 
             // creating a new mail object and sending it to the current mail address? checking for recieving mail
             MailContent UnvalidMail = new();
@@ -228,10 +228,6 @@ namespace Test
         public void TestMethod_invalid_subject()
         {
 
-            //instantiating a GmailHandler object
-            IMailHandler mailHandler1 = account1.GetMailHandler();
-            IMailHandler mailHandler2 = account2.GetMailHandler();
-
             // creating a new mail object and sending it to the current mail address? checking for recieving mail
             MailContent UnvalidMail = new();
 
@@ -247,10 +243,6 @@ namespace Test
         public void TestMethod_cc()
         {
 
-            //instantiating a GmailHandler object
-            IMailHandler mailHandler1 = account1.GetMailHandler();
-            IMailHandler mailHandler2 = account2.GetMailHandler();
-            IMailHandler mailHandler3 = account3.GetMailHandler();
 
             // creating a new mail object and sending it to the current mail address? checking for recieving mail
             MailContent validMail = new();
@@ -296,11 +288,7 @@ namespace Test
         [TestMethod]
         public void TestMethod_bcc()
         {
-
-            //instantiating a GmailHandler object
-            IMailHandler mailHandler1 = account1.GetMailHandler();
-            IMailHandler mailHandler2 = account2.GetMailHandler();
-            IMailHandler mailHandler3 = account3.GetMailHandler();
+            
 
             // creating a new mail object and sending it to the current mail address? checking for recieving mail
             MailContent validMail = new();
@@ -346,13 +334,11 @@ namespace Test
         public void TestMethod_reply()
         {
 
-            //instantiating a GmailHandler object
-            IMailHandler mailHandler1 = account1.GetMailHandler();
-            IMailHandler mailHandler2 = account2.GetMailHandler();
-            IMailHandler mailHandler3 = account3.GetMailHandler();
 
             // creating a new mail object and sending it to the current mail address? checking for recieving mail
             MailContent validMail = new();
+
+            string response = validBody_gen();
 
             validMail.subject = validSubject;
 
@@ -362,7 +348,7 @@ namespace Test
 
             validMail.body = validBody_gen();
 
-            validMail.bcc = new List<MailAddress> { Address3 };
+            validMail.cc = new List<MailAddress> { Address3 };
 
             mailHandler1.Send(validMail);
 
@@ -370,17 +356,103 @@ namespace Test
             System.Threading.Thread.Sleep(2000);
 
             List<MailContent> Inboxlist3 = GetInbox(mailHandler3, "INBOX");
-            
+
+            if (Inboxlist3[0] != null)
+            {
+                mailHandler3.Reply(Inboxlist3[0], response);
+            }
+            else
+            {
+                Assert.Fail("no messages were sent!");
+            }
+
+            //let the program sleep for 2 second to make sure the mail is recieved
+            System.Threading.Thread.Sleep(2000);
+
+            List<MailContent> Inboxlist1 = GetInbox(mailHandler1, "INBOX");
+
+            List<MailContent> Sentlist3 = GetInbox(mailHandler3, "SENT");
+
+            //as messageIDs are different for all mail instances, we need to set them equal to compare the mail objects
+
+            if (Inboxlist1[0] != null && Sentlist3[0] != null)
+            {
+                Sentlist3[0].MessageId = Inboxlist1[0].MessageId;
+                Sentlist3[0].ThreadId = Inboxlist1[0].ThreadId;
+
+                //here we also have to set cc to null as reply doesnt include cc
+                Sentlist3[0].cc = null;
+
+                Assert.IsTrue(Sentlist3[0] == Inboxlist1[0]);
+            }
+            else
+            {
+                Assert.Fail("no messages were sent!");
+            }
+
+        }
+
+        [TestMethod]
+        public void TestMethod_reply_all()
+        {
+
+
+            // creating a new mail object and sending it to the current mail address? checking for recieving mail
+            MailContent validMail = new();
+
+            string response = validBody_gen();
+
+            validMail.subject = validSubject;
+
+            validMail.to = new List<MailAddress> { Address2 };
+
+            validMail.from = Address1;
+
+            validMail.body = validBody_gen();
+
+            validMail.cc = new List<MailAddress> { Address3 };
+
+            mailHandler1.Send(validMail);
+
+            //let the program sleep for 2 second to make sure the mail is recieved
+            System.Threading.Thread.Sleep(2000);
+
+            List<MailContent> Inboxlist3 = GetInbox(mailHandler3, "INBOX");
+
+            if (Inboxlist3[0] != null)
+            {
+                mailHandler3.ReplyAll(Inboxlist3[0], response);
+            }
+            else
+            {
+                Assert.Fail("no messages were sent!");
+            }
+
+            //let the program sleep for 2 second to make sure the mail is recieved
+            System.Threading.Thread.Sleep(2000);
+
+            List<MailContent> Sentlist1 = GetInbox(mailHandler1, "SENT");
+
+            List<MailContent> Sentlist3 = GetInbox(mailHandler3, "SENT");
+
+            //as messageIDs are different for all mail instances, we need to set them equal to compare the mail objects
+
+            if (Sentlist1[0] != null && Sentlist3[0] != null)
+            {
+                Sentlist3[0].MessageId = Sentlist1[0].MessageId;
+                Sentlist3[0].ThreadId = Sentlist1[0].ThreadId;
+
+                Assert.IsTrue(Sentlist3[0] == Sentlist1[0]);
+            }
+            else
+            {
+                Assert.Fail("no messages were sent!");
+            }
         }
 
         [TestMethod]
         public void TestMethod_forward()
         {
-
-            //instantiating a GmailHandler object
-            IMailHandler mailHandler1 = account1.GetMailHandler();
-            IMailHandler mailHandler2 = account2.GetMailHandler();
-            IMailHandler mailHandler3 = account3.GetMailHandler();
 
             // creating a new mail object and sending it to the current mail address? checking for recieving mail
             MailContent validMail = new();
@@ -430,6 +502,93 @@ namespace Test
                 Assert.Fail("no messages were sent!");
             }
 
+
+        }
+
+        [TestMethod]
+        public void TestMethod_attachment()
+        {
+
+            // creating a new mail object and sending it to the current mail address? checking for recieving mail
+            MailContent validMail = new();
+
+            validMail.subject = validSubject;
+
+            validMail.to = new List<MailAddress> { Address2 };
+
+            validMail.from = Address1;
+
+            validMail.body = validBody_gen();
+
+            validMail.attachments = new List<string> { validAttachment };
+
+            mailHandler1.Send(validMail);
+
+            //let the program sleep for 2 second to make sure the mail is recieved
+            System.Threading.Thread.Sleep(2000);
+
+            List<MailContent> Inboxlist2 = GetInbox(mailHandler2, "INBOX");
+
+            List<MailContent> Sentlist1 = GetInbox(mailHandler1, "SENT");
+
+            //as messageIDs are different for all mail instances, we need to set them equal to compare the mail objects
+
+            if (Inboxlist2[0] != null && Sentlist1[0] != null)
+            {
+                Inboxlist2[0].MessageId = Sentlist1[0].MessageId;
+                Inboxlist2[0].ThreadId = Sentlist1[0].ThreadId;
+
+                Assert.IsTrue(Inboxlist2[0] == Sentlist1[0]);
+            }
+            else
+            {
+                Assert.Fail("no messages were sent!");
+            }
+        }
+
+        [TestMethod]
+        public void TestMethod_trash()
+        {
+
+            // creating a new mail object and sending it to the current mail address? checking for recieving mail
+            MailContent validMail = new();
+
+            validMail.subject = validSubject;
+
+            validMail.to = new List<MailAddress> { Address2 };
+
+            validMail.from = Address1;
+
+            validMail.body = validBody_gen();
+
+            mailHandler1.Send(validMail);
+
+            //let the program sleep for 2 second to make sure the mail is recieved
+            System.Threading.Thread.Sleep(2000);
+
+            List<MailContent> Inboxlist2 = GetInbox(mailHandler2, "INBOX");
+
+            if (Inboxlist2[0] != null)
+            {
+                mailHandler2.TrashMail(Inboxlist2[0].MessageId);
+            }
+            else
+            {
+                Assert.Fail("no messages were sent!");
+            }
+
+            //let the program sleep for 2 second to make sure the mail is recieved
+            System.Threading.Thread.Sleep(2000);
+
+            List<MailContent> Trashlist2 = GetInbox(mailHandler2, "TRASH");
+
+            Assert.IsTrue(Trashlist2[0] == Inboxlist2[0]);
+
+        }
+
+        [TestMethod]
+        public void TestMethod_Multiple_acc()
+        {
 
         }
     }
