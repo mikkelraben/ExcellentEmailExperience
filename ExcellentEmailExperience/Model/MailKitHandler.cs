@@ -91,7 +91,7 @@ namespace ExcellentEmailExperience.Model
             throw new NotImplementedException();
         }
 
-        public void DeleteMail(string MessageId)
+        public void TrashMail(string MessageId)
         {
             throw new NotImplementedException();
         }
