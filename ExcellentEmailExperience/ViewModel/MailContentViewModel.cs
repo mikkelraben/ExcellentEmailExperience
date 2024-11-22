@@ -17,9 +17,10 @@ namespace ExcellentEmailExperience.ViewModel
             Cc = mailContent.cc;
             Subject = mailContent.subject;
             Body = mailContent.body;
-            Attach_path = mailContent.attach_path;
+            Attachments = mailContent.attachments;
             Date = mailContent.date;
             bodyType = mailContent.bodyType;
+            messageId = mailContent.MessageId;
         }
 
         [ObservableProperty]
@@ -42,13 +43,15 @@ namespace ExcellentEmailExperience.ViewModel
         public BodyType bodyType;
 
         [ObservableProperty]
-        public string attach_path;
+        public List<string> attachments;
 
         [ObservableProperty]
         public DateTime date;
 
         [ObservableProperty]
         public bool isEditable = false;
+
+        public string messageId;
 
     }
 }
