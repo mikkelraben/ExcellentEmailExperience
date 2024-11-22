@@ -16,9 +16,13 @@ using System.Web;
 using System.Threading;
 using Windows.Storage.Pickers;
 using System.Diagnostics;
+<<<<<<< HEAD
+using Microsoft.Data.Sqlite;
+=======
 using WinUIEx.Messaging;
 using Windows.Storage;
 
+>>>>>>> 8a16f81d9fb5ce7efb257e8687cea5af95336fce
 
 namespace ExcellentEmailExperience.Model
 {
@@ -62,6 +66,11 @@ namespace ExcellentEmailExperience.Model
             //changes the receiver to the person who is being forwarded to. 
             Mail.to = NewTo;
             Send(Mail);
+        }
+
+        private void CacheMessage(MailContent mail)
+        {
+
         }
 
         public IEnumerable<MailContent> GetFolder(string name, bool old, bool refresh)
