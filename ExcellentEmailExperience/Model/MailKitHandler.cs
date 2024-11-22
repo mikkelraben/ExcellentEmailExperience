@@ -1,15 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.Mail;
-using System.Text;
-using System.Threading.Tasks;
-using ExcellentEmailExperience.Interfaces;
+﻿using ExcellentEmailExperience.Interfaces;
 using MailKit;
 using MailKit.Net.Imap;
-using MailKit.Net.Smtp;
-using MimeKit;
-using Windows.Media.Protection.PlayReady;
+using System;
+using System.Collections.Generic;
+using System.Net.Mail;
 
 namespace ExcellentEmailExperience.Model
 {
@@ -56,7 +50,7 @@ namespace ExcellentEmailExperience.Model
             var personalNamespace = imapClient.PersonalNamespaces[0];
             var rootFolder = imapClient.GetFolder(personalNamespace);
             rootFolder.Open(FolderAccess.ReadOnly);
-            
+
             List<string> folderNames = new List<string>();
 
             foreach (var subfolder in rootFolder.GetSubfolders(false))
@@ -93,6 +87,11 @@ namespace ExcellentEmailExperience.Model
         }
 
         public void ReplyAll(MailContent content, string Response)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void DeleteMail(string MessageId)
         {
             throw new NotImplementedException();
         }

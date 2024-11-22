@@ -1,28 +1,15 @@
 ﻿using ExcellentEmailExperience.Interfaces;
-using ExcellentEmailExperience.Views;
 using Google.Apis.Auth.OAuth2;
 using Google.Apis.Gmail.v1;
 using Google.Apis.Gmail.v1.Data;
-using Google.Apis.Requests;
-using Google.Apis.Services;
 using MimeKit;
-using Org.BouncyCastle.Asn1.Cmp;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Net.Mail;
 using System.Text;
-using System.Web;
-using System.Threading;
-using Windows.Storage.Pickers;
-using System.Diagnostics;
-<<<<<<< HEAD
-using Microsoft.Data.Sqlite;
-=======
-using WinUIEx.Messaging;
 using Windows.Storage;
-
->>>>>>> 8a16f81d9fb5ce7efb257e8687cea5af95336fce
 
 namespace ExcellentEmailExperience.Model
 {
@@ -270,11 +257,11 @@ namespace ExcellentEmailExperience.Model
 
         public void Send(MailContent content)
         {
-            if(content.to.Count == 0)
+            if (content.to.Count == 0)
             {
                 throw new Exception("no recipient");
             }
-            if(content.subject == "")
+            if (content.subject == "")
             {
                 throw new Exception("no subject");
             }
@@ -322,7 +309,6 @@ namespace ExcellentEmailExperience.Model
             if (content.bodyType == BodyType.Html)
             {
                 MessageContent = AlternateView.CreateAlternateViewFromString(content.body, new System.Net.Mime.ContentType("text/html"));
-
             }
             if (content.bodyType == BodyType.Plain)
             {
@@ -335,7 +321,7 @@ namespace ExcellentEmailExperience.Model
 
             try
             {
-                if(content.attachments.Count == 0)
+                if (content.attachments.Count == 0)
                 {
                     throw new Exception("no attachments found");
                 }
@@ -398,17 +384,17 @@ namespace ExcellentEmailExperience.Model
                 sendRequest.Execute();
             }
         }
-        public void DeleteMail(string MessageId)
+        public void TrashMail(string MessageId)
         {
             try
             {
-                service.Users.Messages.Delete("me", MessageId);
+                service.Users.Messages.Trash("me", MessageId);
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 Console.WriteLine("error deleting email:" + ex.ToString());
             }
-            
+
         }
     }
 }
