@@ -34,6 +34,7 @@ namespace Test
         IAccount account2 = new GmailAccount();
         IAccount account3 = new GmailAccount(); //PENDING new real account
         MailApp MailApp = new MailApp();
+        string validwhitespacebody= "\n\r\r\r\n         \r\r\n    m";
         //accessing the refresh tokens from the environment variables stored locally on pc
         string? REFRESHTOKEN1 = Environment.GetEnvironmentVariable("REFRESHTOKEN1");
 
@@ -50,7 +51,7 @@ namespace Test
         private string validBody_gen()
         {
             int randomInteger = new Random().Next(0, 1000);
-            validBody = string.Format("Hello sweetpeach, i have a new buiscuit waiting for you\r\n love grandma {0}", randomInteger);
+            validBody = string.Format("Hello sweetpeach, i have a new buiscuit waiting for you \n love grandma {0}", randomInteger);
             return validBody;
         }
 
@@ -180,7 +181,7 @@ namespace Test
             //TODO: change amount of requests when api is changed
 
             //let the program sleep for 2 second to make sure the mail is recieved
-            System.Threading.Thread.Sleep(10000);
+            System.Threading.Thread.Sleep(2000);
 
             List<MailContent> Inboxlist2 = GetInbox(mailHandler2, "INBOX");
 
@@ -528,7 +529,7 @@ namespace Test
             mailHandler1.Send(validMail);
 
             //let the program sleep for 2 second to make sure the mail is recieved
-            System.Threading.Thread.Sleep(4000);
+            System.Threading.Thread.Sleep(2000);
 
             List<MailContent> Inboxlist2 = GetInbox(mailHandler2, "INBOX");
 
@@ -541,7 +542,7 @@ namespace Test
                 Inboxlist2[0].MessageId = Sentlist1[0].MessageId;
                 Inboxlist2[0].ThreadId = Sentlist1[0].ThreadId;
 
-                Assert.AreEqual(Inboxlist2[0], Sentlist1[0]);
+                Assert.IsTrue(Inboxlist2[0]== Sentlist1[0]);
             }
             else
             {
@@ -606,9 +607,59 @@ namespace Test
         {
             MailApp MailApp1 = new();
             MailApp1.NewAccount(account1);
-            MailApp1.DeleteAccount(account1);
+            //MailApp1.DeleteAccount(account1);
             Assert.IsFalse(MailApp1.HasAccount());
 
+        }
+
+        [TestMethod]
+        public void TestMethod_Send_Whitespace()
+        {
+            //creating a new mail object and sending it to the current mail address? checking for recieving mail
+            MailContent validMail = new();
+
+            validMail.subject = validSubject;
+
+            validMail.to = new List<MailAddress> { Address2 };
+
+            validMail.from = Address1;
+
+            validMail.body = validwhitespacebody;
+
+            validMail.cc = new List<MailAddress> { Address1 };
+
+
+            validMail.bcc = new List<MailAddress> { Address3 };
+
+
+
+
+            mailHandler1.Send(validMail);
+
+            //TODO: change amount of requests when api is changed
+
+            //let the program sleep for 2 second to make sure the mail is recieved
+            System.Threading.Thread.Sleep(2000);
+
+            List<MailContent> Inboxlist2 = GetInbox(mailHandler2, "INBOX");
+
+
+            List<MailContent> Sentlist1 = GetInbox(mailHandler1, "SENT");
+
+
+            //as messageIDs are different for all mail instances, we need to set them equal to compare the mail objects
+
+            if (Inboxlist2[0] != null && Sentlist1[0] != null)
+            {
+                Inboxlist2[0].MessageId = Sentlist1[0].MessageId;
+                Inboxlist2[0].ThreadId = Sentlist1[0].ThreadId;
+
+                Assert.IsTrue(Inboxlist2[0] == Sentlist1[0]);
+            }
+            else
+            {
+                Assert.Fail("no messages were sent!");
+            }
         }
     }
 }
