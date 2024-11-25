@@ -21,6 +21,16 @@ namespace ExcellentEmailExperience.Model
         private GmailService service;
         private MailAddress mailAddress;
 
+        // modifies the body string so that google doesnt shit itself in fear and panic
+        // and therefor modifies the message to fit its asinine standards
+        public string MakeDaddyGHappy(string body)
+        {
+            body.Replace("\n", "\r\n");
+            body.Replace(" \r", "\r");
+            body += "\r\n";
+
+            return body;
+        }
 
         public GmailHandler(UserCredential credential, MailAddress mailAddress)
         {
