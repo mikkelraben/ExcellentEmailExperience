@@ -40,7 +40,7 @@ namespace ExcellentEmailExperience.Model
             throw new NotImplementedException();
         }
 
-        public IEnumerable<MailContent> GetFolder(string name, bool old, bool refresh)
+        public IEnumerable<MailContent> GetFolder(string name, bool old, bool refresh, int count)
         {
             throw new NotImplementedException();
         }
@@ -91,7 +91,7 @@ namespace ExcellentEmailExperience.Model
             throw new NotImplementedException();
         }
 
-        public void DeleteMail(string MessageId)
+        public void TrashMail(string MessageId)
         {
             throw new NotImplementedException();
         }

@@ -24,7 +24,7 @@ namespace ExcellentEmailExperience.Interfaces
         void ReplyAll(MailContent content, string Response);
         void Send(MailContent content);
 
-        void DeleteMail(string MessageId);
+        void TrashMail(string MessageId);
 
         /// <summary>
         /// Retrieves the names for every mail folder the user has made.
@@ -43,7 +43,7 @@ namespace ExcellentEmailExperience.Interfaces
         /// <param name="old"> True if GetFolder should retrieve older mails, false if newer </param>
         /// <param name="refresh"> True if the mail list should restart at the newest mail </param>
         /// <returns>List containing MailContent, with an upper bound of 50? elements</returns>
-        IEnumerable<MailContent> GetFolder(string name, bool old, bool refresh);
+        IEnumerable<MailContent> GetFolder(string name, bool old, bool refresh,int count);
 
         /// <summary>
         /// Refreshes the mail retrieved in all folders. Calls GetFolder with refresh = true.

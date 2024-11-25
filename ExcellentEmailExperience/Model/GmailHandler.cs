@@ -21,6 +21,17 @@ namespace ExcellentEmailExperience.Model
         private UserCredential userCredential;
         private GmailService service;
         private MailAddress mailAddress;
+
+        // modifies the body string so that google doesnt shit itself in fear and panic
+        // and therefor modifies the message to fit its asinine standards
+        public string MakeDaddyGHappy(string body)
+        {
+            body.Replace("\n", "\r\n");
+            body.Replace(" \r", "\r");
+            body += "\r\n";
+
+            return body;
+        }
         private CacheHandler cache;
 
         public GmailHandler(UserCredential credential, MailAddress mailAddress)
@@ -57,10 +68,16 @@ namespace ExcellentEmailExperience.Model
             Send(Mail);
         }
 
-        public IEnumerable<MailContent> GetFolder(string name, bool old, bool refresh)
+        private void CacheMessage(MailContent mail)
+        {
+
+        }
+
+        public IEnumerable<MailContent> GetFolder(string name, bool old, bool refresh, int count)
         {
             var request = service.Users.Messages.List("me");
             request.LabelIds = name;
+            request.MaxResults = count;
             IList<Google.Apis.Gmail.v1.Data.Message> messages = request.Execute().Messages;
 
             if (messages == null)
@@ -203,6 +220,10 @@ namespace ExcellentEmailExperience.Model
             else if (messagePart.MimeType.StartsWith("application/"))
             {
             }
+            if (mailContent.body.EndsWith("\r\n"))
+            {
+                mailContent.body = mailContent.body.Remove(mailContent.body.Length - 2);
+            }
         }
 
         public string[] GetFolderNames()
@@ -263,11 +284,11 @@ namespace ExcellentEmailExperience.Model
         {
             if (content.to.Count == 0)
             {
-                throw new Exception("no recipient");
+                throw new ArgumentException("A receiver of null was inappropriately allowed.");
             }
             if (content.subject == "")
             {
-                throw new Exception("no subject");
+                throw new ArgumentException("A subject of null was inappropriately allowed.");
             }
 
             content.date = DateTime.Now;
@@ -275,13 +296,20 @@ namespace ExcellentEmailExperience.Model
             var message = new MailMessage
             {
                 Subject = content.subject,
-                From = content.from
+                From = mailAddress
             };
 
             // adds bcc,cc,and recipient.
-            foreach (var recipient in content.to)
+            try
             {
-                message.To.Add(recipient);
+                foreach (var recipient in content.to)
+                {
+                    message.To.Add(recipient);
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine("error in Receiver field" + ex);
             }
 
             // this is bad but we will fix later. this is only for testing purposes. 
@@ -335,12 +363,10 @@ namespace ExcellentEmailExperience.Model
                     {
                         throw new FileNotFoundException("attachment not found", attachment);
                     }
-
+                    Debug.WriteLine("File Exists");
                     string Type = MimeKit.MimeTypes.GetMimeType(attachment);// defines what type of attachment it is
-
-                    byte[] attachmentBytes = File.ReadAllBytes(attachment); // read it
-                    string attach = Convert.ToBase64String(attachmentBytes); // interpret it
-                    Attachment Attachment = new Attachment(attach); // attach it
+                    Debug.WriteLine("type is:" + Type);
+                    Attachment Attachment = new Attachment(attachment); // attach it
                     Attachment.ContentType = new System.Net.Mime.ContentType(Type); // parse with correct type
                     message.Attachments.Add(Attachment); // brrrrrrrrrrrr
                 }
@@ -388,11 +414,11 @@ namespace ExcellentEmailExperience.Model
                 sendRequest.Execute();
             }
         }
-        public void DeleteMail(string MessageId)
+        public void TrashMail(string MessageId)
         {
             try
             {
-                service.Users.Messages.Delete("me", MessageId);
+                service.Users.Messages.Trash("me", MessageId);
             }
             catch (Exception ex)
             {
