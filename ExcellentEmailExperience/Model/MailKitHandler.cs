@@ -40,7 +40,7 @@ namespace ExcellentEmailExperience.Model
             throw new NotImplementedException();
         }
 
-        public IEnumerable<MailContent> GetFolder(string name, bool old, bool refresh)
+        public IEnumerable<MailContent> GetFolder(string name, bool old, bool refresh, int count)
         {
             throw new NotImplementedException();
         }
