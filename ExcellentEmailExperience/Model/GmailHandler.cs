@@ -2,6 +2,7 @@
 using Google.Apis.Auth.OAuth2;
 using Google.Apis.Gmail.v1;
 using Google.Apis.Gmail.v1.Data;
+using Microsoft.Data.Sqlite;
 using MimeKit;
 using System;
 using System.Collections.Generic;
@@ -31,11 +32,13 @@ namespace ExcellentEmailExperience.Model
 
             return body;
         }
+        private CacheHandler cache;
 
         public GmailHandler(UserCredential credential, MailAddress mailAddress)
         {
             userCredential = credential;
             this.mailAddress = mailAddress;
+            cache = new CacheHandler(mailAddress.Address);
 
             service = new GmailService(new Google.Apis.Services.BaseClientService.Initializer()
             {
@@ -84,11 +87,17 @@ namespace ExcellentEmailExperience.Model
 
             foreach (var message in messages)
             {
-                var msg = service.Users.Messages.Get("me", message.Id).Execute();
-                MailContent mailContent = BuildMailContent(msg);
-
-                yield return mailContent;
-
+                if (cache.CheckCache(message.Id))
+                {
+                    yield return cache.GetCache(message.Id);
+                }
+                else
+                {
+                    var msg = service.Users.Messages.Get("me", message.Id).Execute();
+                    MailContent mailContent = BuildMailContent(msg);
+                    //cache.CacheMessage(mailContent, name);
+                    yield return mailContent;
+                }
             }
             yield break;
         }
@@ -227,8 +236,9 @@ namespace ExcellentEmailExperience.Model
             {
                 foreach (var labelItem in labels)
                 {
-                    // TODO: maybe use labelNames.Add(labelItem.Id); but we will think about this after implementing mailkit
-                    labelNames.Add(labelItem.Name);
+                    // TODO: maybe use labelItem.Id instead of labelItem.Name but we will think about this after implementing mailkit
+                    string folderName = labelItem.Name;
+                    labelNames.Add(folderName);
                 }
             }
 
