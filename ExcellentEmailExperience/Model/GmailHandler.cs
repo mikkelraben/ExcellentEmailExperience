@@ -259,11 +259,11 @@ namespace ExcellentEmailExperience.Model
         {
             if (content.to.Count == 0)
             {
-                throw new Exception("no recipient");
+                throw new ArgumentException("A receiver of null was inappropriately allowed.");
             }
             if (content.subject == "")
             {
-                throw new Exception("no subject");
+                throw new ArgumentException("A subject of null was inappropriately allowed.");
             }
 
             content.date = DateTime.Now;
@@ -275,9 +275,16 @@ namespace ExcellentEmailExperience.Model
             };
 
             // adds bcc,cc,and recipient.
-            foreach (var recipient in content.to)
+            try
             {
-                message.To.Add(recipient);
+                foreach (var recipient in content.to)
+                {
+                    message.To.Add(recipient);
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine("error in Receiver field" + ex);
             }
 
             // this is bad but we will fix later. this is only for testing purposes. 
