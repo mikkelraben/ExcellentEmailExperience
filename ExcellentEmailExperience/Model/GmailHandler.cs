@@ -74,6 +74,7 @@ namespace ExcellentEmailExperience.Model
         {
             var request = service.Users.Messages.List("me");
             request.LabelIds = name;
+            request.MaxResults = 20;
             IList<Google.Apis.Gmail.v1.Data.Message> messages = request.Execute().Messages;
 
             if (messages == null)
