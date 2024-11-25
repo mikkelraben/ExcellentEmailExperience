@@ -23,7 +23,7 @@ namespace Test
         MailAddress Address2 = new MailAddress("postmanpergruppe1@gmail.com");
         MailAddress Address3 = new MailAddress("postmandpersbil@gmail.com"); //PENDING new real account
         string validSubject = "For kitty";
-        string validAttachment = @"~\..\..\..\..\..\..\ExcellentEmailExperience\Assets\Icon.png"; //valid attachment path maybe
+        string validAttachment = @"~\..\..\..\..\..\..\ExcellentEmailExperience\Assets\Icon.png"; //valid attachment path maybe testBranch
         string invalidAttachment = "C:/Users/Downloads"; //invalid attachment path maybe
         string username1 = "lillekatemil6@gmail.com";
         string username2 = "postmanpergruppe1@gmail.com";
@@ -50,7 +50,7 @@ namespace Test
         private string validBody_gen()
         {
             int randomInteger = new Random().Next(0, 1000);
-            validBody = string.Format("Hello sweetpeach, i have a new buiscuit waiting for you \n love grandma {0}", randomInteger);
+            validBody = string.Format("Hello sweetpeach, i have a new buiscuit waiting for you\r\n love grandma {0}", randomInteger);
             return validBody;
         }
 
@@ -180,7 +180,7 @@ namespace Test
             //TODO: change amount of requests when api is changed
 
             //let the program sleep for 2 second to make sure the mail is recieved
-            System.Threading.Thread.Sleep(2000);
+            System.Threading.Thread.Sleep(10000);
 
             List<MailContent> Inboxlist2 = GetInbox(mailHandler2, "INBOX");
 
@@ -528,7 +528,7 @@ namespace Test
             mailHandler1.Send(validMail);
 
             //let the program sleep for 2 second to make sure the mail is recieved
-            System.Threading.Thread.Sleep(2000);
+            System.Threading.Thread.Sleep(4000);
 
             List<MailContent> Inboxlist2 = GetInbox(mailHandler2, "INBOX");
 
@@ -541,7 +541,7 @@ namespace Test
                 Inboxlist2[0].MessageId = Sentlist1[0].MessageId;
                 Inboxlist2[0].ThreadId = Sentlist1[0].ThreadId;
 
-                Assert.IsTrue(Inboxlist2[0] == Sentlist1[0]);
+                Assert.AreEqual(Inboxlist2[0], Sentlist1[0]);
             }
             else
             {

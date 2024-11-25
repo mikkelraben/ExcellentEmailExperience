@@ -200,6 +200,10 @@ namespace ExcellentEmailExperience.Model
             else if (messagePart.MimeType.StartsWith("application/"))
             {
             }
+            if (mailContent.body.EndsWith("\r\n"))
+            {
+                mailContent.body = mailContent.body.Remove(mailContent.body.Length - 2);
+            }
         }
 
         public string[] GetFolderNames()
@@ -338,12 +342,10 @@ namespace ExcellentEmailExperience.Model
                     {
                         throw new FileNotFoundException("attachment not found", attachment);
                     }
-
+                    Debug.WriteLine("File Exists");
                     string Type = MimeKit.MimeTypes.GetMimeType(attachment);// defines what type of attachment it is
-
-                    byte[] attachmentBytes = File.ReadAllBytes(attachment); // read it
-                    string attach = Convert.ToBase64String(attachmentBytes); // interpret it
-                    Attachment Attachment = new Attachment(attach); // attach it
+                    Debug.WriteLine("type is:" + Type);
+                    Attachment Attachment = new Attachment(attachment); // attach it
                     Attachment.ContentType = new System.Net.Mime.ContentType(Type); // parse with correct type
                     message.Attachments.Add(Attachment); // brrrrrrrrrrrr
                 }
