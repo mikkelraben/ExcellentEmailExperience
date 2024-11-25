@@ -70,11 +70,11 @@ namespace ExcellentEmailExperience.Model
 
         }
 
-        public IEnumerable<MailContent> GetFolder(string name, bool old, bool refresh)
+        public IEnumerable<MailContent> GetFolder(string name, bool old, bool refresh, int count)
         {
             var request = service.Users.Messages.List("me");
             request.LabelIds = name;
-            request.MaxResults = 20;
+            request.MaxResults = count;
             IList<Google.Apis.Gmail.v1.Data.Message> messages = request.Execute().Messages;
 
             if (messages == null)
