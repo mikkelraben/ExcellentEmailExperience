@@ -171,7 +171,7 @@ namespace ExcellentEmailExperience.Views
             {
                 sidebarLarge = value;
                 BackButton.IsEnabled = !value;
-                Siderbar.Width = value ? 200 : 0;
+                Siderbar.Margin = value ? new(0, 0, 0, 0) : new(-200, 0, 0, 0);
 
             }
         }

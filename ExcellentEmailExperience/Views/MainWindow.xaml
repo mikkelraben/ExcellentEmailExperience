@@ -104,15 +104,18 @@
                     <ColumnDefinition Width="auto"/>
                     <ColumnDefinition Width="270"/>
                 </Grid.ColumnDefinitions>
+                <Grid.ChildrenTransitions>
+                    <RepositionThemeTransition IsStaggeringEnabled="False"/>
+                </Grid.ChildrenTransitions>
 
                 <!--This should be changed to a tree or something-->
-                <ListView Name="Siderbar" Width="0" ItemsSource="{x:Bind accounts}" SelectionMode="None">
+                <ListView Name="Siderbar" Width="200" Margin="-200,0,0,0" ItemsSource="{x:Bind accounts}" SelectionMode="None" Padding="0,0">
                     <ListView.ItemTemplate>
                         <DataTemplate x:DataType="viewmodel:GmailAccountViewModel">
                             <StackPanel>
                                 <Expander HorizontalAlignment="Stretch">
                                     <Expander.Header>
-                                        <TextBlock Text="{x:Bind Name, Mode=OneWay}" Style="{ThemeResource SubtitleTextBlockStyle}" Margin="8,8,8,8"/>
+                                        <TextBlock Text="{x:Bind Name, Mode=OneWay}" Style="{ThemeResource SubtitleTextBlockStyle}"/>
                                     </Expander.Header>
                                     <ListView ItemsSource="{x:Bind mailHandlerViewModel.folders}" ItemClick="ListView_ItemClick" IsItemClickEnabled="True" SelectionChanged="ListView_SelectionChanged" SelectionMode="Single">
                                         <ListView.ItemTemplate>
@@ -127,9 +130,6 @@
                     </ListView.ItemTemplate>
                 </ListView>
                 <Grid Name="Sidebar" Grid.Column="1">
-                    <Grid.Transitions>
-                        <RepositionThemeTransition/>
-                    </Grid.Transitions>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="auto"/>
                         <RowDefinition Height="auto"/>
@@ -177,9 +177,9 @@
                     </ListView>
                 </Grid>
             </Grid>
-            <Frame Name="MainFrame" Grid.Column="1" Grid.RowSpan="2" Background="{ThemeResource LayerFillColorDefaultBrush}" BorderThickness="1,1,0,0" BorderBrush="{ThemeResource CardStrokeColorDefault}" CornerRadius="8,0,0,0">
+            <Frame Name="MainFrame" Grid.Column="1" Margin="0,0,-200,0" Padding="0,0,200,0" Grid.RowSpan="2" Background="{ThemeResource LayerFillColorDefaultBrush}" BorderThickness="1,1,0,0" BorderBrush="{ThemeResource CardStrokeColorDefault}" CornerRadius="8,0,0,0">
                 <Frame.Transitions>
-                    <RepositionThemeTransition/>
+                    <RepositionThemeTransition IsStaggeringEnabled="False"/>
                 </Frame.Transitions>
             </Frame>
             <Grid HorizontalAlignment="Stretch" Grid.Row="1" Margin="5,0,5,0" BorderThickness="0,1,0,0" BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}">
