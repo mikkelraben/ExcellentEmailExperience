@@ -57,7 +57,7 @@ namespace ExcellentEmailExperience.Model
         public void Forward(MailContent content, List<MailAddress> NewTo)
         {
             var Mail = new MailContent();
-            Mail.subject = "Forward: " + Mail.subject;
+            Mail.subject = "Forward: " + content.subject;
             Mail.body = $"Forwarded from {content.from}\n {content.body} \n\n Originally sent to:{content.to}";
 
             //making the currect account the sender. 
