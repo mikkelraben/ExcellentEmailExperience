@@ -26,8 +26,8 @@ namespace ExcellentEmailExperience.Model
         // and therefor modifies the message to fit its asinine standards
         public string MakeDaddyGHappy(string body)
         {
-            body.Replace("\n", "\r\n");
-            body.Replace(" \r", "\r");
+            body = body.Replace("\n", "\r\n");
+            body = body.Replace(" \r", "\r");
             body += "\r\n";
 
             return body;
