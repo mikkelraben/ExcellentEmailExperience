@@ -2,6 +2,7 @@
 using Google.Apis.Auth.OAuth2;
 using Google.Apis.Gmail.v1;
 using Google.Apis.Gmail.v1.Data;
+using Microsoft.Data.Sqlite;
 using MimeKit;
 using System;
 using System.Collections.Generic;
@@ -21,11 +22,23 @@ namespace ExcellentEmailExperience.Model
         private GmailService service;
         private MailAddress mailAddress;
 
+        // modifies the body string so that google doesnt shit itself in fear and panic
+        // and therefor modifies the message to fit its asinine standards
+        public string MakeDaddyGHappy(string body)
+        {
+            body.Replace("\n", "\r\n");
+            body.Replace(" \r", "\r");
+            body += "\r\n";
+
+            return body;
+        }
+        private CacheHandler cache;
 
         public GmailHandler(UserCredential credential, MailAddress mailAddress)
         {
             userCredential = credential;
             this.mailAddress = mailAddress;
+            cache = new CacheHandler(mailAddress.Address);
 
             service = new GmailService(new Google.Apis.Services.BaseClientService.Initializer()
             {
@@ -60,10 +73,11 @@ namespace ExcellentEmailExperience.Model
 
         }
 
-        public IEnumerable<MailContent> GetFolder(string name, bool old, bool refresh)
+        public IEnumerable<MailContent> GetFolder(string name, bool old, bool refresh, int count)
         {
             var request = service.Users.Messages.List("me");
             request.LabelIds = name;
+            request.MaxResults = count;
             IList<Google.Apis.Gmail.v1.Data.Message> messages = request.Execute().Messages;
 
             if (messages == null)
@@ -73,11 +87,17 @@ namespace ExcellentEmailExperience.Model
 
             foreach (var message in messages)
             {
-                var msg = service.Users.Messages.Get("me", message.Id).Execute();
-                MailContent mailContent = BuildMailContent(msg);
-
-                yield return mailContent;
-
+                if (cache.CheckCache(message.Id))
+                {
+                    yield return cache.GetCache(message.Id);
+                }
+                else
+                {
+                    var msg = service.Users.Messages.Get("me", message.Id).Execute();
+                    MailContent mailContent = BuildMailContent(msg);
+                    //cache.CacheMessage(mailContent, name);
+                    yield return mailContent;
+                }
             }
             yield break;
         }
@@ -200,6 +220,10 @@ namespace ExcellentEmailExperience.Model
             else if (messagePart.MimeType.StartsWith("application/"))
             {
             }
+            if (mailContent.body.EndsWith("\r\n"))
+            {
+                mailContent.body = mailContent.body.Remove(mailContent.body.Length - 2);
+            }
         }
 
         public string[] GetFolderNames()
@@ -212,8 +236,9 @@ namespace ExcellentEmailExperience.Model
             {
                 foreach (var labelItem in labels)
                 {
-                    // TODO: maybe use labelNames.Add(labelItem.Id); but we will think about this after implementing mailkit
-                    labelNames.Add(labelItem.Name);
+                    // TODO: maybe use labelItem.Id instead of labelItem.Name but we will think about this after implementing mailkit
+                    string folderName = labelItem.Name;
+                    labelNames.Add(folderName);
                 }
             }
 
@@ -338,12 +363,10 @@ namespace ExcellentEmailExperience.Model
                     {
                         throw new FileNotFoundException("attachment not found", attachment);
                     }
-
+                    Debug.WriteLine("File Exists");
                     string Type = MimeKit.MimeTypes.GetMimeType(attachment);// defines what type of attachment it is
-
-                    byte[] attachmentBytes = File.ReadAllBytes(attachment); // read it
-                    string attach = Convert.ToBase64String(attachmentBytes); // interpret it
-                    Attachment Attachment = new Attachment(attach); // attach it
+                    Debug.WriteLine("type is:" + Type);
+                    Attachment Attachment = new Attachment(attachment); // attach it
                     Attachment.ContentType = new System.Net.Mime.ContentType(Type); // parse with correct type
                     message.Attachments.Add(Attachment); // brrrrrrrrrrrr
                 }

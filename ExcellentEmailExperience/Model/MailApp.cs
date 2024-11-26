@@ -1,11 +1,7 @@
 ﻿using ExcellentEmailExperience.Interfaces;
-using Microsoft.UI.Xaml.Controls;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
-using System.Linq;
-using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Windows.Storage;
@@ -37,7 +33,7 @@ namespace ExcellentEmailExperience.Model
             accounts.Add(account);
         }
 
-        public void DeleteAccount()
+        public void DeleteAccount(IAccount account)
         {
             throw new NotImplementedException();
         }

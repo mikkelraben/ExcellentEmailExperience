@@ -23,7 +23,7 @@ namespace Test
         MailAddress Address2 = new MailAddress("postmanpergruppe1@gmail.com");
         MailAddress Address3 = new MailAddress("postmandpersbil@gmail.com"); //PENDING new real account
         string validSubject = "For kitty";
-        string validAttachment = "C:/Users/Downloads/Untitled_Artwork (3).png"; //valid attachment path maybe
+        string validAttachment = @"~\..\..\..\..\..\..\ExcellentEmailExperience\Assets\Icon.png"; //valid attachment path maybe testBranch
         string invalidAttachment = "C:/Users/Downloads"; //invalid attachment path maybe
         string username1 = "lillekatemil6@gmail.com";
         string username2 = "postmanpergruppe1@gmail.com";
@@ -33,7 +33,7 @@ namespace Test
         IAccount account1 = new GmailAccount();
         IAccount account2 = new GmailAccount();
         IAccount account3 = new GmailAccount(); //PENDING new real account
-
+        MailApp MailApp = new MailApp();
         //accessing the refresh tokens from the environment variables stored locally on pc
         string? REFRESHTOKEN1 = Environment.GetEnvironmentVariable("REFRESHTOKEN1");
 
@@ -50,7 +50,7 @@ namespace Test
         private string validBody_gen()
         {
             int randomInteger = new Random().Next(0, 1000);
-            validBody = string.Format("Hello sweetpeach, i have a new buiscuit waiting for you \n love grandma {0}", randomInteger);
+            validBody = string.Format("Hello sweetpeach, i have a new buiscuit waiting for you\r\n love grandma {0}", randomInteger);
             return validBody;
         }
 
@@ -62,7 +62,7 @@ namespace Test
             List<MailContent> inbox = new();
 
 
-            foreach (var mail in mailHandler.GetFolder(folder, false, false))
+            foreach (var mail in mailHandler.GetFolder(folder, false, false, 20))
             {
                 inbox.Add(mail);
                 inbox.Sort((x, y) => -x.date.CompareTo(y.date));
@@ -74,6 +74,7 @@ namespace Test
         public void UnitTest_init()
         {
 
+            MailApp.NewAccount(account1);
 
             CredentialHandler.AddCredential(username1, REFRESHTOKEN1);
 
@@ -179,7 +180,7 @@ namespace Test
             //TODO: change amount of requests when api is changed
 
             //let the program sleep for 2 second to make sure the mail is recieved
-            System.Threading.Thread.Sleep(2000);
+            System.Threading.Thread.Sleep(10000);
 
             List<MailContent> Inboxlist2 = GetInbox(mailHandler2, "INBOX");
 
@@ -382,6 +383,7 @@ namespace Test
 
                 //here we also have to set cc to null as reply doesnt include cc
                 Sentlist3[0].cc = null;
+                Sentlist3[0].subject = "RE: " + validSubject;
 
                 Assert.IsTrue(Sentlist3[0] == Inboxlist1[0]);
             }
@@ -441,6 +443,7 @@ namespace Test
             {
                 Sentlist3[0].MessageId = Sentlist1[0].MessageId;
                 Sentlist3[0].ThreadId = Sentlist1[0].ThreadId;
+                Sentlist3[0].subject = "RE: " + validSubject;
 
                 Assert.IsTrue(Sentlist3[0] == Sentlist1[0]);
             }
@@ -525,7 +528,7 @@ namespace Test
             mailHandler1.Send(validMail);
 
             //let the program sleep for 2 second to make sure the mail is recieved
-            System.Threading.Thread.Sleep(2000);
+            System.Threading.Thread.Sleep(4000);
 
             List<MailContent> Inboxlist2 = GetInbox(mailHandler2, "INBOX");
 
@@ -538,7 +541,7 @@ namespace Test
                 Inboxlist2[0].MessageId = Sentlist1[0].MessageId;
                 Inboxlist2[0].ThreadId = Sentlist1[0].ThreadId;
 
-                Assert.IsTrue(Inboxlist2[0] == Sentlist1[0]);
+                Assert.AreEqual(Inboxlist2[0], Sentlist1[0]);
             }
             else
             {
@@ -567,6 +570,7 @@ namespace Test
             System.Threading.Thread.Sleep(2000);
 
             List<MailContent> Inboxlist2 = GetInbox(mailHandler2, "INBOX");
+            List<MailContent> Sentlist1 = GetInbox(mailHandler1, "SENT");
 
             if (Inboxlist2[0] != null)
             {
@@ -582,13 +586,28 @@ namespace Test
 
             List<MailContent> Trashlist2 = GetInbox(mailHandler2, "TRASH");
 
-            Assert.IsTrue(Trashlist2[0] == Inboxlist2[0]);
+            Assert.IsTrue(Trashlist2[0] == Sentlist1[0]);
+            Assert.IsTrue(Trashlist2[0] != Inboxlist2[0]);
 
         }
 
         [TestMethod]
+        [ExpectedException(typeof(ArgumentException),
+        "Cant add account twice.")]
         public void TestMethod_Multiple_acc()
         {
+            MailApp.NewAccount(account2);
+
+            MailApp.NewAccount(account1);
+        }
+
+        [TestMethod]
+        public void TestMethod_DeleteAccount()
+        {
+            MailApp MailApp1 = new();
+            MailApp1.NewAccount(account1);
+            MailApp1.DeleteAccount(account1);
+            Assert.IsFalse(MailApp1.HasAccount());
 
         }
     }
