@@ -68,11 +68,6 @@ namespace ExcellentEmailExperience.Model
             Send(Mail);
         }
 
-        private void CacheMessage(MailContent mail)
-        {
-
-        }
-
         public IEnumerable<MailContent> GetFolder(string name, bool old, bool refresh, int count)
         {
             var request = service.Users.Messages.List("me");
@@ -95,7 +90,7 @@ namespace ExcellentEmailExperience.Model
                 {
                     var msg = service.Users.Messages.Get("me", message.Id).Execute();
                     MailContent mailContent = BuildMailContent(msg);
-                    //cache.CacheMessage(mailContent, name);
+                    cache.CacheMessage(mailContent, name);
                     yield return mailContent;
                 }
             }
