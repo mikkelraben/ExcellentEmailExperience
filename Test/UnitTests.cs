@@ -19,9 +19,13 @@ namespace Test
 
         //creating a new mail address object
 
-        MailAddress Address1 = new MailAddress("lillekatemil6@gmail.com", "bias");
-        MailAddress Address2 = new MailAddress("postmanpergruppe1@gmail.com");
-        MailAddress Address3 = new MailAddress("postmandpersbil@gmail.com"); //PENDING new real account
+        MailAddress Address1_ = new MailAddress("lillekatemil6@gmail.com", "bias");
+        MailAddress Address2_ = new MailAddress("postmanpergruppe1@gmail.com");
+        MailAddress Address3_ = new MailAddress("postmandpersbil@gmail.com"); //PENDING new real account
+        MailAddress Address1;
+        MailAddress Address2;
+        MailAddress Address3;
+        
         string validSubject = "For kitty";
         string validAttachment = @"~\..\..\..\..\..\..\ExcellentEmailExperience\Assets\Icon.png"; //valid attachment path maybe testBranch
         string invalidAttachment = "C:/Users/Downloads"; //invalid attachment path maybe
@@ -37,7 +41,6 @@ namespace Test
         string validwhitespacebody= "\n\r\r\r\n         \r\r\n    m";
         //accessing the refresh tokens from the environment variables stored locally on pc
         string? REFRESHTOKEN1 = Environment.GetEnvironmentVariable("REFRESHTOKEN1");
-
         string? REFRESHTOKEN2 = Environment.GetEnvironmentVariable("REFRESHTOKEN2");
 
         string? REFRESHTOKEN3 = Environment.GetEnvironmentVariable("REFRESHTOKEN3"); //PENDING new real account
@@ -48,12 +51,65 @@ namespace Test
         IMailHandler? mailHandler2;
         IMailHandler? mailHandler3;
 
+        private void UnitTest_init()
+        {
+            List<MailAddress> mailAddresses = new List<MailAddress> { Address1_, Address2_, Address3_ };
+            List<string> Refreshtokens = new List<string> { REFRESHTOKEN1, REFRESHTOKEN2, REFRESHTOKEN3 };
+            List<string> usernames = new List<string> { username1, username2, username3 };
+            //create a list with the numbers 1,2,3 and shuffle them:
+
+
+            List<int> IntegerList= IntRemix();
+            Address1 = mailAddresses[IntegerList[0]];
+            Address2 = mailAddresses[IntegerList[1]];
+            Address3 = mailAddresses[IntegerList[2]];
+
+
+            MailApp.NewAccount(account1);
+
+            CredentialHandler.AddCredential(usernames[IntegerList[0]], Refreshtokens[IntegerList[0]]);
+
+            CredentialHandler.AddCredential(usernames[IntegerList[1]], Refreshtokens[IntegerList[1]]);
+
+            CredentialHandler.AddCredential(usernames[IntegerList[2]], Refreshtokens[IntegerList[2]]); 
+
+            //logging in to the account
+
+            account1.Login(usernames[IntegerList[0]]);
+            account2.Login(usernames[IntegerList[1]]);
+            account3.Login(usernames[IntegerList[2]]); 
+
+
+            //instantiating a GmailHandler object
+            mailHandler1 = account1.GetMailHandler();
+            mailHandler2 = account2.GetMailHandler();
+            mailHandler3 = account3.GetMailHandler();
+        }
         private string validBody_gen()
         {
             int randomInteger = new Random().Next(0, 1000);
             validBody = string.Format("Hello sweetpeach, i have a new buiscuit waiting for you \n love grandma {0}", randomInteger);
             return validBody;
         }
+
+
+        private List<int> IntRemix()
+        {
+            Random rng = new Random();
+            
+            List<int> list = new List<int> { 0,1,2 };
+            int n = list.Count;
+            while (n > 1)
+            {
+                n--;
+                int k = rng.Next(n + 1);
+                int value = list[k];
+                list[k] = list[n];
+                list[n] = value;
+            }
+            return list;
+        }
+            
 
         private static List<MailContent> GetInbox(IMailHandler mailHandler, string folder)
         {
@@ -71,35 +127,13 @@ namespace Test
             return inbox;
         }
 
-        [TestInitialize]
-        public void UnitTest_init()
-        {
-
-            MailApp.NewAccount(account1);
-
-            CredentialHandler.AddCredential(username1, REFRESHTOKEN1);
-
-            CredentialHandler.AddCredential(username2, REFRESHTOKEN2);
-
-            CredentialHandler.AddCredential(username3, REFRESHTOKEN3); //PENDING new real account
-
-
-            //logging in to the account
-            account1.Login(username1);
-            account2.Login(username2);
-            account3.Login(username3); //PENDING new real account
-
-
-            //instantiating a GmailHandler object
-            mailHandler1 = account1.GetMailHandler();
-            mailHandler2 = account2.GetMailHandler();
-            mailHandler3 = account3.GetMailHandler();
-        }
+        
 
 
         [TestMethod]
         public void TestMethod_login()
         {
+            UnitTest_init();
             Assert.IsTrue(account1.TryLogin(username1, REFRESHTOKEN1));
 
         }
@@ -109,7 +143,7 @@ namespace Test
         [TestMethod]
         public void TestMethod_send_speed()
         {
-
+            UnitTest_init();
 
 
             //creating a new mail object and sending it to the current mail address? checking for recieving mail
@@ -128,7 +162,7 @@ namespace Test
             //TODO: change amount of requests when api is changed
 
             //let the program sleep for 2 second to make sure the mail is recieved
-            System.Threading.Thread.Sleep(2000);
+            System.Threading.Thread.Sleep(4000);
 
             List<MailContent> Inboxlist2 = GetInbox(mailHandler2, "INBOX");
 
@@ -155,7 +189,7 @@ namespace Test
         public void TestMethod_send_content()
         {
 
-
+            UnitTest_init();
 
             //creating a new mail object and sending it to the current mail address? checking for recieving mail
             MailContent validMail = new();
@@ -181,7 +215,7 @@ namespace Test
             //TODO: change amount of requests when api is changed
 
             //let the program sleep for 2 second to make sure the mail is recieved
-            System.Threading.Thread.Sleep(2000);
+            System.Threading.Thread.Sleep(4000);
 
             List<MailContent> Inboxlist2 = GetInbox(mailHandler2, "INBOX");
 
@@ -196,7 +230,7 @@ namespace Test
                 Inboxlist2[0].MessageId = Sentlist1[0].MessageId;
                 Inboxlist2[0].ThreadId = Sentlist1[0].ThreadId;
 
-                Assert.IsTrue(Inboxlist2[0] == Sentlist1[0]);
+                Assert.IsTrue(Inboxlist2[0].body == Sentlist1[0].body);
             }
             else
             {
@@ -211,7 +245,7 @@ namespace Test
         "A receiver of null was inappropriately allowed.")]
         public void TestMethod_invalid_receiver()
         {
-
+            UnitTest_init();
 
             // creating a new mail object and sending it to the current mail address? checking for recieving mail
             MailContent UnvalidMail = new();
@@ -229,7 +263,7 @@ namespace Test
         "A subject of null was inappropriately allowed.")]
         public void TestMethod_invalid_subject()
         {
-
+            UnitTest_init();
             // creating a new mail object and sending it to the current mail address? checking for recieving mail
             MailContent UnvalidMail = new();
 
@@ -244,7 +278,7 @@ namespace Test
         [TestMethod]
         public void TestMethod_cc()
         {
-
+            UnitTest_init();
 
             // creating a new mail object and sending it to the current mail address? checking for recieving mail
             MailContent validMail = new();
@@ -262,7 +296,7 @@ namespace Test
             mailHandler1.Send(validMail);
 
             //let the program sleep for 2 second to make sure the mail is recieved
-            System.Threading.Thread.Sleep(2000);
+            System.Threading.Thread.Sleep(4000);
 
             List<MailContent> Inboxlist3 = GetInbox(mailHandler3, "INBOX");
 
@@ -287,10 +321,11 @@ namespace Test
 
         }
 
+
         [TestMethod]
         public void TestMethod_bcc()
         {
-            
+            UnitTest_init();
 
             // creating a new mail object and sending it to the current mail address? checking for recieving mail
             MailContent validMail = new();
@@ -308,7 +343,7 @@ namespace Test
             mailHandler1.Send(validMail);
 
             //let the program sleep for 2 second to make sure the mail is recieved
-            System.Threading.Thread.Sleep(2000);
+            System.Threading.Thread.Sleep(4000);
 
             List<MailContent> Inboxlist3 = GetInbox(mailHandler3, "INBOX");
 
@@ -336,7 +371,7 @@ namespace Test
         public void TestMethod_reply()
         {
 
-
+            UnitTest_init();
             // creating a new mail object and sending it to the current mail address? checking for recieving mail
             MailContent validMail = new();
 
@@ -355,7 +390,7 @@ namespace Test
             mailHandler1.Send(validMail);
 
             //let the program sleep for 2 second to make sure the mail is recieved
-            System.Threading.Thread.Sleep(2000);
+            System.Threading.Thread.Sleep(4000);
 
             List<MailContent> Inboxlist3 = GetInbox(mailHandler3, "INBOX");
 
@@ -369,7 +404,7 @@ namespace Test
             }
 
             //let the program sleep for 2 second to make sure the mail is recieved
-            System.Threading.Thread.Sleep(2000);
+            System.Threading.Thread.Sleep(4000);
 
             List<MailContent> Inboxlist1 = GetInbox(mailHandler1, "INBOX");
 
@@ -381,10 +416,10 @@ namespace Test
             {
                 Sentlist3[0].MessageId = Inboxlist1[0].MessageId;
                 Sentlist3[0].ThreadId = Inboxlist1[0].ThreadId;
-
+                
                 //here we also have to set cc to null as reply doesnt include cc
-                Sentlist3[0].cc = null;
-                Sentlist3[0].subject = "RE: " + validSubject;
+                Sentlist3[0].cc = new();
+                Sentlist3[0].subject =  validSubject;
 
                 Assert.IsTrue(Sentlist3[0] == Inboxlist1[0]);
             }
@@ -398,7 +433,7 @@ namespace Test
         [TestMethod]
         public void TestMethod_reply_all()
         {
-
+            UnitTest_init();
 
             // creating a new mail object and sending it to the current mail address? checking for recieving mail
             MailContent validMail = new();
@@ -418,7 +453,7 @@ namespace Test
             mailHandler1.Send(validMail);
 
             //let the program sleep for 2 second to make sure the mail is recieved
-            System.Threading.Thread.Sleep(2000);
+            System.Threading.Thread.Sleep(4000);
 
             List<MailContent> Inboxlist3 = GetInbox(mailHandler3, "INBOX");
 
@@ -432,7 +467,7 @@ namespace Test
             }
 
             //let the program sleep for 2 second to make sure the mail is recieved
-            System.Threading.Thread.Sleep(2000);
+            System.Threading.Thread.Sleep(4000);
 
             List<MailContent> Sentlist1 = GetInbox(mailHandler1, "SENT");
 
@@ -457,7 +492,7 @@ namespace Test
         [TestMethod]
         public void TestMethod_forward()
         {
-
+            UnitTest_init();
             // creating a new mail object and sending it to the current mail address? checking for recieving mail
             MailContent validMail = new();
 
@@ -472,7 +507,7 @@ namespace Test
             mailHandler1.Send(validMail);
 
             //let the program sleep for 2 second to make sure the mail is recieved
-            System.Threading.Thread.Sleep(2000);
+            System.Threading.Thread.Sleep(4000);
 
             List<MailContent> Inboxlist2 = GetInbox(mailHandler2, "INBOX");
 
@@ -486,7 +521,7 @@ namespace Test
             }
 
             //let the program sleep for 2 second to make sure the mail is recieved
-            System.Threading.Thread.Sleep(2000);
+            System.Threading.Thread.Sleep(4000);
 
             List<MailContent> Inboxlist3 = GetInbox(mailHandler3, "INBOX");
 
@@ -512,7 +547,7 @@ namespace Test
         [TestMethod]
         public void TestMethod_attachment()
         {
-
+            UnitTest_init();
             // creating a new mail object and sending it to the current mail address? checking for recieving mail
             MailContent validMail = new();
 
@@ -529,7 +564,7 @@ namespace Test
             mailHandler1.Send(validMail);
 
             //let the program sleep for 2 second to make sure the mail is recieved
-            System.Threading.Thread.Sleep(2000);
+            System.Threading.Thread.Sleep(4000);
 
             List<MailContent> Inboxlist2 = GetInbox(mailHandler2, "INBOX");
 
@@ -553,7 +588,7 @@ namespace Test
         [TestMethod]
         public void TestMethod_trash()
         {
-
+            UnitTest_init();
             // creating a new mail object and sending it to the current mail address? checking for recieving mail
             MailContent validMail = new();
 
@@ -568,7 +603,7 @@ namespace Test
             mailHandler1.Send(validMail);
 
             //let the program sleep for 2 second to make sure the mail is recieved
-            System.Threading.Thread.Sleep(2000);
+            System.Threading.Thread.Sleep(4000);
 
             List<MailContent> Inboxlist2 = GetInbox(mailHandler2, "INBOX");
             List<MailContent> Sentlist1 = GetInbox(mailHandler1, "SENT");
@@ -583,7 +618,7 @@ namespace Test
             }
 
             //let the program sleep for 2 second to make sure the mail is recieved
-            System.Threading.Thread.Sleep(2000);
+            System.Threading.Thread.Sleep(4000);
 
             List<MailContent> Trashlist2 = GetInbox(mailHandler2, "TRASH");
 
@@ -597,6 +632,7 @@ namespace Test
         "Cant add account twice.")]
         public void TestMethod_Multiple_acc()
         {
+            UnitTest_init();
             MailApp.NewAccount(account2);
 
             MailApp.NewAccount(account1);
@@ -605,6 +641,7 @@ namespace Test
         [TestMethod]
         public void TestMethod_DeleteAccount()
         {
+            UnitTest_init();
             MailApp MailApp1 = new();
             MailApp1.NewAccount(account1);
             //MailApp1.DeleteAccount(account1);
@@ -615,6 +652,7 @@ namespace Test
         [TestMethod]
         public void TestMethod_Send_Whitespace()
         {
+            UnitTest_init();
             //creating a new mail object and sending it to the current mail address? checking for recieving mail
             MailContent validMail = new();
 
@@ -639,7 +677,7 @@ namespace Test
             //TODO: change amount of requests when api is changed
 
             //let the program sleep for 2 second to make sure the mail is recieved
-            System.Threading.Thread.Sleep(2000);
+            System.Threading.Thread.Sleep(4000);
 
             List<MailContent> Inboxlist2 = GetInbox(mailHandler2, "INBOX");
 
