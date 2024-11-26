@@ -119,7 +119,7 @@ namespace Test
             List<MailContent> inbox = new();
 
 
-            foreach (var mail in mailHandler.GetFolder(folder, false, false))
+            foreach (var mail in mailHandler.GetFolder(folder, false, false, 20))
             {
                 inbox.Add(mail);
                 inbox.Sort((x, y) => -x.date.CompareTo(y.date));

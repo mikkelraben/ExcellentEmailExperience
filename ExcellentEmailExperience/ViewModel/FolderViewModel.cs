@@ -26,7 +26,7 @@ namespace ExcellentEmailExperience.ViewModel
             {
                 try
                 {
-                    foreach (var mail in mailHandler.GetFolder(name, false, false))
+                    foreach (var mail in mailHandler.GetFolder(name, false, false,20))
                     {
                         if (cancellationToken.IsCancellationRequested)
                         {
