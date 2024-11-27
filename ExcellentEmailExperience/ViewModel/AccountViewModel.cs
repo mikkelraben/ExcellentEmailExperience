@@ -34,6 +34,9 @@ namespace ExcellentEmailExperience.ViewModel
         }
 
         [ObservableProperty]
+        private bool isExpanded = false;
+
+        [ObservableProperty]
         public string name;
         public MailAddress emailAddress;
 

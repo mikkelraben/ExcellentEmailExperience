@@ -19,6 +19,7 @@ using WinUIEx;
 
 namespace ExcellentEmailExperience.Views
 {
+
     /// <summary>
     /// An empty window that can be used on its own or navigated to within a Frame.
     /// </summary>
@@ -28,6 +29,7 @@ namespace ExcellentEmailExperience.Views
         FolderViewModel currentFolder;
         ObservableCollection<AccountViewModel> accounts = new();
         CancellationTokenSource cancellationToken = new();
+        UserMessageViewModel MessageViewModel = new();
 
         public MainWindow(MailApp mailApp)
         {
@@ -51,26 +53,44 @@ namespace ExcellentEmailExperience.Views
 
             mailApp.Accounts.ForEach(account =>
             {
-                if (account is GmailAccount)
+                if (account is GmailAccount gmail)
                 {
-                    accounts.Add(new GmailAccountViewModel(account as GmailAccount, DispatcherQueue, cancellationToken.Token));
+                    accounts.Add(new GmailAccountViewModel(gmail, DispatcherQueue, cancellationToken.Token));
                 }
             });
 
             Closed += (s, e) => cancellationToken.Cancel();
 
+            mailApp.SaveAccounts();
+            mailApp.SaveAppSettings();
+
+            Email email = new();
+            email.Initialize();
+            MainFrame.Content = email;
+
+            SizeChanged += MainWindow_SizeChanged;
+
+            if (accounts.Count == 0)
+            {
+                MessageHandler.AddMessage("No accounts found", MessageSeverity.Error);
+                return;
+            }
+            if (accounts[0].mailHandlerViewModel.folders.Count == 0)
+            {
+                MessageHandler.AddMessage("No folders found", MessageSeverity.Error);
+                return;
+            }
             currentFolder = accounts[0].mailHandlerViewModel.folders[0];
 
             FolderName.Text = currentFolder.Name;
 
             MailList.ItemsSource = currentFolder.mails;
 
-            mailApp.SaveAccounts();
 
-            Email email = new();
-            email.Initialize();
-            MainFrame.Content = email;
-            SizeChanged += MainWindow_SizeChanged;
+
+
+
+
         }
 
         private void MainWindow_SizeChanged(object sender, WindowSizeChangedEventArgs args)
@@ -170,7 +190,6 @@ namespace ExcellentEmailExperience.Views
             get => sidebarLarge; set
             {
                 sidebarLarge = value;
-                BackButton.IsEnabled = !value;
                 Siderbar.Margin = value ? new(0, 0, 0, 0) : new(-200, 0, 0, 0);
 
             }
@@ -178,10 +197,7 @@ namespace ExcellentEmailExperience.Views
 
         private void BackButton_Click(object sender, RoutedEventArgs e)
         {
-            if (!SidebarLarge)
-            {
-                SidebarLarge = true;
-            }
+            SidebarLarge = !SidebarLarge;
         }
 
         private void SettingsButton_Click(object sender, RoutedEventArgs e)
@@ -214,25 +230,6 @@ namespace ExcellentEmailExperience.Views
             Closed += (s, e) => settings.Close();
         }
 
-
-        private void ListView_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            if (e.AddedItems.Count == 0)
-            {
-                return;
-            }
-            currentFolder = (e.AddedItems[0] as FolderViewModel);
-            (sender as ListView).SelectedItem = null;
-            FolderName.Text = currentFolder.Name;
-            MailList.ItemsSource = currentFolder.mails;
-            SidebarLarge = false;
-        }
-
-        private void StackPanel_PointerReleased(object sender, Microsoft.UI.Xaml.Input.PointerRoutedEventArgs e)
-        {
-            SidebarLarge = false;
-        }
-
         private void ListView_ItemClick(object sender, ItemClickEventArgs e)
         {
             SidebarLarge = false;
@@ -246,6 +243,35 @@ namespace ExcellentEmailExperience.Views
 
             (MainFrame.Content as Email).ChangeMail(mailContent, true);
 
+        }
+
+        private void Siderbar_SelectionChanged(TreeView sender, TreeViewSelectionChangedEventArgs args)
+        {
+            if (args.AddedItems.Count != 1)
+            {
+                MessageHandler.AddMessage("Multiple items selected", MessageSeverity.Error);
+                return;
+            }
+            if (args.AddedItems[0] is FolderViewModel folder)
+            {
+                currentFolder = folder;
+                FolderName.Text = currentFolder.Name;
+                MailList.ItemsSource = currentFolder.mails;
+                SidebarLarge = false;
+            }
+        }
+
+        private void MessagesBar_Loaded(object sender, RoutedEventArgs e)
+        {
+            var infoBar = (sender as InfoBar);
+            var message = infoBar.DataContext as Message;
+            MessageSeverityToInfoBarSeverity converter = new();
+            infoBar.Severity = (InfoBarSeverity)converter.Convert(message.severity, typeof(MessageSeverity), null, null);
+        }
+
+        private void MessagesBar_Closed(InfoBar sender, InfoBarClosedEventArgs args)
+        {
+            MessageViewModel.messages.Remove(sender.DataContext as Message);
         }
     }
 
@@ -290,55 +316,50 @@ namespace ExcellentEmailExperience.Views
         }
     }
 
-    //public static class AncestorSource
-    //{
-    //    public static readonly DependencyProperty AncestorTypeProperty =
-    //        DependencyProperty.RegisterAttached(
-    //            "AncestorType",
-    //            typeof(Type),
-    //            typeof(AncestorSource),
-    //            new PropertyMetadata(default(Type), OnAncestorTypeChanged)
-    //    );
+    public class MessageSeverityToInfoBarSeverity : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, string language)
+        {
+            InfoBarSeverity severity = InfoBarSeverity.Informational;
+            switch (value)
+            {
+                case MessageSeverity.Info:
+                    severity = InfoBarSeverity.Informational;
+                    break;
+                case MessageSeverity.Success:
+                    severity = InfoBarSeverity.Success;
+                    break;
+                case MessageSeverity.Warning:
+                    severity = InfoBarSeverity.Warning;
+                    break;
+                case MessageSeverity.Error:
+                    severity = InfoBarSeverity.Error;
+                    break;
+            }
+            return severity;
+        }
+        public object ConvertBack(object value, Type targetType, object parameter, string language)
+        {
+            throw new NotImplementedException();
+        }
+    }
 
-    //    public static void SetAncestorType(FrameworkElement element, Type value) =>
-    //        element.SetValue(AncestorTypeProperty, value);
+    class SiderbarTemplateSelector : DataTemplateSelector
+    {
+        public DataTemplate AccountTemplate { get; set; }
+        public DataTemplate FolderTemplate { get; set; }
 
-    //    public static Type GetAncestorType(FrameworkElement element) =>
-    //        (Type)element.GetValue(AncestorTypeProperty);
-
-    //    private static void OnAncestorTypeChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
-    //    {
-    //        FrameworkElement target = (FrameworkElement)d;
-    //        if (target.IsLoaded)
-    //            SetDataContext(target);
-    //        else
-    //            target.Loaded += OnTargetLoaded;
-    //    }
-
-    //    private static void OnTargetLoaded(object sender, RoutedEventArgs e)
-    //    {
-    //        FrameworkElement target = (FrameworkElement)sender;
-    //        target.Loaded -= OnTargetLoaded;
-    //        SetDataContext(target);
-    //    }
-
-    //    private static void SetDataContext(FrameworkElement target)
-    //    {
-    //        Type ancestorType = GetAncestorType(target);
-    //        if (ancestorType != null)
-    //            target.DataContext = FindParent(target, ancestorType);
-    //    }
-
-    //    private static object FindParent(DependencyObject dependencyObject, Type ancestorType)
-    //    {
-    //        DependencyObject parent = VisualTreeHelper.GetParent(dependencyObject);
-    //        if (parent == null)
-    //            return null;
-
-    //        if (ancestorType.IsInstanceOfType(parent))
-    //            return parent;
-
-    //        return FindParent(parent, ancestorType);
-    //    }
-    //}
+        protected override DataTemplate SelectTemplateCore(object item)
+        {
+            if (item is GmailAccountViewModel)
+            {
+                return AccountTemplate;
+            }
+            else if (item is FolderViewModel)
+            {
+                return FolderTemplate;
+            }
+            throw new NotImplementedException();
+        }
+    }
 }

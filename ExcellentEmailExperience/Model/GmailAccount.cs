@@ -86,6 +86,7 @@ namespace ExcellentEmailExperience.Model
 
             if (userCredential == null)
             {
+                MessageHandler.AddMessage("Login failed", MessageSeverity.Error);
                 throw new Exception("Login failed");
             }
             handler = new GmailHandler(userCredential, mailAddress);

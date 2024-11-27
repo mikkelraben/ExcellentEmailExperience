@@ -19,6 +19,7 @@ using System.Threading.Tasks;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
 using Windows.Storage;
+using Windows.Storage.Pickers;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -131,6 +132,40 @@ namespace ExcellentEmailExperience.Views
         private void FromAddress_ItemInvoked(ItemsView sender, ItemsViewItemInvokedEventArgs args)
         {
 
+        }
+
+        private async void SaveAttachment(object sender, RoutedEventArgs e)
+        {
+            string path = ((e.OriginalSource as MenuFlyoutItem).DataContext as string);
+
+
+            FileSavePicker savePicker = new FileSavePicker();
+            savePicker.SuggestedStartLocation = PickerLocationId.DocumentsLibrary;
+            savePicker.SuggestedFileName = Path.GetFileName(path);
+            savePicker.FileTypeChoices.Add("Attachment", new List<string>() { Path.GetExtension(path) });
+
+            var window = App.mainWindow;
+            var hWnd = WinRT.Interop.WindowNative.GetWindowHandle(window);
+            WinRT.Interop.InitializeWithWindow.Initialize(savePicker, hWnd);
+
+            var file = await savePicker.PickSaveFileAsync();
+            if (file != null)
+            {
+                StorageFile storageFile = await StorageFile.GetFileFromPathAsync(path);
+                await storageFile.CopyAndReplaceAsync(file);
+            }
+        }
+    }
+
+    public class CountToVisibility : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, string language)
+        {
+            return (int)value > 0 ? Visibility.Visible : Visibility.Collapsed;
+        }
+        public object ConvertBack(object value, Type targetType, object parameter, string language)
+        {
+            throw new NotImplementedException();
         }
     }
 }

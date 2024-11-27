@@ -10,13 +10,17 @@
     mc:Ignorable="d"
     Background="Transparent">
 
+    <Page.Resources>
+        <local:CountToVisibility x:Key="CountToVisibility"/>
+    </Page.Resources>
+
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
-        <Grid Height="60">
+        <Grid>
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="*"/>
@@ -40,15 +44,20 @@
                 To
             </TextBlock>
             <!--<TextBlock Text="{x:Bind viewModel.To.Count,Mode=OneWay}"/>-->
-            <ItemsView ItemsSource="{x:Bind viewModel.To,Mode=OneWay}" Margin="12,4" SelectionMode="None" ItemInvoked="FromAddress_ItemInvoked" Grid.Column="1" Grid.Row="1">
+            <ItemsView ItemsSource="{x:Bind viewModel.To,Mode=OneWay}" Margin="-1,0" SelectionMode="None" ItemInvoked="FromAddress_ItemInvoked" Grid.Column="1" Grid.Row="1">
+                <ItemsView.Layout>
+                    <LinedFlowLayout ItemsStretch="Fill" LineHeight="27"/>
+                </ItemsView.Layout>
                 <ItemsView.ItemTemplate>
                     <DataTemplate x:DataType="mail:MailAddress">
                         <ItemContainer>
-                            
-                        <TextBlock Margin="12,4" Grid.Column="1" Grid.Row="0" IsTextSelectionEnabled="True" ToolTipService.ToolTip="{x:Bind Address}">
-                            <Run Text="{x:Bind DisplayName}" FontSize="14"/>
-                            <Run Text="{x:Bind Address}" FontSize="12" Foreground="{ThemeResource TextFillColorDisabledBrush}"/>
-                        </TextBlock>
+
+
+
+                            <TextBlock Margin="12,4" Grid.Column="1" Grid.Row="0" IsTextSelectionEnabled="True" ToolTipService.ToolTip="{x:Bind Address}" HorizontalAlignment="Left" HorizontalTextAlignment="Left">
+                                <Run Text="{x:Bind DisplayName}" FontSize="14"/>
+                                <Run Text="{x:Bind Address}" FontSize="12" Foreground="{ThemeResource TextFillColorDisabledBrush}"/>
+                            </TextBlock>
 
                         </ItemContainer>
                     </DataTemplate>
@@ -64,19 +73,34 @@
             <TextBlock Text="No mail selected." IsTextSelectionEnabled="True" Margin="12,12" VerticalAlignment="Center" HorizontalAlignment="Center"/>
         </Grid>
         <WebView2 Grid.Row="1" x:Name="HTMLViewer" Visibility="Collapsed" CanGoBack="False" CanGoForward="False" CanDrag="False" DefaultBackgroundColor="Transparent" Source="about:blank"/>
-        <GridView Name="Attachments" Grid.Row="2" MaxHeight="266" ItemsSource="{x:Bind viewModel.Attachments,Mode=OneWay}" SelectionMode="None" Padding="0,0">
-            <GridView.ItemContainerStyle>
-                <Style TargetType="GridViewItem" BasedOn="{StaticResource DefaultGridViewItemStyle}">
-                    <Setter Property="Margin" Value="5, 5, 5, 5"/>
-                </Style>
-            </GridView.ItemContainerStyle>
+        <StackPanel 
+            Grid.Row="2" 
+            Visibility="{x:Bind viewModel.Attachments.Count,Converter={StaticResource CountToVisibility},Mode=OneWay,FallbackValue=collapsed}" 
+            BorderThickness="0,1,0,0"
+            BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}">
+            
+            <TextBlock Text="Attachments" Margin="4,4" Style="{ThemeResource BodyStrongTextBlockStyle}"/>
+            <GridView Name="Attachments" MaxHeight="266" ItemsSource="{x:Bind viewModel.Attachments,Mode=OneWay}" SelectionMode="None" Padding="0,0">
+                <GridView.ItemContainerStyle>
+                    <Style TargetType="GridViewItem" BasedOn="{StaticResource DefaultGridViewItemStyle}">
+                        <Setter Property="Margin" Value="5, 5, 5, 5"/>
+                    </Style>
+                </GridView.ItemContainerStyle>
 
 
-            <GridView.ItemTemplate>
-                <DataTemplate x:DataType="x:String">
-                    <Image Source="{x:Bind}" MaxHeight="256" MaxWidth="256"/>
-                </DataTemplate>
-            </GridView.ItemTemplate>
-        </GridView>
+                <GridView.ItemTemplate>
+                    <DataTemplate x:DataType="x:String">
+                        <Border CornerRadius="4">
+                            <Border.ContextFlyout>
+                                <MenuFlyout>
+                                    <MenuFlyoutItem Text="Save" Click="SaveAttachment"/>
+                                </MenuFlyout>
+                            </Border.ContextFlyout>
+                            <Image Source="{x:Bind}" MaxHeight="256" MaxWidth="256"/>
+                        </Border>
+                    </DataTemplate>
+                </GridView.ItemTemplate>
+            </GridView>
+        </StackPanel>
     </Grid>
 </Page>
