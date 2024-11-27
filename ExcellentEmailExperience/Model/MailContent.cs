@@ -29,6 +29,7 @@ namespace ExcellentEmailExperience.Model
         public string ThreadId = "";
         public string MessageId = "";
 
+        // for some reason if we dont define how to compare this class. the test code shits itself.
         public override bool Equals(object? obj)
         {
             if (obj is not MailContent other)

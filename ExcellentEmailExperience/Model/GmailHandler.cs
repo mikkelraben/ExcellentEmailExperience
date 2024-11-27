@@ -26,8 +26,8 @@ namespace ExcellentEmailExperience.Model
         // and therefore modifies the message to fit its asinine standards
         public string MakeDaddyGHappy(string body)
         {
-            body.Replace("\n", "\r\n");
-            body.Replace(" \r", "\r");
+            body = body.Replace("\n", "\r\n");
+            body = body.Replace(" \r", "\r");
             body += "\r\n";
 
             return body;
@@ -57,7 +57,7 @@ namespace ExcellentEmailExperience.Model
         public void Forward(MailContent content, List<MailAddress> NewTo)
         {
             var Mail = new MailContent();
-            Mail.subject = "Forward: " + Mail.subject;
+            Mail.subject = "Forward: " + content.subject;
             Mail.body = $"Forwarded from {content.from}\n {content.body} \n\n Originally sent to:{content.to}";
 
             //making the currect account the sender. 
