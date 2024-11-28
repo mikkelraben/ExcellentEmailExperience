@@ -159,7 +159,11 @@ namespace ExcellentEmailExperience.Model
                     mail.bodyType = (BodyType)reader.GetInt32(5);
                     mail.subject = reader.GetString(6);
                     mail.body = reader.GetString(7);
-                    mail.attachments = reader.GetString(2).Split(';').ToList();
+
+                    var attachments = reader.GetString(8);
+                    if (attachments != "")
+                        mail.attachments = reader.GetString(8).Split(';').ToList();
+
                     mail.date = DateTime.Parse(reader.GetString(9));
                     mail.ThreadId = reader.GetString(10);
 
