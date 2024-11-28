@@ -223,8 +223,11 @@ namespace ExcellentEmailExperience.Model
                 File.WriteAllBytes(filePath, attachmentData);
                 try
                 {
-                    if (cid != "")
-                        File.CreateSymbolicLink(cid, $".\\{fileName}");
+                    if (!File.Exists(cid))
+                    {
+                        if (cid != "")
+                            File.CreateSymbolicLink(cid, $".\\{fileName}");
+                    }
                 }
                 catch (Exception)
                 {

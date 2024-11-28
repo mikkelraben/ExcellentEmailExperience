@@ -265,6 +265,9 @@ namespace ExcellentEmailExperience.Views
         {
             var infoBar = (sender as InfoBar);
             var message = infoBar.DataContext as Message;
+            if (message is null)
+                return;
+
             MessageSeverityToInfoBarSeverity converter = new();
             infoBar.Severity = (InfoBarSeverity)converter.Convert(message.severity, typeof(MessageSeverity), null, null);
         }
