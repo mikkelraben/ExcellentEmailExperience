@@ -18,7 +18,7 @@ namespace ExcellentEmailExperience.Model
         // this is a means of counteracting that to give the cache more time by having its own cache, cache jr. (legal name: shortTermCache)
         private List<string> shortTermCache = new();
         private string connectionString;
-        
+
         public CacheHandler(string accountAddress)
         {
             try
@@ -30,7 +30,7 @@ namespace ExcellentEmailExperience.Model
 
                 string filePath = $@"{folderPath}\{DBName}.db";
                 connectionString = $@"Data Source={filePath}";
-            
+
                 if (!Directory.Exists(folderPath))
                 {
                     Directory.CreateDirectory(folderPath);
@@ -151,6 +151,7 @@ namespace ExcellentEmailExperience.Model
                     reader.Read();
 
                     MailContent mail = new MailContent();
+                    mail.MessageId = reader.GetString(0);
                     mail.from = JsonSerializer.Deserialize<MailAddress>(reader.GetString(1), options);
                     mail.to = JsonSerializer.Deserialize<List<MailAddress>>(reader.GetString(2), options);
                     mail.bcc = JsonSerializer.Deserialize<List<MailAddress>>(reader.GetString(3), options);
