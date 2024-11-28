@@ -19,13 +19,22 @@ namespace ExcellentEmailExperience.Model
             }
             catch (Exception)
             {
+                MessageHandler.AddMessage($"Could not get credential for email {email}", MessageSeverity.Info);
                 return null;
             }
         }
 
         public static void AddCredential(string email, string secret)
         {
-            vault.Add(new Windows.Security.Credentials.PasswordCredential("SoftwareGroup1.ExcellentEmailExperience", email, secret));
+            try
+            {
+                vault.Add(new Windows.Security.Credentials.PasswordCredential("SoftwareGroup1.ExcellentEmailExperience", email, secret));
+            }
+            catch (Exception)
+            {
+                MessageHandler.AddMessage($"Could not add credential for email {email}", MessageSeverity.Info);
+                throw;
+            }
         }
 
         public static void RemoveCredential(string email)
@@ -45,6 +54,7 @@ namespace ExcellentEmailExperience.Model
             }
             catch (Exception)
             {
+                MessageHandler.AddMessage("Could not get accounts", MessageSeverity.Info);
                 return [];
             }
         }
@@ -70,7 +80,6 @@ namespace ExcellentEmailExperience.Model
                 return default;
             }
             T? thing = JsonSerializer.Deserialize<T>(credential);
-            Console.WriteLine(thing);
             return thing;
         }
 

@@ -51,7 +51,7 @@ namespace ExcellentEmailExperience
         }
 
         private Intro? intro;
-        private MainWindow? mainWindow;
+        public static MainWindow? mainWindow;
         private MailApp? mailApp;
     }
 }
