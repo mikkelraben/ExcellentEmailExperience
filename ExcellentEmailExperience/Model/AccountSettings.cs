@@ -10,7 +10,7 @@ namespace ExcellentEmailExperience.Model
 
     public class AccountSettings
     {
-
+        
         // seje settings pending
 
 
