@@ -299,6 +299,7 @@ namespace ExcellentEmailExperience.Model
 
         public void Send(MailContent content)
         {
+            content.body = MakeDaddyGHappy(content.body);
             if (content.to.Count == 0)
             {
                 MessageHandler.AddMessage("Cannot send mail to no one, try adding an email in the To field", MessageSeverity.Error);
