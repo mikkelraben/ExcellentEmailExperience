@@ -38,7 +38,8 @@ namespace ExcellentEmailExperience.Model
 
         public void DeleteAccount(IAccount account)
         {
-            throw new NotImplementedException();
+            CredentialHandler.RemoveCredential(account.GetEmail().Address);
+            accounts.Remove(account);
         }
 
         public bool HasAccount()

@@ -87,7 +87,7 @@
                                 <Expander
                                     HorizontalAlignment="Stretch"
                                     Margin="4,4"
-                                    HorizontalContentAlignment="Left">
+                                    HorizontalContentAlignment="Stretch">
                                 <Expander.Header>
                                     <StackPanel Orientation="Horizontal">
                                         <ImageIcon Source="/Assets/GmailLogo.png" Width="20" Height="20" Margin="0,0,8,0"/>
@@ -97,9 +97,14 @@
                                         </StackPanel>
                                     </StackPanel>
                                 </Expander.Header>
-
-                                <TextBox HorizontalAlignment="Stretch" MaxWidth="400" Header="Name" Text="{x:Bind Name, Mode=TwoWay}"/>
-
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition/>
+                                        <RowDefinition/>
+                                    </Grid.RowDefinitions>
+                                    <TextBox Grid.Row="0" HorizontalAlignment="Left" MaxWidth="400" Header="Name" Text="{x:Bind Name, Mode=TwoWay}"/>
+                                    <Button Grid.Row="1" Margin="0,4,0,0" HorizontalAlignment="Right" Content="Remove" Style="{ThemeResource AccentButtonStyle}" Click="RemoveAccount_Click"/>
+                                </Grid>
                                 </Expander>
                             </DataTemplate>
                         </ListView.ItemTemplate>

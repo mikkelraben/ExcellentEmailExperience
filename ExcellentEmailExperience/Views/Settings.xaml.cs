@@ -68,5 +68,12 @@ namespace ExcellentEmailExperience.Views
 
             accounts.Add(new GmailAccountViewModel(account, DispatcherQueue, appClose));
         }
+
+        private void RemoveAccount_Click(object sender, RoutedEventArgs e)
+        {
+            object account = (sender as Button).DataContext;
+            accounts.Remove(account as AccountViewModel);
+            mailApp.DeleteAccount((account as AccountViewModel).account);
+        }
     }
 }

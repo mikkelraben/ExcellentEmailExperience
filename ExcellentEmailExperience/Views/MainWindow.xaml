@@ -43,7 +43,7 @@
                 </Grid>
             </DataTemplate>
             <DataTemplate x:Key="AccountViewModel" x:DataType="viewmodel:GmailAccountViewModel">
-                <TreeViewItem ItemsSource="{x:Bind mailHandlerViewModel.folders}" Content="{x:Bind Name}" IsExpanded="True"/>
+                <TreeViewItem ItemsSource="{x:Bind mailHandlerViewModel.folders}" Content="{x:Bind Name, Mode=OneWay}" IsExpanded="True"/>
             </DataTemplate>
             <DataTemplate x:Key="FolderViewModel" x:DataType="viewmodel:FolderViewModel">
                 <TreeViewItem Content="{x:Bind Name, Mode=OneWay}"/>

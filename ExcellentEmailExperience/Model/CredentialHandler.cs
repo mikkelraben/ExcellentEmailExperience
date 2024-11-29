@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
+using Windows.System;
 
 namespace ExcellentEmailExperience.Model
 {
@@ -19,7 +20,8 @@ namespace ExcellentEmailExperience.Model
             }
             catch (Exception)
             {
-                MessageHandler.AddMessage($"Could not get credential for email {email}", MessageSeverity.Info);
+                if (email != "This account name cannot be used")
+                    MessageHandler.AddMessage($"Could not get credential for email {email}", MessageSeverity.Info);
                 return null;
             }
         }

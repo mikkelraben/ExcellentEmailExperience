@@ -64,7 +64,7 @@ namespace ExcellentEmailExperience.Views
             mailApp.SaveAccounts();
             mailApp.SaveAppSettings();
 
-            Email email = new();
+            Email email = new(accounts);
             email.Initialize();
             MainFrame.Content = email;
 
@@ -247,6 +247,16 @@ namespace ExcellentEmailExperience.Views
 
         private void Siderbar_SelectionChanged(TreeView sender, TreeViewSelectionChangedEventArgs args)
         {
+            if (args.AddedItems.Count == 0)
+            {
+                currentFolder = null;
+                FolderName.Text = "No Folder";
+                MailList.ItemsSource = null;
+                SidebarLarge = false;
+                MessageHandler.AddMessage("No folder selected", MessageSeverity.Error);
+
+                return;
+            }
             if (args.AddedItems.Count != 1)
             {
                 MessageHandler.AddMessage("Multiple items selected", MessageSeverity.Error);
