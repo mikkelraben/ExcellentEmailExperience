@@ -17,9 +17,9 @@
         <local:BoolToVisibility x:Key="BoolToVisibility"/>
         <local:BoolToNotVisibility x:Key="BoolToNotVisibility"/>
     </Page.Resources>
-    <ScrollView>
+    <ScrollViewer>
         
-        <Grid VerticalAlignment="Stretch">
+        <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="*" MinHeight="150"/>
@@ -38,20 +38,24 @@
                 <Grid.RowDefinitions>
                     <RowDefinition/>
                     <RowDefinition/>
-
+                    <RowDefinition/>
                 </Grid.RowDefinitions>
                 <!--<TextBlock Text="{x:Bind viewModel.IsEditable,Mode=OneWay}"/>-->
+                <TextBlock Margin="12,4" Grid.Column="0" Grid.Row="0" VerticalAlignment="Center" HorizontalTextAlignment="Left" Visibility="{x:Bind viewModel.IsEditable,Converter={StaticResource BoolToVisibility},Mode=OneWay}">
+                    Subject
+                </TextBlock>
+                <TextBox Grid.Row="0" Grid.Column="1" Margin="0,0" Height="32" VerticalAlignment="Center" PlaceholderText="Subject" x:Name="SubjectField" Text="{x:Bind viewModel.Subject,Mode=TwoWay}" Visibility="{x:Bind viewModel.IsEditable,Converter={StaticResource BoolToVisibility},Mode=OneWay}"/>
 
-                <TextBlock Margin="12,4" Grid.Column="0" Grid.Row="0" VerticalAlignment="Center" HorizontalTextAlignment="Left">
+                <TextBlock Margin="12,4" Grid.Column="0" Grid.Row="1" VerticalAlignment="Center" HorizontalTextAlignment="Left">
                     From
                 </TextBlock>
 
-                <TextBlock Margin="12,4" Grid.Column="1" Grid.Row="0" IsTextSelectionEnabled="True" ToolTipService.ToolTip="{x:Bind viewModel.From,Mode=OneWay}" Visibility="{x:Bind viewModel.IsEditable,Converter={StaticResource BoolToNotVisibility},Mode=OneWay}">
+                <TextBlock Margin="12,4" Grid.Column="1" Grid.Row="1" IsTextSelectionEnabled="True" ToolTipService.ToolTip="{x:Bind viewModel.From,Mode=OneWay}" Visibility="{x:Bind viewModel.IsEditable,Converter={StaticResource BoolToNotVisibility},Mode=OneWay}">
                     <Run Text="{x:Bind viewModel.From.DisplayName,Mode=OneWay}" FontSize="14"/>
                     <Run Text="{x:Bind viewModel.From.Address,Mode=OneWay}" FontSize="12" Foreground="{ThemeResource TextFillColorDisabledBrush}"/>
                 </TextBlock>
 
-                <ComboBox Margin="0,12" Grid.Column="1" Grid.Row="0" x:Name="FromAddress" ItemsSource="{x:Bind accounts,Mode=OneWay}" SelectionChanged="FromAddress_SelectionChanged" SelectedIndex="0" IsTextSearchEnabled="True" Visibility="{x:Bind viewModel.IsEditable,Converter={StaticResource BoolToVisibility},Mode=OneWay}">
+                <ComboBox Margin="0,4,0,4" Grid.Column="1" Grid.Row="1" x:Name="FromAddress" ItemsSource="{x:Bind accounts,Mode=OneWay}" SelectionChanged="FromAddress_SelectionChanged" SelectedIndex="0" IsTextSearchEnabled="True" Visibility="{x:Bind viewModel.IsEditable,Converter={StaticResource BoolToVisibility},Mode=OneWay}">
                     <ComboBox.ItemTemplate>
                         <DataTemplate x:DataType="view:GmailAccountViewModel">
                             <TextBlock Text="{x:Bind emailAddress}" FontSize="14"/>
@@ -59,11 +63,11 @@
                     </ComboBox.ItemTemplate>
                 </ComboBox>
 
-                <TextBlock Margin="12,4" Grid.Column="0" Grid.Row="1" VerticalAlignment="Center" HorizontalTextAlignment="Left">
+                <TextBlock Margin="12,4" Grid.Column="0" Grid.Row="2" VerticalAlignment="Center" HorizontalTextAlignment="Left">
                     To
                 </TextBlock>
                 <!--<TextBlock Text="{x:Bind viewModel.To.Count,Mode=OneWay}"/>-->
-                <StackPanel Orientation="Horizontal" Grid.Column="1" Grid.Row="1">
+                <StackPanel Orientation="Horizontal" Grid.Column="1" Grid.Row="2">
                     <Button Margin="0,0,5,0" Width="32" Height="32" Padding="0,0" Background="Transparent" BorderBrush="Transparent" Click="AddMailAddress_Click" Visibility="{x:Bind viewModel.IsEditable,Converter={StaticResource BoolToVisibility},Mode=OneWay}">
                         <FontIcon Glyph="&#xE710;"/>
                     </Button>
@@ -83,16 +87,16 @@
                             </DataTemplate>
                         </ItemsView.ItemTemplate>
                     </ItemsView>
-                    <ItemsView ItemsSource="{x:Bind toField,Mode=OneWay}" SelectionMode="None" IsItemInvokedEnabled="False" ItemInvoked="FromAddress_ItemInvoked" Visibility="{x:Bind viewModel.IsEditable,Converter={StaticResource BoolToVisibility},Mode=OneWay}">
+                    <ItemsView ItemsSource="{x:Bind viewModel.recipients,Mode=OneWay}" SelectionMode="None" IsItemInvokedEnabled="False" ItemInvoked="FromAddress_ItemInvoked" Visibility="{x:Bind viewModel.IsEditable,Converter={StaticResource BoolToVisibility},Mode=OneWay}">
                         <ItemsView.Layout>
                             <LinedFlowLayout ItemsStretch="Fill" LineHeight="32" MinItemSpacing="5"/>
                         </ItemsView.Layout>
                         <ItemsView.ItemTemplate>
-                            <DataTemplate x:DataType="x:String">
+                            <DataTemplate x:DataType="view:StringWrapper">
                                 <ItemContainer>
                                     <StackPanel Orientation="Horizontal">
 
-                                        <TextBox Text="{x:Bind}" IsSpellCheckEnabled="False"/>
+                                        <TextBox Text="{Binding Value,Mode=TwoWay}" IsSpellCheckEnabled="False"/>
                                         <Button Margin="5,0,0,0" Width="32" Height="32" Padding="0,0" Background="Transparent" BorderBrush="Transparent" Click="RemoveMailAddress_Click">
                                             <FontIcon Glyph="&#xE711;"/>
                                         </Button>
@@ -102,7 +106,7 @@
                         </ItemsView.ItemTemplate>
                     </ItemsView>
                 </StackPanel>
-                <Button Margin="12,12" Grid.Column="2" Grid.Row="0" Style="{ThemeResource AccentButtonStyle}" Click="SendMail_Click" Visibility="{x:Bind viewModel.IsEditable,Converter={StaticResource BoolToVisibility},Mode=OneWay}">
+                <Button Margin="12,6,12,4" Grid.Column="2" Grid.Row="0" Style="{ThemeResource AccentButtonStyle}" Click="SendMail_Click" Visibility="{x:Bind viewModel.IsEditable,Converter={StaticResource BoolToVisibility},Mode=OneWay}">
                     <StackPanel Orientation="Horizontal">
                         <FontIcon Glyph="&#xE724;" Margin="0,0,4,0" FontSize="12"/>
                         <TextBlock Text="Send"/>
@@ -152,5 +156,5 @@
                 <RichEditBox x:Name="MailEditor" Margin="12,12" VerticalAlignment="Stretch" MinHeight="200"/>
             </ScrollView>
         </Grid>
-    </ScrollView>
+    </ScrollViewer>
 </Page>

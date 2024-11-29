@@ -1,26 +1,16 @@
-using CommunityToolkit.Mvvm.ComponentModel;
 using ExcellentEmailExperience.Model;
 using ExcellentEmailExperience.ViewModel;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Controls.Primitives;
 using Microsoft.UI.Xaml.Data;
 using Microsoft.UI.Xaml.Input;
-using Microsoft.UI.Xaml.Media;
-using Microsoft.UI.Xaml.Navigation;
 using Microsoft.Web.WebView2.Core;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.ComponentModel;
 using System.IO;
-using System.Linq;
-using System.Net.Mail;
-using System.Runtime.InteropServices.WindowsRuntime;
 using System.Text;
 using System.Threading.Tasks;
-using Windows.Foundation;
-using Windows.Foundation.Collections;
 using Windows.Storage;
 using Windows.Storage.Pickers;
 
@@ -36,7 +26,6 @@ namespace ExcellentEmailExperience.Views
     {
         MailContentViewModel viewModel = new();
         ObservableCollection<AccountViewModel> accounts;
-        ObservableCollection<string> toField = new();
         public Email(ObservableCollection<AccountViewModel> accounts)
         {
             this.accounts = accounts;
@@ -175,17 +164,45 @@ namespace ExcellentEmailExperience.Views
             if (!viewModel.IsEditable)
                 return;
 
-            toField.Add("");
+            viewModel.recipients.Add(new(""));
         }
 
         private void RemoveMailAddress_Click(object sender, RoutedEventArgs e)
         {
-
+            var stringThing = (sender as Button).DataContext as StringWrapper;
+            viewModel.recipients.Remove(stringThing);
         }
 
         private void SendMail_Click(object sender, RoutedEventArgs e)
         {
+            AccountViewModel account = FromAddress.SelectedItem as AccountViewModel;
+            if (account == null)
+            {
+                MessageHandler.AddMessage("Could not send from no account", MessageSeverity.Error);
+                return;
+            }
 
+            MailContent mail = new();
+            mail.from = account.account.GetEmail();
+            foreach (var recipient in viewModel.recipients)
+            {
+                mail.to.Add(new(recipient.Value));
+            }
+            mail.subject = viewModel.Subject;
+            mail.body = "Hello There this is mail";
+            mail.bodyType = BodyType.Plain;
+            mail.attachments = viewModel.Attachments;
+            mail.cc = viewModel.Cc;
+            mail.bcc = viewModel.Bcc;
+            try
+            {
+                account.account.GetMailHandler().Send(mail);
+                MessageHandler.AddMessage("Sent Message", MessageSeverity.Success);
+            }
+            catch (ArgumentException _)
+            {
+
+            }
         }
     }
 
