@@ -8,21 +8,27 @@ public class MailAddressConverter : JsonConverter<MailAddress>
     public override MailAddress Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
         string address = "";
+        string displayName = "";
+
         while (reader.Read())
         {
             switch (reader.TokenType)
             {
                 case JsonTokenType.PropertyName:
-                    switch (reader.GetString())
+                    var property = reader.GetString();
+                    reader.Read();
+                    switch (property)
                     {
                         case "Address":
-                            reader.Read();
                             address = reader.GetString();
+                            break;
+                        case "DisplayName":
+                            displayName = reader.GetString();
                             break;
                     }
                     break;
                 case JsonTokenType.EndObject:
-                    return new MailAddress(address);
+                    return new MailAddress(address, displayName);
             }
         }
 
