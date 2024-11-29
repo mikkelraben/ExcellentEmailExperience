@@ -262,6 +262,7 @@ namespace ExcellentEmailExperience.Model
             return labelNames.ToArray();
         }
 
+        // we might need to consider implimenting this later.
         public List<MailContent> Refresh(string name)
         {
             throw new NotImplementedException();
