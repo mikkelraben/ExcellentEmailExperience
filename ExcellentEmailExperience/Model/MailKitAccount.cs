@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Net.Mail;
 using System.Text;
@@ -11,6 +12,13 @@ using MailKit.Net.Imap;
 
 namespace ExcellentEmailExperience.Model
 {
+    public struct ConnectionConfig
+    {
+        public string MailServer;
+        public int imapPort;
+        public int smtpPort;
+    }
+
     internal class MailKitAccount : IAccount
     {
         [JsonInclude]
@@ -20,6 +28,7 @@ namespace ExcellentEmailExperience.Model
 
         private string password;
         MailKitHandler handler;
+        public ConnectionConfig config = new();
 
         public MailAddress GetEmail()
         {
@@ -39,21 +48,21 @@ namespace ExcellentEmailExperience.Model
         public void Login(string email, string secret = "")
         {
             using var client = new ImapClient();
-            client.ConnectAsync("imap.friends.com", 993, true);
+            client.Connect(config.MailServer, config.imapPort, true);
             try
             {
-                client.AuthenticateAsync(email, secret);
+                client.Authenticate(email, secret);
             }
             catch (Exception)
             {
                 throw new Exception("Login failed");
             }
 
-            handler = new MailKitHandler(email, secret);
+            handler = new MailKitHandler(email, secret, config);
             mailAddress = new MailAddress(email);
             password = secret;
 
-            client.DisconnectAsync(true);
+            client.Disconnect(true);
         }
 
         public void Logout()
@@ -69,17 +78,17 @@ namespace ExcellentEmailExperience.Model
         public bool TryLogin(string email, string secret)
         {
             using var client = new ImapClient();
-            client.ConnectAsync("imap.friends.com", 993, true);
+            client.Connect(config.MailServer, config.imapPort, true);
             try
             {
-                client.AuthenticateAsync(email, secret);
+                client.Authenticate(email, secret);
             }
             catch (Exception)
             {
                 return false;
             }
 
-            handler = new MailKitHandler(email, secret);
+            handler = new MailKitHandler(email, secret, config);
             mailAddress = new MailAddress(email);
             password = secret;
 

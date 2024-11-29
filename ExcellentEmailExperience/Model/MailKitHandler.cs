@@ -3,7 +3,9 @@ using MailKit;
 using MailKit.Net.Imap;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Net.Mail;
+using Windows.Media.Protection.PlayReady;
 
 namespace ExcellentEmailExperience.Model
 {
@@ -16,17 +18,17 @@ namespace ExcellentEmailExperience.Model
 
         public List<MailAddress> flaggedMails { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
 
-        public MailKitHandler(string mail, string secret)
+        public MailKitHandler(string mail, string secret, Model.ConnectionConfig config)
         {
             mailAddress = mail;
             password = secret;
 
             imapClient = new ImapClient();
-            imapClient.ConnectAsync("imap.friends.com", 993, true);
+            imapClient.ConnectAsync(config.MailServer, config.imapPort, true);
             imapClient.AuthenticateAsync(mailAddress, password);
 
             smtpClient = new MailKit.Net.Smtp.SmtpClient();
-            smtpClient.ConnectAsync("smtp.friends.com", 587, true);
+            smtpClient.ConnectAsync(config.MailServer, config.smtpPort, true);
             smtpClient.AuthenticateAsync(mailAddress, password);
         }
 
