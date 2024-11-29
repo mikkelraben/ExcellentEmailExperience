@@ -480,7 +480,7 @@ namespace Test
                 
                 //here we also have to set cc to null as reply doesnt include cc
                 Sentlist3[0].cc = new();
-                Sentlist3[0].subject =  validSubject;
+                //Sentlist3[0].subject =  validSubject;
 
                 Assert.IsTrue(Sentlist3[0] == Inboxlist1[0]);
             }
@@ -531,7 +531,14 @@ namespace Test
             //let the program sleep for 2 second to make sure the mail is recieved
             System.Threading.Thread.Sleep(4000);
 
-            List<MailContent> Sentlist1 = GetInbox(mailHandler1, "SENT");
+            // this doesnt make sense. were comparing the original mail sent with the 
+            // response sent from the receiver. 
+
+            // i send a mail: knock knock.
+            // you reply: who's there.
+
+            // these two mails are not the same. and they're not meant to be
+            List<MailContent> Inboxlist1 = GetInbox(mailHandler1, "INBOX");
 
             List<MailContent> Sentlist3 = GetInbox(mailHandler3, "SENT");
 
@@ -539,13 +546,13 @@ namespace Test
 
             //as messageIDs are different for all mail instances, we need to set them equal to compare the mail objects
 
-            if (Sentlist1[0] != null && Sentlist3[0] != null)
+            if (Inboxlist1[0] != null && Sentlist3[0] != null)
             {
-                Sentlist3[0].MessageId = Sentlist1[0].MessageId;
-                Sentlist3[0].ThreadId = Sentlist1[0].ThreadId;
-                Sentlist3[0].subject = "RE: " + validSubject;
+                Sentlist3[0].MessageId = Inboxlist1[0].MessageId;
+                Sentlist3[0].ThreadId = Inboxlist1[0].ThreadId;
+                Sentlist3[0].subject = "Re: " + validSubject;
 
-                Assert.IsTrue(Sentlist3[0] == Sentlist1[0]);
+                Assert.IsTrue(Sentlist3[0] == Inboxlist1[0]);
             }
             else
             {

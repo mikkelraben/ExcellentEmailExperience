@@ -26,7 +26,7 @@ namespace ExcellentEmailExperience.ViewModel
             {
                 try
                 {
-                    foreach (var mail in mailHandler.GetFolder(name, false, false,20))
+                    foreach (var mail in mailHandler.GetFolder(name, false, false, 20))
                     {
                         if (cancellationToken.IsCancellationRequested)
                         {
@@ -38,7 +38,7 @@ namespace ExcellentEmailExperience.ViewModel
 
                         inboxMail.from = mail.from;
                         inboxMail.to = mail.to;
-                        inboxMail.subject = mail.subject;
+                        inboxMail.subject = mail.subject.Replace("\n", "").Replace("\r", "");
                         inboxMail.date = mail.date;
                         if (dispatcherQueue != null)
                         {
@@ -67,7 +67,7 @@ namespace ExcellentEmailExperience.ViewModel
                 }
                 catch (Exception)
                 {
-                    // Womp Womp :(
+                    MessageHandler.AddMessage("Failed to load mails", MessageSeverity.Error);
                     return;
                 }
             });

@@ -11,14 +11,18 @@ using Microsoft.UI.Xaml.Navigation;
 using Microsoft.Web.WebView2.Core;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
+using System.Net.Mail;
 using System.Runtime.InteropServices.WindowsRuntime;
 using System.Text;
 using System.Threading.Tasks;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
 using Windows.Storage;
+using Windows.Storage.Pickers;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -31,8 +35,11 @@ namespace ExcellentEmailExperience.Views
     public sealed partial class Email : Page
     {
         MailContentViewModel viewModel = new();
-        public Email()
+        ObservableCollection<AccountViewModel> accounts;
+        ObservableCollection<string> toField = new();
+        public Email(ObservableCollection<AccountViewModel> accounts)
         {
+            this.accounts = accounts;
             this.InitializeComponent();
         }
 
@@ -106,7 +113,10 @@ namespace ExcellentEmailExperience.Views
             viewModel.Update(mail);
             viewModel.IsEditable = editable;
 
+            Editor.Visibility = editable ? Visibility.Visible : Visibility.Collapsed;
+
             EmptyMail.Visibility = Visibility.Collapsed;
+
             switch (mail.bodyType)
             {
                 case BodyType.Plain:
@@ -131,6 +141,87 @@ namespace ExcellentEmailExperience.Views
         private void FromAddress_ItemInvoked(ItemsView sender, ItemsViewItemInvokedEventArgs args)
         {
 
+        }
+
+        private async void SaveAttachment(object sender, RoutedEventArgs e)
+        {
+            string path = ((e.OriginalSource as MenuFlyoutItem).DataContext as string);
+
+
+            FileSavePicker savePicker = new FileSavePicker();
+            savePicker.SuggestedStartLocation = PickerLocationId.DocumentsLibrary;
+            savePicker.SuggestedFileName = Path.GetFileName(path);
+            savePicker.FileTypeChoices.Add("Attachment", new List<string>() { Path.GetExtension(path) });
+
+            var window = App.mainWindow;
+            var hWnd = WinRT.Interop.WindowNative.GetWindowHandle(window);
+            WinRT.Interop.InitializeWithWindow.Initialize(savePicker, hWnd);
+
+            var file = await savePicker.PickSaveFileAsync();
+            if (file != null)
+            {
+                StorageFile storageFile = await StorageFile.GetFileFromPathAsync(path);
+                await storageFile.CopyAndReplaceAsync(file);
+            }
+        }
+
+        private void FromAddress_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+
+        }
+
+        private void AddMailAddress_Click(object sender, RoutedEventArgs e)
+        {
+            if (!viewModel.IsEditable)
+                return;
+
+            toField.Add("");
+        }
+
+        private void RemoveMailAddress_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        private void SendMail_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
+    }
+
+    public class CountToVisibility : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, string language)
+        {
+            return (int)value > 0 ? Visibility.Visible : Visibility.Collapsed;
+        }
+        public object ConvertBack(object value, Type targetType, object parameter, string language)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
+    public class BoolToVisibility : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, string language)
+        {
+            return (bool)value ? Visibility.Visible : Visibility.Collapsed;
+        }
+        public object ConvertBack(object value, Type targetType, object parameter, string language)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
+    public class BoolToNotVisibility : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, string language)
+        {
+            return (bool)value ? Visibility.Collapsed : Visibility.Visible;
+        }
+        public object ConvertBack(object value, Type targetType, object parameter, string language)
+        {
+            throw new NotImplementedException();
         }
     }
 }

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace ExcellentEmailExperience.Model
 {
-    enum Theme
+    public enum Theme
     {
         System,
         Light,
@@ -15,8 +15,10 @@ namespace ExcellentEmailExperience.Model
 
     public class AppSettings
     {
-        Theme theme;
-        string[] signatures;
+        public Theme theme;
+        public string[] signatures;
+        public MessageSeverity logLevel;
+        public string mainMail;
 
     }
 }

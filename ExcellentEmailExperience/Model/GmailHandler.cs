@@ -22,8 +22,8 @@ namespace ExcellentEmailExperience.Model
         private GmailService service;
         private MailAddress mailAddress;
 
-        // modifies the body string so that google doesnt shit itself in fear and panic
-        // and therefor modifies the message to fit its asinine standards
+        // modifies the body string so that google doesn't shit itself in fear and panic
+        // and therefore modifies the message to fit its asinine standards
         public string MakeDaddyGHappy(string body)
         {
             body = body.Replace("\n", "\r\n");
@@ -57,7 +57,7 @@ namespace ExcellentEmailExperience.Model
         public void Forward(MailContent content, List<MailAddress> NewTo)
         {
             var Mail = new MailContent();
-            Mail.subject = "Forward: " + Mail.subject;
+            Mail.subject = "Forward: " + content.subject;
             Mail.body = $"Forwarded from {content.from}\n {content.body} \n\n Originally sent to:{content.to}";
 
             //making the currect account the sender. 
@@ -110,8 +110,15 @@ namespace ExcellentEmailExperience.Model
             mailContent.MessageId = msg.Id;
             mailContent.ThreadId = msg.ThreadId;
 
-            HandleMessagePart(msg.Payload, mailContent);
-
+            try
+            {
+                HandleMessagePart(msg.Payload, mailContent);
+            }
+            catch (Exception e)
+            {
+                MessageHandler.AddMessage($"Error parsing message: {e.Message}", MessageSeverity.Error);
+                throw;
+            }
             foreach (var header in msg.Payload.Headers)
             {
                 if (header.Name == "From")
@@ -181,7 +188,7 @@ namespace ExcellentEmailExperience.Model
                         break;
                 }
 
-                var fileName = messagePart.Filename == "" ? $"{messagePart.PartId}.{extension}" : messagePart.Filename;
+                var fileName = messagePart.Filename == "" ? $"Attachment{messagePart.PartId}.{extension}" : messagePart.Filename;
 
                 var cid = "";
 
@@ -214,8 +221,18 @@ namespace ExcellentEmailExperience.Model
 
                 Directory.CreateDirectory(folder.Path + $"\\attachments\\{mailContent.MessageId}");
                 File.WriteAllBytes(filePath, attachmentData);
-                if (cid != "")
-                    File.CreateSymbolicLink(cid, $".\\{fileName}");
+                try
+                {
+                    if (!File.Exists(cid))
+                    {
+                        if (cid != "")
+                            File.CreateSymbolicLink(cid, $".\\{fileName}");
+                    }
+                }
+                catch (Exception)
+                {
+
+                }
             }
             else if (messagePart.MimeType.StartsWith("application/"))
             {
@@ -245,6 +262,7 @@ namespace ExcellentEmailExperience.Model
             return labelNames.ToArray();
         }
 
+        // we might need to consider implimenting this later.
         public List<MailContent> Refresh(string name)
         {
             throw new NotImplementedException();
@@ -282,12 +300,15 @@ namespace ExcellentEmailExperience.Model
 
         public void Send(MailContent content)
         {
+            content.body = MakeDaddyGHappy(content.body);
             if (content.to.Count == 0)
             {
+                MessageHandler.AddMessage("Cannot send mail to no one, try adding an email in the To field", MessageSeverity.Error);
                 throw new ArgumentException("A receiver of null was inappropriately allowed.");
             }
             if (content.subject == "")
             {
+                MessageHandler.AddMessage("Cannot send mail with no subject, try adding a subject", MessageSeverity.Error);
                 throw new ArgumentException("A subject of null was inappropriately allowed.");
             }
 
@@ -311,6 +332,8 @@ namespace ExcellentEmailExperience.Model
             {
                 Debug.WriteLine("error in Receiver field" + ex);
             }
+
+            //TODO: if these fields are empty, the program will crash. please rethrow the exceptions below
 
             // this is bad but we will fix later. this is only for testing purposes. 
             try

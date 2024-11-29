@@ -4,79 +4,153 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:ExcellentEmailExperience.Views"
+    xmlns:model="using:ExcellentEmailExperience.Model"
+    xmlns:view="using:ExcellentEmailExperience.ViewModel"
     xmlns:mail="using:System.Net.Mail"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
     Background="Transparent">
 
-    <Grid>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="Auto"/>
-        </Grid.RowDefinitions>
-        <Grid Height="60">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto"/>
-                <ColumnDefinition Width="*"/>
-            </Grid.ColumnDefinitions>
+    <Page.Resources>
+        <local:CountToVisibility x:Key="CountToVisibility"/>
+        <local:BoolToVisibility x:Key="BoolToVisibility"/>
+        <local:BoolToNotVisibility x:Key="BoolToNotVisibility"/>
+    </Page.Resources>
+    <ScrollView>
+        
+        <Grid VerticalAlignment="Stretch">
             <Grid.RowDefinitions>
-                <RowDefinition/>
-                <RowDefinition/>
-
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*" MinHeight="150"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
-            <!--<TextBlock Text="{x:Bind viewModel.IsEditable,Mode=OneWay}"/>-->
+            <Grid>
+                <Grid.ChildrenTransitions>
+                    <RepositionThemeTransition IsStaggeringEnabled="False"/>
+                </Grid.ChildrenTransitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition/>
+                    <RowDefinition/>
 
-            <TextBlock Margin="12,4" Grid.Column="0" Grid.Row="0">
-                From
-            </TextBlock>
+                </Grid.RowDefinitions>
+                <!--<TextBlock Text="{x:Bind viewModel.IsEditable,Mode=OneWay}"/>-->
 
-            <TextBlock Margin="12,4" Grid.Column="1" Grid.Row="0" IsTextSelectionEnabled="True" ToolTipService.ToolTip="{x:Bind viewModel.From,Mode=OneWay}">
-                <Run Text="{x:Bind viewModel.From.DisplayName,Mode=OneWay}" FontSize="14"/>
-                <Run Text="{x:Bind viewModel.From.Address,Mode=OneWay}" FontSize="12" Foreground="{ThemeResource TextFillColorDisabledBrush}"/>
-            </TextBlock>
-            <TextBlock Margin="12,4" Grid.Column="0" Grid.Row="1">
-                To
-            </TextBlock>
-            <!--<TextBlock Text="{x:Bind viewModel.To.Count,Mode=OneWay}"/>-->
-            <ItemsView ItemsSource="{x:Bind viewModel.To,Mode=OneWay}" Margin="12,4" SelectionMode="None" ItemInvoked="FromAddress_ItemInvoked" Grid.Column="1" Grid.Row="1">
-                <ItemsView.ItemTemplate>
-                    <DataTemplate x:DataType="mail:MailAddress">
-                        <ItemContainer>
-                            
-                        <TextBlock Margin="12,4" Grid.Column="1" Grid.Row="0" IsTextSelectionEnabled="True" ToolTipService.ToolTip="{x:Bind Address}">
-                            <Run Text="{x:Bind DisplayName}" FontSize="14"/>
-                            <Run Text="{x:Bind Address}" FontSize="12" Foreground="{ThemeResource TextFillColorDisabledBrush}"/>
-                        </TextBlock>
+                <TextBlock Margin="12,4" Grid.Column="0" Grid.Row="0" VerticalAlignment="Center" HorizontalTextAlignment="Left">
+                    From
+                </TextBlock>
 
-                        </ItemContainer>
-                    </DataTemplate>
-                </ItemsView.ItemTemplate>
-            </ItemsView>
+                <TextBlock Margin="12,4" Grid.Column="1" Grid.Row="0" IsTextSelectionEnabled="True" ToolTipService.ToolTip="{x:Bind viewModel.From,Mode=OneWay}" Visibility="{x:Bind viewModel.IsEditable,Converter={StaticResource BoolToNotVisibility},Mode=OneWay}">
+                    <Run Text="{x:Bind viewModel.From.DisplayName,Mode=OneWay}" FontSize="14"/>
+                    <Run Text="{x:Bind viewModel.From.Address,Mode=OneWay}" FontSize="12" Foreground="{ThemeResource TextFillColorDisabledBrush}"/>
+                </TextBlock>
+
+                <ComboBox Margin="0,12" Grid.Column="1" Grid.Row="0" x:Name="FromAddress" ItemsSource="{x:Bind accounts,Mode=OneWay}" SelectionChanged="FromAddress_SelectionChanged" SelectedIndex="0" IsTextSearchEnabled="True" Visibility="{x:Bind viewModel.IsEditable,Converter={StaticResource BoolToVisibility},Mode=OneWay}">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate x:DataType="view:GmailAccountViewModel">
+                            <TextBlock Text="{x:Bind emailAddress}" FontSize="14"/>
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+
+                <TextBlock Margin="12,4" Grid.Column="0" Grid.Row="1" VerticalAlignment="Center" HorizontalTextAlignment="Left">
+                    To
+                </TextBlock>
+                <!--<TextBlock Text="{x:Bind viewModel.To.Count,Mode=OneWay}"/>-->
+                <StackPanel Orientation="Horizontal" Grid.Column="1" Grid.Row="1">
+                    <Button Margin="0,0,5,0" Width="32" Height="32" Padding="0,0" Background="Transparent" BorderBrush="Transparent" Click="AddMailAddress_Click" Visibility="{x:Bind viewModel.IsEditable,Converter={StaticResource BoolToVisibility},Mode=OneWay}">
+                        <FontIcon Glyph="&#xE710;"/>
+                    </Button>
+
+                    <ItemsView ItemsSource="{x:Bind viewModel.To,Mode=OneWay}" SelectionMode="None" ItemInvoked="FromAddress_ItemInvoked"  Visibility="{x:Bind viewModel.IsEditable,Converter={StaticResource BoolToNotVisibility},Mode=OneWay}">
+                        <ItemsView.Layout>
+                            <LinedFlowLayout ItemsStretch="Fill" LineHeight="27"/>
+                        </ItemsView.Layout>
+                        <ItemsView.ItemTemplate>
+                            <DataTemplate x:DataType="mail:MailAddress">
+                                <ItemContainer>
+                                    <TextBlock Margin="12,4" Grid.Column="1" Grid.Row="0" IsTextSelectionEnabled="True" ToolTipService.ToolTip="{x:Bind Address}" HorizontalAlignment="Left" HorizontalTextAlignment="Left">
+                                        <Run Text="{x:Bind DisplayName}" FontSize="14"/>
+                                        <Run Text="{x:Bind Address}" FontSize="12" Foreground="{ThemeResource TextFillColorDisabledBrush}"/>
+                                    </TextBlock>
+                                </ItemContainer>
+                            </DataTemplate>
+                        </ItemsView.ItemTemplate>
+                    </ItemsView>
+                    <ItemsView ItemsSource="{x:Bind toField,Mode=OneWay}" SelectionMode="None" IsItemInvokedEnabled="False" ItemInvoked="FromAddress_ItemInvoked" Visibility="{x:Bind viewModel.IsEditable,Converter={StaticResource BoolToVisibility},Mode=OneWay}">
+                        <ItemsView.Layout>
+                            <LinedFlowLayout ItemsStretch="Fill" LineHeight="32" MinItemSpacing="5"/>
+                        </ItemsView.Layout>
+                        <ItemsView.ItemTemplate>
+                            <DataTemplate x:DataType="x:String">
+                                <ItemContainer>
+                                    <StackPanel Orientation="Horizontal">
+
+                                        <TextBox Text="{x:Bind}" IsSpellCheckEnabled="False"/>
+                                        <Button Margin="5,0,0,0" Width="32" Height="32" Padding="0,0" Background="Transparent" BorderBrush="Transparent" Click="RemoveMailAddress_Click">
+                                            <FontIcon Glyph="&#xE711;"/>
+                                        </Button>
+                                    </StackPanel>
+                                </ItemContainer>
+                            </DataTemplate>
+                        </ItemsView.ItemTemplate>
+                    </ItemsView>
+                </StackPanel>
+                <Button Margin="12,12" Grid.Column="2" Grid.Row="0" Style="{ThemeResource AccentButtonStyle}" Click="SendMail_Click" Visibility="{x:Bind viewModel.IsEditable,Converter={StaticResource BoolToVisibility},Mode=OneWay}">
+                    <StackPanel Orientation="Horizontal">
+                        <FontIcon Glyph="&#xE724;" Margin="0,0,4,0" FontSize="12"/>
+                        <TextBlock Text="Send"/>
+                    </StackPanel>
+                </Button>
+
+            </Grid>
+            <ScrollView Grid.Row="1" x:Name="ScrollView" VerticalScrollBarVisibility="Auto" Visibility="Collapsed">
+                <TextBlock TextWrapping="Wrap" IsTextSelectionEnabled="True" Margin="12,12" Name="MailContent">
+                    No mail content.
+                </TextBlock>
+            </ScrollView>
+            <Grid Grid.Row="1"  Name="EmptyMail">
+                <TextBlock Text="No mail selected." IsTextSelectionEnabled="True" Margin="12,12" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+            </Grid>
+            <WebView2 Grid.Row="1" x:Name="HTMLViewer" Visibility="Collapsed" CanGoBack="False" CanGoForward="False" CanDrag="False" DefaultBackgroundColor="Transparent" Source="about:blank"/>
+            <StackPanel 
+                Grid.Row="2" 
+                Visibility="{x:Bind viewModel.Attachments.Count,Converter={StaticResource CountToVisibility},Mode=OneWay,FallbackValue=collapsed}" 
+                BorderThickness="0,1,0,0"
+                BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}">
+            
+                <TextBlock Text="Attachments" Margin="4,4" Style="{ThemeResource BodyStrongTextBlockStyle}"/>
+                <GridView Name="Attachments" MaxHeight="266" ItemsSource="{x:Bind viewModel.Attachments,Mode=OneWay}" SelectionMode="None" Padding="0,0">
+                    <GridView.ItemContainerStyle>
+                        <Style TargetType="GridViewItem" BasedOn="{StaticResource DefaultGridViewItemStyle}">
+                            <Setter Property="Margin" Value="5, 5, 5, 5"/>
+                        </Style>
+                    </GridView.ItemContainerStyle>
+
+
+                    <GridView.ItemTemplate>
+                        <DataTemplate x:DataType="x:String">
+                            <Border CornerRadius="4">
+                                <Border.ContextFlyout>
+                                    <MenuFlyout>
+                                        <MenuFlyoutItem Text="Save" Click="SaveAttachment"/>
+                                    </MenuFlyout>
+                                </Border.ContextFlyout>
+                                <Image Source="{x:Bind}" MaxHeight="256" MaxWidth="256"/>
+                            </Border>
+                        </DataTemplate>
+                    </GridView.ItemTemplate>
+                </GridView>
+            </StackPanel>
+            <ScrollView x:Name="Editor" Grid.Row="3" Visibility="Collapsed">
+                <RichEditBox x:Name="MailEditor" Margin="12,12" VerticalAlignment="Stretch" MinHeight="200"/>
+            </ScrollView>
         </Grid>
-        <ScrollView Grid.Row="1" x:Name="ScrollView" VerticalScrollBarVisibility="Auto" Visibility="Collapsed">
-            <TextBlock TextWrapping="Wrap" IsTextSelectionEnabled="True" Margin="12,12" Name="MailContent">
-                No mail content.
-            </TextBlock>
-        </ScrollView>
-        <Grid Grid.Row="1"  Name="EmptyMail">
-            <TextBlock Text="No mail selected." IsTextSelectionEnabled="True" Margin="12,12" VerticalAlignment="Center" HorizontalAlignment="Center"/>
-        </Grid>
-        <WebView2 Grid.Row="1" x:Name="HTMLViewer" Visibility="Collapsed" CanGoBack="False" CanGoForward="False" CanDrag="False" DefaultBackgroundColor="Transparent" Source="about:blank"/>
-        <GridView Name="Attachments" Grid.Row="2" MaxHeight="266" ItemsSource="{x:Bind viewModel.Attachments,Mode=OneWay}" SelectionMode="None" Padding="0,0">
-            <GridView.ItemContainerStyle>
-                <Style TargetType="GridViewItem" BasedOn="{StaticResource DefaultGridViewItemStyle}">
-                    <Setter Property="Margin" Value="5, 5, 5, 5"/>
-                </Style>
-            </GridView.ItemContainerStyle>
-
-
-            <GridView.ItemTemplate>
-                <DataTemplate x:DataType="x:String">
-                    <Image Source="{x:Bind}" MaxHeight="256" MaxWidth="256"/>
-                </DataTemplate>
-            </GridView.ItemTemplate>
-        </GridView>
-    </Grid>
+    </ScrollView>
 </Page>

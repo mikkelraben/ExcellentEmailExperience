@@ -16,7 +16,14 @@ namespace ExcellentEmailExperience.ViewModel
     {
         public MailHandlerViewModel(IAccount account, DispatcherQueue dispatcherQueue, CancellationToken cancellationToken)
         {
-            account.GetMailHandler().GetFolderNames().ToList().ForEach(folder => folders.Add(new FolderViewModel(account.GetMailHandler(), folder, dispatcherQueue, cancellationToken)));
+            var mailHandler = account.GetMailHandler();
+
+            if (mailHandler == null)
+            {
+                return;
+            }
+
+            mailHandler.GetFolderNames().ToList().ForEach(folder => folders.Add(new FolderViewModel(mailHandler, folder, dispatcherQueue, cancellationToken)));
         }
 
         public ObservableCollection<FolderViewModel> folders = new();
