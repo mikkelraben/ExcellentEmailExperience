@@ -10,6 +10,7 @@ using System.Net.Mail; //including mail functionalities from .NET
 using System.Collections.Generic;
 using System.Linq;
 using Org.BouncyCastle.Crypto.Macs;
+using System.Threading;
 
 namespace Test
 {
@@ -25,6 +26,8 @@ namespace Test
         MailAddress Address1;
         MailAddress Address2;
         MailAddress Address3;
+
+        private Mutex mut=new();
         
         string validSubject = "For kitty";
         string validAttachment = @"~\..\..\..\..\..\..\ExcellentEmailExperience\Assets\Icon.png"; //valid attachment path maybe testBranch
@@ -85,6 +88,33 @@ namespace Test
             mailHandler2 = account2.GetMailHandler();
             mailHandler3 = account3.GetMailHandler();
         }
+
+        //private void send_mutex(bool roF, bool rAoF, MailContent mailtosend, IMailHandler mailHandler,MailAddress? address)
+        //{
+        //    if (roF)
+        //    {
+        //        if (rAoF)
+        //        {
+        //            mailHandler.Forward(mailtosend, new List<MailAddress> { address });
+
+        //        }
+        //        else
+        //        {
+        //            mailHandler.Reply(mailtosend, validBody_gen());
+
+        //        }
+        //    }
+        //    else if (rAoF)
+        //    {
+        //        mailHandler.ReplyAll(mailtosend, validBody_gen());
+        //    }
+        //    else
+        //    {
+        //        mailHandler.Send(mailtosend);
+        //    }
+        //}
+
+       
         private string validBody_gen()
         {
             int randomInteger = new Random().Next(0, 1000);
@@ -157,6 +187,8 @@ namespace Test
 
             validMail.from = Address1;
 
+            mut.WaitOne();
+
             mailHandler1.Send(validMail);
 
             //TODO: change amount of requests when api is changed
@@ -168,6 +200,7 @@ namespace Test
 
 
             List<MailContent> Sentlist1 = GetInbox(mailHandler1, "SENT");
+            mut.ReleaseMutex();
 
             if (Inboxlist2[0] == null && Sentlist1[0] == null)
             {
@@ -208,7 +241,7 @@ namespace Test
             validMail.bcc = new List<MailAddress> { Address3 };
 
 
-
+            mut.WaitOne();
 
             mailHandler1.Send(validMail);
 
@@ -222,7 +255,7 @@ namespace Test
 
             List<MailContent> Sentlist1 = GetInbox(mailHandler1, "SENT");
 
-
+            mut.ReleaseMutex();
             //as messageIDs are different for all mail instances, we need to set them equal to compare the mail objects
 
             if (Inboxlist2[0] != null && Sentlist1[0] != null)
@@ -253,9 +286,17 @@ namespace Test
             UnvalidMail.subject = validSubject;
 
             UnvalidMail.from = Address1;
-            mailHandler1.Send(UnvalidMail);
+            mut.WaitOne();
+            try
+            {
 
+                mailHandler1.Send(UnvalidMail);
+            }
+            catch (ArgumentException ex)
+            {
+                mut.ReleaseMutex();
 
+            }
         }
 
         [TestMethod]
@@ -270,7 +311,17 @@ namespace Test
             UnvalidMail.to = new List<MailAddress> { Address2 };
 
             UnvalidMail.from = Address1;
-            mailHandler1.Send(UnvalidMail);
+            mut.WaitOne();
+            try
+            {
+
+                mailHandler1.Send(UnvalidMail);
+            }
+            catch (ArgumentException ex)
+            {
+                mut.ReleaseMutex();
+
+            }
 
 
         }
@@ -293,6 +344,8 @@ namespace Test
 
             validMail.cc = new List<MailAddress> { Address3 };
 
+            mut.WaitOne();
+
             mailHandler1.Send(validMail);
 
             //let the program sleep for 2 second to make sure the mail is recieved
@@ -302,7 +355,7 @@ namespace Test
 
 
             List<MailContent> Sentlist1 = GetInbox(mailHandler1, "SENT");
-
+            mut.ReleaseMutex();
 
             //as messageIDs are different for all mail instances, we need to set them equal to compare the mail objects
 
@@ -340,6 +393,8 @@ namespace Test
 
             validMail.bcc = new List<MailAddress> { Address3 };
 
+            mut.WaitOne();
+
             mailHandler1.Send(validMail);
 
             //let the program sleep for 2 second to make sure the mail is recieved
@@ -349,6 +404,8 @@ namespace Test
 
 
             List<MailContent> Sentlist1 = GetInbox(mailHandler1, "SENT");
+
+            mut.ReleaseMutex();
 
             //as messageIDs are different for all mail instances, we need to set them equal to compare the mail objects
 
@@ -387,6 +444,8 @@ namespace Test
 
             validMail.cc = new List<MailAddress> { Address3 };
 
+            mut.WaitOne();
+
             mailHandler1.Send(validMail);
 
             //let the program sleep for 2 second to make sure the mail is recieved
@@ -402,6 +461,7 @@ namespace Test
             {
                 Assert.Fail("no messages were sent!");
             }
+            
 
             //let the program sleep for 2 second to make sure the mail is recieved
             System.Threading.Thread.Sleep(4000);
@@ -410,6 +470,7 @@ namespace Test
 
             List<MailContent> Sentlist3 = GetInbox(mailHandler3, "SENT");
 
+            mut.ReleaseMutex();
             //as messageIDs are different for all mail instances, we need to set them equal to compare the mail objects
 
             if (Inboxlist1[0] != null && Sentlist3[0] != null)
@@ -449,6 +510,7 @@ namespace Test
             validMail.body = validBody_gen();
 
             validMail.cc = new List<MailAddress> { Address3 };
+            mut.WaitOne();
 
             mailHandler1.Send(validMail);
 
@@ -465,7 +527,7 @@ namespace Test
             {
                 Assert.Fail("no messages were sent!");
             }
-
+            
             //let the program sleep for 2 second to make sure the mail is recieved
             System.Threading.Thread.Sleep(4000);
 
@@ -479,6 +541,8 @@ namespace Test
             List<MailContent> Inboxlist1 = GetInbox(mailHandler1, "INBOX");
 
             List<MailContent> Sentlist3 = GetInbox(mailHandler3, "SENT");
+
+            mut.ReleaseMutex();
 
             //as messageIDs are different for all mail instances, we need to set them equal to compare the mail objects
 
@@ -511,6 +575,8 @@ namespace Test
 
             validMail.body = validBody_gen();
 
+            mut.WaitOne();
+
             mailHandler1.Send(validMail);
 
             //let the program sleep for 2 second to make sure the mail is recieved
@@ -535,6 +601,8 @@ namespace Test
             List<MailContent> Sentlist1 = GetInbox(mailHandler1, "SENT");
 
             //as messageIDs are different for all mail instances, we need to set them equal to compare the mail objects
+
+            mut.ReleaseMutex();
 
             if (Sentlist1[0] != null && Inboxlist3[0]!=null)
             {
@@ -568,6 +636,8 @@ namespace Test
 
             validMail.attachments = new List<string> { validAttachment };
 
+            mut.WaitOne();
+
             mailHandler1.Send(validMail);
 
             //let the program sleep for 2 second to make sure the mail is recieved
@@ -576,6 +646,8 @@ namespace Test
             List<MailContent> Inboxlist2 = GetInbox(mailHandler2, "INBOX");
 
             List<MailContent> Sentlist1 = GetInbox(mailHandler1, "SENT");
+
+            mut.ReleaseMutex();
 
             //as messageIDs are different for all mail instances, we need to set them equal to compare the mail objects
 
@@ -607,6 +679,8 @@ namespace Test
 
             validMail.body = validBody_gen();
 
+            mut.WaitOne();
+
             mailHandler1.Send(validMail);
 
             //let the program sleep for 2 second to make sure the mail is recieved
@@ -628,6 +702,8 @@ namespace Test
             System.Threading.Thread.Sleep(4000);
 
             List<MailContent> Trashlist2 = GetInbox(mailHandler2, "TRASH");
+
+            mut.ReleaseMutex();
 
             Assert.IsTrue(Trashlist2[0] == Sentlist1[0]);
             Assert.IsTrue(Trashlist2[0] != Inboxlist2[0]);
@@ -677,7 +753,7 @@ namespace Test
             validMail.bcc = new List<MailAddress> { Address3 };
 
 
-
+            mut.WaitOne();
 
             mailHandler1.Send(validMail);
 
@@ -691,6 +767,7 @@ namespace Test
 
             List<MailContent> Sentlist1 = GetInbox(mailHandler1, "SENT");
 
+            mut.ReleaseMutex();
 
             //as messageIDs are different for all mail instances, we need to set them equal to compare the mail objects
 
