@@ -55,6 +55,7 @@ namespace ExcellentEmailExperience.Model
             }
             catch (Exception)
             {
+                MessageHandler.AddMessage("Login failed", MessageSeverity.Error);
                 throw new Exception("Login failed");
             }
 
