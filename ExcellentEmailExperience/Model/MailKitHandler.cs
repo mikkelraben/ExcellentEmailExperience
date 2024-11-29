@@ -1,11 +1,13 @@
 ﻿using ExcellentEmailExperience.Interfaces;
 using MailKit;
 using MailKit.Net.Imap;
+using MimeKit;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Net.Mail;
-using Windows.Media.Protection.PlayReady;
+using System.Text;
 
 namespace ExcellentEmailExperience.Model
 {
@@ -80,8 +82,13 @@ namespace ExcellentEmailExperience.Model
 
         public void Send(MailContent content)
         {
-            throw new NotImplementedException();
+            var mimemessage = MailSetup.SetupMail(content);
+
+            //TODO: plis impliment cancel token. please and thankyou. :) 
+            smtpClient.SendAsync(mimemessage);
         }
+
+       
 
         public void Reply(MailContent content, string Response)
         {
