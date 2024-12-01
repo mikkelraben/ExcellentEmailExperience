@@ -1,4 +1,6 @@
-﻿using System;
+﻿using ExcellentEmailExperience.Views;
+using Microsoft.UI.Xaml.Controls;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -29,7 +31,7 @@ namespace ExcellentEmailExperience.Model
     public class Message
     {
         public string message;
-        public MessageSeverity severity;
+        public InfoBarSeverity severity;
     }
 
     static class MessageHandler
@@ -48,7 +50,12 @@ namespace ExcellentEmailExperience.Model
         /// <param name="severity"></param>
         public static void AddMessage(string message, MessageSeverity severity)
         {
-            messages.Insert(0, new Message { message = message, severity = severity });
+
+            MessageSeverityToInfoBarSeverity converter = new();
+            var infoSeverity = (InfoBarSeverity)converter.Convert(severity, typeof(MessageSeverity), null, null);
+
+
+            messages.Insert(0, new Message { message = message, severity = infoSeverity });
             if (MessageAdded is not null)
                 MessageAdded.Invoke(null, EventArgs.Empty);
         }

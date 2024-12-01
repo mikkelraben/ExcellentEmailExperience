@@ -1,3 +1,4 @@
+using ExcellentEmailExperience.Interfaces;
 using ExcellentEmailExperience.Model;
 using ExcellentEmailExperience.ViewModel;
 using Microsoft.UI.Input;
@@ -8,8 +9,10 @@ using Microsoft.UI.Xaml.Data;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Net.Mail;
 using System.Threading;
+using Windows.ApplicationModel.DataTransfer;
 using Windows.Foundation;
 using Windows.Graphics;
 using WinUIEx;
@@ -30,6 +33,7 @@ namespace ExcellentEmailExperience.Views
         ObservableCollection<AccountViewModel> accounts = new();
         CancellationTokenSource cancellationToken = new();
         UserMessageViewModel MessageViewModel = new();
+        public static List<object> DraggedItems = new();
 
         public MainWindow(MailApp mailApp)
         {
@@ -86,10 +90,18 @@ namespace ExcellentEmailExperience.Views
 
             MailList.ItemsSource = currentFolder.mails;
 
-
-
-
-
+            accounts.CollectionChanged += (s, e) =>
+            {
+                if (e.Action == System.Collections.Specialized.NotifyCollectionChangedAction.Remove)
+                {
+                    mailApp.Accounts.Remove((e.OldItems[0] as AccountViewModel).account);
+                }
+                if (e.Action == System.Collections.Specialized.NotifyCollectionChangedAction.Add)
+                {
+                    mailApp.Accounts.Insert(e.NewStartingIndex, (e.NewItems[0] as AccountViewModel).account);
+                    mailApp.SaveAccounts();
+                }
+            };
 
         }
 
@@ -271,8 +283,15 @@ namespace ExcellentEmailExperience.Views
             }
         }
 
-        private void MessagesBar_Loaded(object sender, RoutedEventArgs e)
+        private void MessagesBar_Closed(InfoBar sender, InfoBarClosedEventArgs args)
         {
+            sender.IsOpen = true;
+            MessageViewModel.messages.Remove(sender.DataContext as Message);
+        }
+
+        private void MessagesBar_BringIntoViewRequested(UIElement sender, BringIntoViewRequestedEventArgs args)
+        {
+            throw new NotImplementedException();
             var infoBar = (sender as InfoBar);
             var message = infoBar.DataContext as Message;
             if (message is null)
@@ -280,11 +299,42 @@ namespace ExcellentEmailExperience.Views
 
             MessageSeverityToInfoBarSeverity converter = new();
             infoBar.Severity = (InfoBarSeverity)converter.Convert(message.severity, typeof(MessageSeverity), null, null);
+
         }
 
-        private void MessagesBar_Closed(InfoBar sender, InfoBarClosedEventArgs args)
+        private void Siderbar_DragItemsStarting(TreeView sender, TreeViewDragItemsStartingEventArgs args)
         {
-            MessageViewModel.messages.Remove(sender.DataContext as Message);
+            if (args.Items[0] is not AccountViewModel)
+            {
+                args.Cancel = true;
+                return;
+            }
+
+            foreach (var account in accounts)
+            {
+                var item = sender.ContainerFromItem(account);
+                if (item is TreeViewItem treeViewItem)
+                {
+                    treeViewItem.IsExpanded = false;
+                }
+                Debug.WriteLine(item);
+            }
+
+            foreach (var item in args.Items)
+            {
+                DraggedItems.Add(item);
+            }
+        }
+
+        private void Siderbar_DragItemsCompleted(TreeView sender, TreeViewDragItemsCompletedEventArgs args)
+        {
+            DraggedItems.Clear();
+        }
+
+        private void TreeViewItem_DragEnter(object sender, DragEventArgs e)
+        {
+            e.AcceptedOperation = DataPackageOperation.None;
+            Debug.WriteLine(e);
         }
     }
 
@@ -374,5 +424,54 @@ namespace ExcellentEmailExperience.Views
             }
             throw new NotImplementedException();
         }
+    }
+
+
+    // Thanks to https://github.com/kaiguo/TreeViewConditionalReorderSample/blob/master/TreeViewConditionalReorderSample/MyTreeViewItem.cs
+    class MyTreeViewItem : TreeViewItem
+    {
+        protected override void OnDragEnter(DragEventArgs e)
+        {
+            var draggedItem = MainWindow.DraggedItems[0];
+            var draggedOverItem = DataContext;
+            // Block TreeViewNode auto expanding if we are dragging a group onto another group
+            if (draggedItem is AccountViewModel && draggedOverItem is AccountViewModel)
+            {
+                e.Handled = true;
+            }
+
+            base.OnDragEnter(e);
+        }
+
+        protected override void OnDragOver(DragEventArgs e)
+        {
+            var draggedItem = MainWindow.DraggedItems[0];
+            var draggedOverItem = DataContext;
+
+            Debug.WriteLine("DraggedItem: " + draggedItem);
+
+            if (draggedItem is AccountViewModel && (draggedOverItem is AccountViewModel || draggedOverItem is FolderViewModel))
+            {
+                //- Group
+                //-- Leaf1
+                //-- (Group2) <- Blocks dropping another Group here
+                //-- Leaf2
+                e.Handled = true;
+            }
+            base.OnDragOver(e);
+            e.AcceptedOperation = draggedOverItem is AccountViewModel && !(draggedItem is AccountViewModel) ? DataPackageOperation.Move : DataPackageOperation.None;
+        }
+        protected override void OnDrop(DragEventArgs e)
+        {
+            var data = DataContext as AccountViewModel;
+            // Block all drops on leaf node
+            if (data == null)
+            {
+                e.Handled = true;
+            }
+
+            base.OnDrop(e);
+        }
+
     }
 }

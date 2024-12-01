@@ -43,13 +43,13 @@
                 </Grid>
             </DataTemplate>
             <DataTemplate x:Key="AccountViewModel" x:DataType="viewmodel:GmailAccountViewModel">
-                <TreeViewItem ItemsSource="{x:Bind mailHandlerViewModel.folders}" Content="{x:Bind Name, Mode=OneWay}" IsExpanded="True"/>
+                <local:MyTreeViewItem ItemsSource="{x:Bind mailHandlerViewModel.folders}" Content="{x:Bind Name, Mode=OneWay}" IsExpanded="True"/>
             </DataTemplate>
             <DataTemplate x:Key="FolderViewModel" x:DataType="viewmodel:FolderViewModel">
-                <TreeViewItem Content="{x:Bind Name, Mode=OneWay}"/>
+                <local:MyTreeViewItem Content="{x:Bind Name, Mode=OneWay}" />
             </DataTemplate>
             <DataTemplate x:Key="MessageTemplate" x:DataType="model:Message">
-                <InfoBar Margin="4,4" Name="MessagesBar" Content="{x:Bind message}" Loaded="MessagesBar_Loaded" Closed="MessagesBar_Closed" IsOpen="True"/>
+                <InfoBar Margin="4,4" Name="MessagesBar" BringIntoViewRequested="MessagesBar_BringIntoViewRequested" Content="{x:Bind message}" Severity="{x:Bind severity}" Closed="MessagesBar_Closed" IsOpen="True"/>
             </DataTemplate>
 
 
@@ -106,7 +106,10 @@
                     Margin="-200,0,0,0" 
                     SelectionChanged="Siderbar_SelectionChanged"
                     ItemsSource="{x:Bind accounts}" 
-                    ItemTemplateSelector="{StaticResource SiderbarTemplateSelector}" />
+                    ItemTemplateSelector="{StaticResource SiderbarTemplateSelector}" 
+                    CanReorderItems="True"
+                    DragItemsStarting="Siderbar_DragItemsStarting"
+                    DragItemsCompleted="Siderbar_DragItemsCompleted"/>
                 
                 <!--This should be changed to a tree or something-->
                 <Grid Name="Sidebar" Grid.Column="1">
@@ -193,7 +196,7 @@
 
         </Grid>
 
-        <ListView Margin="0,12" Padding="0,0" ItemsSource="{x:Bind MessageViewModel.messages}" ItemTemplate="{StaticResource MessageTemplate}" VerticalAlignment="Bottom" HorizontalAlignment="Right" Grid.Row="1" SelectionMode="None" IsItemClickEnabled="False"/>
+        <ListView x:Name="NotificationList" Margin="0,12" Padding="0,0" ItemsSource="{x:Bind MessageViewModel.messages, Mode=OneWay}" ItemTemplate="{StaticResource MessageTemplate}" VerticalAlignment="Bottom" HorizontalAlignment="Right" Grid.Row="1" SelectionMode="None" IsItemClickEnabled="False"/>
 
     </Grid>
 </winex:WindowEx>

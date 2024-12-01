@@ -46,6 +46,13 @@
                 </TextBlock>
                 <TextBox Grid.Row="0" Grid.Column="1" Margin="0,0" Height="32" VerticalAlignment="Center" PlaceholderText="Subject" x:Name="SubjectField" Text="{x:Bind viewModel.Subject,Mode=TwoWay}" Visibility="{x:Bind viewModel.IsEditable,Converter={StaticResource BoolToVisibility},Mode=OneWay}"/>
 
+                <Button Margin="12,6,12,4" Grid.Column="2" Grid.Row="0" Style="{ThemeResource AccentButtonStyle}" Click="SendMail_Click" Visibility="{x:Bind viewModel.IsEditable,Converter={StaticResource BoolToVisibility},Mode=OneWay}">
+                    <StackPanel Orientation="Horizontal">
+                        <FontIcon Glyph="&#xE724;" Margin="0,0,4,0" FontSize="12"/>
+                        <TextBlock Text="Send"/>
+                    </StackPanel>
+                </Button>
+                
                 <TextBlock Margin="12,4" Grid.Column="0" Grid.Row="1" VerticalAlignment="Center" HorizontalTextAlignment="Left">
                     From
                 </TextBlock>
@@ -94,6 +101,12 @@
                         <ItemsView.ItemTemplate>
                             <DataTemplate x:DataType="view:StringWrapper">
                                 <ItemContainer>
+                                    <ItemContainer.Resources>
+                                        <ResourceDictionary>
+                                            <StaticResource x:Key="ItemContainerPointerOverBackground" ResourceKey="SubtleFillColorTransparentBrush"/>
+                                            <StaticResource x:Key="ItemContainerPressedBackground" ResourceKey="SubtleFillColorTransparentBrush"/>
+                                        </ResourceDictionary>
+                                    </ItemContainer.Resources>
                                     <StackPanel Orientation="Horizontal">
 
                                         <TextBox Text="{Binding Value,Mode=TwoWay}" IsSpellCheckEnabled="False"/>
@@ -106,12 +119,7 @@
                         </ItemsView.ItemTemplate>
                     </ItemsView>
                 </StackPanel>
-                <Button Margin="12,6,12,4" Grid.Column="2" Grid.Row="0" Style="{ThemeResource AccentButtonStyle}" Click="SendMail_Click" Visibility="{x:Bind viewModel.IsEditable,Converter={StaticResource BoolToVisibility},Mode=OneWay}">
-                    <StackPanel Orientation="Horizontal">
-                        <FontIcon Glyph="&#xE724;" Margin="0,0,4,0" FontSize="12"/>
-                        <TextBlock Text="Send"/>
-                    </StackPanel>
-                </Button>
+
 
             </Grid>
             <ScrollView Grid.Row="1" x:Name="ScrollView" VerticalScrollBarVisibility="Auto" Visibility="Collapsed">

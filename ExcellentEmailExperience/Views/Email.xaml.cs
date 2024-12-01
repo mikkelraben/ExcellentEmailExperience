@@ -1,10 +1,12 @@
 using ExcellentEmailExperience.Model;
 using ExcellentEmailExperience.ViewModel;
+using Microsoft.UI.Text;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Data;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.Web.WebView2.Core;
+using RtfPipe;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -184,9 +186,19 @@ namespace ExcellentEmailExperience.Views
 
             MailContent mail = new();
             mail.from = account.account.GetEmail();
-            foreach (var recipient in viewModel.recipients)
+            try
             {
-                mail.to.Add(new(recipient.Value));
+
+
+                foreach (var recipient in viewModel.recipients)
+                {
+                    mail.to.Add(new(recipient.Value));
+                }
+            }
+            catch (Exception _)
+            {
+                MessageHandler.AddMessage("A recipient mail is not valid please check your To field", MessageSeverity.Error);
+                return;
             }
             mail.subject = viewModel.Subject;
             mail.body = "Hello There this is mail";
@@ -194,14 +206,23 @@ namespace ExcellentEmailExperience.Views
             mail.attachments = viewModel.Attachments;
             mail.cc = viewModel.Cc;
             mail.bcc = viewModel.Bcc;
+
+            Stream bla = new MemoryStream();
+            MailEditor.Document.SaveToStream(TextGetOptions.None, bla.AsRandomAccessStream());
+            //MailEditor.Document.SaveToStream(TextGetOptions.FormatRtf, new FileStream(@$"C:\Users\mikke\Desktop\bla.rtf", FileMode.OpenOrCreate).AsRandomAccessStream());
+            string rtf = Encoding.UTF8.GetString((bla as MemoryStream).ToArray());
+
+            //mail.body = Rtf.ToHtml(bla);
+            MailEditor.Document.GetText(TextGetOptions.None, out mail.body);
             try
             {
                 account.account.GetMailHandler().Send(mail);
                 MessageHandler.AddMessage("Sent Message", MessageSeverity.Success);
+                ChangeMail(new(), false);
             }
-            catch (ArgumentException _)
+            catch (Exception _)
             {
-
+                MessageHandler.AddMessage("Could not send message", MessageSeverity.Error);
             }
         }
     }
