@@ -295,6 +295,7 @@ namespace ExcellentEmailExperience.Model
 
         public void Send(MailContent content)
         {
+
             content.body = MakeDaddyGHappy(content.body);
 
             var mimemessage = MailSetup.SetupMail(content);

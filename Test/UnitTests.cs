@@ -32,6 +32,7 @@ namespace Test
         
         string validSubject = "For kitty";
         string validAttachment = @"~\..\..\..\..\..\..\ExcellentEmailExperience\Assets\Icon.png"; //valid attachment path maybe testBranch
+        string validAttachment1 = @"~\..\..\..\..\..\..\ExcellentEmailExperience\Assets\TextFile1.txt"; //valid attachment path maybe testBranch
         string invalidAttachment = "C:/Users/Downloads"; //invalid attachment path maybe
         string username1 = "lillekatemil6@gmail.com";
         string username2 = "postmanpergruppe1@gmail.com";
@@ -599,7 +600,7 @@ namespace Test
         }
 
         [TestMethod]
-        public void TestMethod_attachment()
+        public void TestMethod_attachment_png()
         {
             UnitTest_init();
             // creating a new mail object and sending it to the current mail address? checking for recieving mail
@@ -642,6 +643,97 @@ namespace Test
                 Assert.Fail("no messages were sent!");
             }
         }
+
+        [TestMethod]
+        public void TestMethod_attachment_txt()
+        {
+            UnitTest_init();
+            // creating a new mail object and sending it to the current mail address? checking for recieving mail
+            MailContent validMail = new();
+
+            validMail.subject = validSubject;
+
+            validMail.to = new List<MailAddress> { Address2 };
+
+            validMail.from = Address1;
+
+            validMail.body = validBody_gen();
+
+            validMail.attachments = new List<string> { validAttachment1 };
+
+            mut.WaitOne(); Debug.WriteLine("getting mutex access");
+
+            mailHandler1.Send(validMail);
+
+            //let the program sleep for 2 second to make sure the mail is recieved
+            System.Threading.Thread.Sleep(4000);
+
+            List<MailContent> Inboxlist2 = GetInbox(mailHandler2, "INBOX");
+
+            List<MailContent> Sentlist1 = GetInbox(mailHandler1, "SENT");
+
+            Debug.WriteLine("finished mutex access"); mut.ReleaseMutex();
+
+            //as messageIDs are different for all mail instances, we need to set them equal to compare the mail objects
+
+            if (Inboxlist2[0] != null && Sentlist1[0] != null)
+            {
+                Inboxlist2[0].MessageId = Sentlist1[0].MessageId;
+                Inboxlist2[0].ThreadId = Sentlist1[0].ThreadId;
+
+                Assert.IsTrue(Inboxlist2[0] == Sentlist1[0]);
+            }
+            else
+            {
+                Assert.Fail("no messages were sent!");
+            }
+        }
+
+        [TestMethod]
+        public void TestMethod_Invalid_attachment()
+        {
+            UnitTest_init();
+            // creating a new mail object and sending it to the current mail address? checking for recieving mail
+            MailContent validMail = new();
+
+            validMail.subject = validSubject;
+
+            validMail.to = new List<MailAddress> { Address2 };
+
+            validMail.from = Address1;
+
+            validMail.body = validBody_gen();
+
+            validMail.attachments = new List<string> { invalidAttachment };
+
+            mut.WaitOne(); Debug.WriteLine("getting mutex access");
+
+            mailHandler1.Send(validMail);
+
+            //let the program sleep for 2 second to make sure the mail is recieved
+            System.Threading.Thread.Sleep(4000);
+
+            List<MailContent> Inboxlist2 = GetInbox(mailHandler2, "INBOX");
+
+            List<MailContent> Sentlist1 = GetInbox(mailHandler1, "SENT");
+
+            Debug.WriteLine("finished mutex access"); mut.ReleaseMutex();
+
+            //as messageIDs are different for all mail instances, we need to set them equal to compare the mail objects
+
+            if (Inboxlist2[0] != null && Sentlist1[0] != null)
+            {
+                Inboxlist2[0].MessageId = Sentlist1[0].MessageId;
+                Inboxlist2[0].ThreadId = Sentlist1[0].ThreadId;
+
+                Assert.IsTrue(Inboxlist2[0] == Sentlist1[0]);
+            }
+            else
+            {
+                Assert.Fail("no messages were sent!");
+            }
+        }
+
 
         [TestMethod]
         public void TestMethod_trash()
