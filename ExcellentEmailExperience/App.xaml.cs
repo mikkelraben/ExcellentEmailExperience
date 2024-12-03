@@ -1,6 +1,7 @@
 ﻿using ExcellentEmailExperience.Model;
 using ExcellentEmailExperience.Views;
 using Microsoft.UI.Xaml;
+using System.Text;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -27,6 +28,7 @@ namespace ExcellentEmailExperience
         /// <param name="args">Details about the launch request and process.</param>
         protected async override void OnLaunched(Microsoft.UI.Xaml.LaunchActivatedEventArgs args)
         {
+            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
             mailApp = new MailApp();
             await mailApp.Initialize();
             if (!mailApp.HasAccount())
