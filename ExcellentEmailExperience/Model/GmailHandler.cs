@@ -300,6 +300,7 @@ namespace ExcellentEmailExperience.Model
 
         public void Send(MailContent content)
         {
+
             content.body = MakeDaddyGHappy(content.body);
             if (content.to.Count == 0)
             {
