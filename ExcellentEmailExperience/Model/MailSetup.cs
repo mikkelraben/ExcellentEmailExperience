@@ -1,12 +1,9 @@
 ﻿using MimeKit;
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Net.Mail;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace ExcellentEmailExperience.Model
 {
@@ -91,6 +88,7 @@ namespace ExcellentEmailExperience.Model
             {
                 if (content.attachments.Count == 0)
                 {
+                    //TODO: explain to Mikkel how this is an exception?
                     throw new Exception("no attachments found");
                 }
                 foreach (var attachment in content.attachments)

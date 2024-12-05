@@ -2,6 +2,7 @@
 using ExcellentEmailExperience.Model;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Net.Mail;
 
 namespace ExcellentEmailExperience.ViewModel
@@ -21,6 +22,9 @@ namespace ExcellentEmailExperience.ViewModel
             Date = mailContent.date;
             bodyType = mailContent.bodyType;
             messageId = mailContent.MessageId;
+
+            recipients.Clear();
+            mailContent.to.ForEach(x => recipients.Add(new(x.Address)));
         }
 
         [ObservableProperty]
@@ -28,6 +32,9 @@ namespace ExcellentEmailExperience.ViewModel
 
         [ObservableProperty]
         public List<MailAddress> to;
+
+        // This variable is used to store the strings of the emails so they can be edited
+        public ObservableCollection<StringWrapper> recipients = new();
 
         [ObservableProperty]
         public List<MailAddress> bcc;
@@ -53,5 +60,19 @@ namespace ExcellentEmailExperience.ViewModel
 
         public string messageId;
 
+    }
+
+    /// <summary>
+    /// Worry not this is a terrible class to have but due to Microsoft's lack of support for their own wonderful technology(binding) I have to create this class to be able to edit the recipients of the emails
+    /// </summary>
+    [ObservableObject]
+    public partial class StringWrapper
+    {
+        public StringWrapper(string value)
+        {
+            this.Value = value;
+        }
+        [ObservableProperty]
+        public string value;
     }
 }
