@@ -9,6 +9,7 @@ using System.Diagnostics;
 using System.Text;
 using ExcellentEmailExperience.Interfaces;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 
 namespace ExcellentEmailExperience.Model
 {
@@ -18,6 +19,31 @@ namespace ExcellentEmailExperience.Model
         // this is a means of counteracting that to give the cache more time by having its own cache, cache jr. (legal name: shortTermCache)
         private List<string> shortTermCache = new();
         private string connectionString;
+
+        public static Dictionary<string, List<string>> ParseMailQuery(string query)
+        {
+            // Dictionary to store the parsed fields
+            var result = new Dictionary<string, List<string>>(StringComparer.OrdinalIgnoreCase);
+
+            // Regex to match fields like "from:", "cc:", "subject:", followed by their values
+            string pattern = @"(?<field>from|cc|bcc|subject|to|after|before|newer|older|older_than|newer_than|flag|has|filename|is):(?<value>.*?)(?=(\s+\w+:|$))";
+            var matches = Regex.Matches(query, pattern, RegexOptions.IgnoreCase);
+
+            foreach (Match match in matches)
+            {
+                string field = match.Groups["field"].Value.ToLower();
+                string value = match.Groups["value"].Value.Trim();
+
+                if (!result.ContainsKey(field))
+                {
+                    result[field] = new List<string>();
+                }
+
+                result[field].Add(value);
+            }
+
+            return result;
+        }
 
         public CacheHandler(string accountAddress)
         {
@@ -186,5 +212,85 @@ namespace ExcellentEmailExperience.Model
                 }
             }
         }
+
+        public void ClearCache()
+        {
+            using (var connection = new SqliteConnection(connectionString))
+            {
+                connection.Open();
+
+                var command = connection.CreateCommand();
+                command.CommandText = "TRUNCATE TABLE MailContent";
+                command.ExecuteNonQuery();
+            }
+        }
+
+        public IEnumerable<MailContent> SearchCache(string query)
+        {
+            var options = new JsonSerializerOptions
+            {
+                Converters = { new MailAddressConverter() }
+            };
+
+            using (var connection = new SqliteConnection(connectionString))
+            {
+                connection.Open();
+                
+                int fromIndex = 0;
+                int toIndex = 0;
+                int subjectIndex = 0;
+                int bodyIndex = 0;
+                int dateIndex = 0;
+                int threadIndex = 0;
+                int folderIndex = 0;
+                int attachmentIndex = 0;
+                int flagsIndex = 0;
+
+
+                if (query == "") yield break;
+                Dictionary<string, List<string>> parsedQuery = ParseMailQuery(query);
+                if (parsedQuery.TryGetValue("from", out List<string> from))
+                {
+
+                }
+                var command = connection.CreateCommand();
+                command.CommandText = $@"
+                SELECT *
+                FROM MailContent
+                WHERE FolderId = $folder
+                ";
+
+                //command.Parameters.AddWithValue("$folder", folderName);
+
+                var reader = command.ExecuteReader();
+
+                IEnumerable<MailContent> mails = new List<MailContent>();
+                while (reader.Read())
+                {
+                    MailContent mail = new MailContent();
+                    mail.MessageId = reader.GetString(0);
+                    mail.from = JsonSerializer.Deserialize<MailAddress>(reader.GetString(1), options);
+                    mail.to = JsonSerializer.Deserialize<List<MailAddress>>(reader.GetString(2), options);
+                    mail.bcc = JsonSerializer.Deserialize<List<MailAddress>>(reader.GetString(3), options);
+                    mail.cc = JsonSerializer.Deserialize<List<MailAddress>>(reader.GetString(4), options);
+                    mail.bodyType = (BodyType)reader.GetInt32(5);
+                    mail.subject = reader.GetString(6);
+                    mail.body = reader.GetString(7);
+
+                    var attachments = reader.GetString(8);
+                    if (attachments != "")
+                        mail.attachments = reader.GetString(8).Split(';').ToList();
+
+                    mail.date = DateTime.Parse(reader.GetString(9));
+                    mail.ThreadId = reader.GetString(10);
+                    mail.flags = (MailFlag)reader.GetInt32(11);
+
+                    mails.Append(mail);
+                    yield return mail;
+                }
+
+            }
+        }
+
     }
 }
