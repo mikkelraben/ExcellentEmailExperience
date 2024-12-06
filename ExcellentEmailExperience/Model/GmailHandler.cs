@@ -97,8 +97,6 @@ namespace ExcellentEmailExperience.Model
             yield break;
         }
 
-
-
         private MailContent BuildMailContent(Google.Apis.Gmail.v1.Data.Message msg)
         {
             MailContent mailContent = new();
