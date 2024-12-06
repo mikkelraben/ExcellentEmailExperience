@@ -56,6 +56,7 @@ namespace ExcellentEmailExperience.Model
 	                    date TEXT NOT NULL,
 	                    ThreadId TEXT,
                         FolderId TEXT NOT NULL,
+                        flags INTEGER,
 	                    PRIMARY KEY(MessageId)
                         );";
                         command.ExecuteNonQuery();
@@ -78,8 +79,8 @@ namespace ExcellentEmailExperience.Model
                     command.CommandText =
                     $@"
                     INSERT INTO MailContent
-                    (MessageId, [from], [to], bcc, cc, bodytype, subject, body, attachments, date, ThreadId, FolderId)
-                    VALUES ($id, $from, $to, $bcc, $cc, $bodytype, $subject, $body, $attach, $date, $thread, $folder);
+                    (MessageId, [from], [to], bcc, cc, bodytype, subject, body, attachments, date, ThreadId, FolderId, flags)
+                    VALUES ($id, $from, $to, $bcc, $cc, $bodytype, $subject, $body, $attach, $date, $thread, $folder, $flags);
                     ";
                     command.Parameters.AddWithValue("$id", mail.MessageId);
                     command.Parameters.AddWithValue("$from", JsonSerializer.Serialize(mail.from));
@@ -104,6 +105,7 @@ namespace ExcellentEmailExperience.Model
                     command.Parameters.AddWithValue("$date", mail.date.ToString());
                     command.Parameters.AddWithValue("$thread", mail.ThreadId);
                     command.Parameters.AddWithValue("$folder", folderName);
+                    command.Parameters.AddWithValue("$flags", (int)mail.flags);
 
                     command.ExecuteNonQuery();
                 }
@@ -150,6 +152,7 @@ namespace ExcellentEmailExperience.Model
 
                 mail.date = DateTime.Parse(reader.GetString(9));
                 mail.ThreadId = reader.GetString(10);
+                mail.flags = (MailFlag)reader.GetInt32(5);
 
                 return mail;
             }
