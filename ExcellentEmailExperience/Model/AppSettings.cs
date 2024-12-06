@@ -1,4 +1,6 @@
-﻿namespace ExcellentEmailExperience.Model
+﻿using System.Collections.Generic;
+
+namespace ExcellentEmailExperience.Model
 {
     public enum Theme
     {
@@ -15,7 +17,7 @@
         public string mainMail;
         public int mailFetchCount;
 
-        
+
 
         public void addSignature(string signature)
         {
