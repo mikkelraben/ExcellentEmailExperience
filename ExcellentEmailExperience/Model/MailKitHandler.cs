@@ -8,6 +8,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Net.Mail;
 using System.Text;
+using Windows.Media.Protection.PlayReady;
 
 namespace ExcellentEmailExperience.Model
 {
@@ -43,11 +44,44 @@ namespace ExcellentEmailExperience.Model
         {
             throw new NotImplementedException();
         }
-
         public IEnumerable<MailContent> GetFolder(string name, bool old, bool refresh, int count)
         {
             throw new NotImplementedException();
+            var folder = imapClient.GetFolder(name);
+            folder.Open(FolderAccess.ReadOnly);
+
+            for (var i = 0; i < folder.Count; i++)
+            {
+                var message = folder.GetMessage(i);
+            }
+
+            yield break;
         }
+
+        private MailContent BuildMailContent(MimeMessage message)
+        {
+            throw new NotImplementedException();
+            MailContent mailContent = new();
+            mailContent.MessageId = mailContent.ThreadId = message.MessageId;
+            mailContent.date = message.Date.UtcDateTime;
+            mailContent.from = (MailAddress) message.Sender;
+            foreach (var address in message.To.Mailboxes)
+            {
+                mailContent.to.Add((MailAddress) address);
+            }
+            foreach (var address in message.Bcc.Mailboxes)
+            {
+                mailContent.bcc.Add((MailAddress) address);
+            }
+            foreach (var address in message.Cc.Mailboxes)
+            {
+                mailContent.cc.Add((MailAddress) address);
+            }
+
+            return mailContent;
+        }
+
+
 
         public string[] GetFolderNames()
         {
