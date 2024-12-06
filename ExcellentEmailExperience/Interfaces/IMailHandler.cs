@@ -54,7 +54,6 @@ namespace ExcellentEmailExperience.Interfaces
         /// <param name="query"> the search query after googles api </param>
         /// <param name="count"> the number of mails to retrieve </param>
         /// <returns> IEnumerable of mail suiting query</returns>
-        
         IEnumerable<MailContent> Search(string query, int count);
     }
 }
