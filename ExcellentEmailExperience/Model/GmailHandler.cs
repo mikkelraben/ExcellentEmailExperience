@@ -11,6 +11,7 @@ using System.IO;
 using System.Net.Mail;
 using System.Text;
 using Windows.Storage;
+using static Google.Apis.Requests.BatchRequest;
 
 namespace ExcellentEmailExperience.Model
 {
@@ -21,6 +22,8 @@ namespace ExcellentEmailExperience.Model
         private UserCredential userCredential;
         private GmailService service;
         private MailAddress mailAddress;
+        private ulong NewestId;
+        private ulong LastId;
 
         // modifies the body string so that google doesn't shit itself in fear and panic
         // and therefore modifies the message to fit its asinine standards
@@ -70,15 +73,75 @@ namespace ExcellentEmailExperience.Model
 
         public IEnumerable<MailContent> GetFolder(string name, bool old, bool refresh, int count)
         {
+            if (refresh && !old)
+            {
+                var refreq = service.Users.History.List("me");
+                refreq.LabelId = name;
+                refreq.StartHistoryId = NewestId;
+                var historyResponse = refreq.Execute();
+                if (historyResponse.History == null)
+                {
+                    yield break;
+                }
+                foreach (var history in historyResponse.History)
+                {
+                    if (history.MessagesAdded == null)
+                    {
+                        yield break;
+                    }
+                    foreach (var addedMessage in history.MessagesAdded)
+                    {
+                        var msg = service.Users.Messages.Get("me", addedMessage.Message.Id).Execute();
+                        MailContent mailContent = BuildMailContent(msg);
+                        cache.CacheMessage(mailContent, name);
+                        yield return mailContent;
+                    }
+                }
+
+                // Update the newest history ID after processing the refresh
+                if (historyResponse.HistoryId.HasValue)
+                {
+                    NewestId = historyResponse.HistoryId.Value;
+                }
+                yield break;
+            }
+            else if (refresh && old)
+            {
+                var refreqOld = service.Users.Messages.List("me");
+                refreqOld.LabelIds = name;
+                refreqOld.MaxResults = count;
+
+                refreqOld.Q = $"before:{LastId}";
+
+                var messageListResponse = refreqOld.Execute();
+                if (messageListResponse.Messages == null || messageListResponse.Messages.Count == 0)
+                {
+                    yield break;
+                }
+
+                foreach(var message in messageListResponse.Messages)
+                {
+                    var msg = service.Users.Messages.Get("me", message.Id).Execute();
+                    MailContent mailContent = BuildMailContent(msg);
+                    cache.CacheMessage(mailContent, name);
+                    yield return mailContent;
+                }
+
+                var NewLastMessage = service.Users.Messages.Get("me", messageListResponse.Messages[^1].Id).Execute();
+                LastId = NewLastMessage.HistoryId.Value;
+
+            }
+
             var request = service.Users.Messages.List("me");
             request.LabelIds = name;
             request.MaxResults = count;
-            IList<Google.Apis.Gmail.v1.Data.Message> messages = request.Execute().Messages;
 
+            IList<Google.Apis.Gmail.v1.Data.Message> messages = request.Execute().Messages;
             if (messages == null)
             {
                 yield break;
             }
+            
 
             foreach (var message in messages)
             {
@@ -94,6 +157,12 @@ namespace ExcellentEmailExperience.Model
                     yield return mailContent;
                 }
             }
+            var NewestMessage = service.Users.Messages.Get("me", messages[0].Id).Execute();
+            NewestId = NewestMessage.HistoryId.Value;
+
+            var LastMessage = service.Users.Messages.Get("me", messages[^1].Id).Execute();
+            LastId = LastMessage.HistoryId.Value;
+
             yield break;
         }
 
@@ -255,12 +324,6 @@ namespace ExcellentEmailExperience.Model
             }
 
             return labelNames.ToArray();
-        }
-
-        // we might need to consider implimenting this later.
-        public List<MailContent> Refresh(string name)
-        {
-            throw new NotImplementedException();
         }
 
         // when calling reply. it is important that you give it the exact mailcontent you want to reply to

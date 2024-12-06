@@ -38,10 +38,6 @@ namespace ExcellentEmailExperience.Model
                     message.To.Add(recipient);
                 }
             }
-            catch (Exception ex)
-            {
-                Debug.WriteLine("error in Receiver field" + ex);
-            }
 
             //TODO: if these fields are empty, the program will crash. please rethrow the exceptions below
 
@@ -86,11 +82,6 @@ namespace ExcellentEmailExperience.Model
 
             try
             {
-                if (content.attachments.Count == 0)
-                {
-                    //TODO: explain to Mikkel how this is an exception?
-                    throw new Exception("no attachments found");
-                }
                 foreach (var attachment in content.attachments)
                 {
                     if (!File.Exists(attachment)) // does the file exist
