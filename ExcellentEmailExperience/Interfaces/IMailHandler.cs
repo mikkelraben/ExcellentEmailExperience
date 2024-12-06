@@ -42,14 +42,19 @@ namespace ExcellentEmailExperience.Interfaces
         /// <param name="name"> Name of the current active folder that mail is retrieved from </param>
         /// <param name="old"> True if GetFolder should retrieve older mails, false if newer </param>
         /// <param name="refresh"> True if the mail list should restart at the newest mail </param>
-        /// <returns>List containing MailContent, with an upper bound of 50? elements</returns>
+        /// <param name="count"> The number of mails to retrieve </param>
+        /// <returns>IEnumerable containing MailContent, with an upper bound of 50? elements</returns>
         IEnumerable<MailContent> GetFolder(string name, bool old, bool refresh,int count);
 
+
         /// <summary>
-        /// Refreshes the mail retrieved in all folders. Calls GetFolder with refresh = true.
+        /// Searches for mails in the current folder where query follows googles q documentation:
+        /// https://developers.google.com/gmail/api/reference/rest/v1/users.messages/list.
         /// </summary>
-        /// <param name="name"> Name of the current active folder that mail is retrieved from </param>
-        /// <returns>List containing MailContent, with an upper bound of 50? elements</returns>
-        List<MailContent> Refresh(string name);
+        /// <param name="query"> the search query after googles api </param>
+        /// <param name="count"> the number of mails to retrieve </param>
+        /// <returns> IEnumerable of mail suiting query</returns>
+        
+        IEnumerable<MailContent> Search(string query, int count);
     }
 }

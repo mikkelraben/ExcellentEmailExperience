@@ -344,5 +344,35 @@ namespace ExcellentEmailExperience.Model
             }
 
         }
+
+        public IEnumerable<MailContent> Search(string query, int count)
+        {
+            var request = service.Users.Messages.List("me");
+            request.Q = query;
+            request.MaxResults = count;
+            IList<Google.Apis.Gmail.v1.Data.Message> messages = request.Execute().Messages;
+
+            if (messages == null)
+            {
+                yield break;
+            }
+
+            foreach (var message in messages)
+            {
+                if (cache.CheckCache(message.Id))
+                {
+                    yield return cache.GetCache(message.Id);
+                }
+                else
+                {
+                    var msg = service.Users.Messages.Get("me", message.Id).Execute();
+                    MailContent mailContent = BuildMailContent(msg);
+                    cache.CacheMessage(mailContent, "Search");
+                    yield return mailContent;
+                }
+            }
+            yield break;
+        }
+
     }
 }
