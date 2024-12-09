@@ -101,10 +101,11 @@ namespace ExcellentEmailExperience.Model
                         }
                     }
                     command.Parameters.AddWithValue("$attach", attach);
-
                     command.Parameters.AddWithValue("$date", mail.date.ToString());
                     command.Parameters.AddWithValue("$thread", mail.ThreadId);
-                    command.Parameters.AddWithValue("$folder", folderName);
+
+                    List<string> folders = new List<string> { folderName };
+                    command.Parameters.AddWithValue("$folder", JsonSerializer.Serialize(folders));
                     command.Parameters.AddWithValue("$flags", (int)mail.flags);
 
                     command.ExecuteNonQuery();
@@ -152,7 +153,7 @@ namespace ExcellentEmailExperience.Model
 
                 mail.date = DateTime.Parse(reader.GetString(9));
                 mail.ThreadId = reader.GetString(10);
-                mail.flags = (MailFlag)reader.GetInt32(5);
+                mail.flags = (MailFlag)reader.GetInt32(12);
 
                 return mail;
             }
@@ -184,6 +185,93 @@ namespace ExcellentEmailExperience.Model
                 {
                     throw new Exception("CheckCache Failed");
                 }
+            }
+        }
+
+        public void UpdateFlagsAndFolders(string messageId, string folderName)
+        {
+            using (var connection = new SqliteConnection(connectionString))
+            {
+                connection.Open();
+
+                List<string>? folders;
+                int? flags;
+
+                using (var command = connection.CreateCommand())
+                {
+                    command.CommandText = $@"
+                    SELECT *
+                    FROM MailContent
+                    WHERE MessageId = $id
+                    ";
+                    command.Parameters.AddWithValue("$id", messageId);
+
+                    var reader = command.ExecuteReader();
+                    reader.Read();
+
+                    folders = JsonSerializer.Deserialize<List<string>>(reader.GetString(11));
+                    if (!folders.Contains(folderName))
+                    {
+                        folders.Add(folderName);
+                    }
+
+                    flags = reader.GetInt32(12);
+                    switch (folderName)
+                    {
+                        case "UNREAD":  
+                            flags |= (int)MailFlag.unread;
+                            break;
+                        case "STARRED":
+                            flags |= (int)MailFlag.favorite;
+                            break;
+                    }
+                }
+
+                using (var command = connection.CreateCommand())
+                {
+                    command.CommandText = $@"
+                    UPDATE MailContent
+                    SET FolderId = $folder, flags = $flags
+                    WHERE MessageId = $id
+                    ";
+                    command.Parameters.AddWithValue("$folder", JsonSerializer.Serialize(folders));
+                    command.Parameters.AddWithValue("$flags", flags);
+                    command.Parameters.AddWithValue("$id", messageId);
+                    command.ExecuteNonQuery();
+                }
+            }
+        }
+
+        public void UpdateFlags(string messageId, MailFlag flag)
+        {
+            using (var connection = new SqliteConnection(connectionString))
+            {
+                connection.Open();
+
+                var command = connection.CreateCommand();
+                command.CommandText = $@"
+                SELECT *
+                FROM MailContent
+                WHERE MessageId = $id
+                ";
+                command.Parameters.AddWithValue("$id", messageId);
+
+                var reader = command.ExecuteReader();
+                reader.Read();
+
+                var flags = reader.GetInt32(12);
+                flags |= (int)flag;
+                reader.Close();
+
+                command.CommandText = $@"
+                UPDATE MailContent
+                SET flags = $flags
+                WHERE MessageId = $id
+                ";
+
+                command.Parameters.AddWithValue("$flags", flags);
+                command.Parameters.AddWithValue("$id", messageId);
+                command.ExecuteNonQuery();
             }
         }
     }
