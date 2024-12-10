@@ -354,7 +354,7 @@ namespace ExcellentEmailExperience.Model
 
         }
 
-        public IEnumerable<MailContent> Search(string query, int count, bool local)
+        public IEnumerable<MailContent> Search(string query, int count)
         {
             var request = service.Users.Messages.List("me");
             request.Q = query;
