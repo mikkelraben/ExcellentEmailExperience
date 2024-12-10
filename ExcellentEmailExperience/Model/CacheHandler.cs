@@ -29,6 +29,9 @@ namespace ExcellentEmailExperience.Model
             string pattern = @"(?<field>from|cc|bcc|subject|to|after|before|newer|older|older_than|newer_than|flag|has|filename|is):(?<value>.*?)(?=(\s+\w+:|$))";
             var matches = Regex.Matches(query, pattern, RegexOptions.IgnoreCase);
 
+            // To track the end of the last match
+            int lastMatchEnd = 0;
+
             foreach (Match match in matches)
             {
                 string field = match.Groups["field"].Value.ToLower();
@@ -40,6 +43,25 @@ namespace ExcellentEmailExperience.Model
                 }
 
                 result[field].Add(value);
+
+                // Update last match end position
+                lastMatchEnd = match.Index + match.Length;
+            }
+
+            // Capture free text after the last matched field
+            if (lastMatchEnd < query.Length)
+            {
+                string freeText = query.Substring(lastMatchEnd).Trim();
+                if (!string.IsNullOrEmpty(freeText))
+                {
+                    // Store free text under a default field (e.g., "search")
+                    const string defaultField = "search";
+                    if (!result.ContainsKey(defaultField))
+                    {
+                        result[defaultField] = new List<string>();
+                    }
+                    result[defaultField].Add(freeText);
+                }
             }
 
             return result;
@@ -236,29 +258,57 @@ namespace ExcellentEmailExperience.Model
             {
                 connection.Open();
                 
-                int fromIndex = 0;
-                int toIndex = 0;
-                int subjectIndex = 0;
-                int bodyIndex = 0;
-                int dateIndex = 0;
-                int threadIndex = 0;
-                int folderIndex = 0;
-                int attachmentIndex = 0;
-                int flagsIndex = 0;
-
 
                 if (query == "") yield break;
-                Dictionary<string, List<string>> parsedQuery = ParseMailQuery(query);
-                if (parsedQuery.TryGetValue("from", out List<string> from))
-                {
-
-                }
                 var command = connection.CreateCommand();
                 command.CommandText = $@"
                 SELECT *
                 FROM MailContent
-                WHERE FolderId = $folder
                 ";
+
+
+                Dictionary<string, List<string>> parsedQuery = ParseMailQuery(query);
+
+                var conditions = new List<string>();
+
+                if (parsedQuery.TryGetValue("from", out List<string> from))
+                {
+                    conditions.Add("[from] LIKE $from");
+                }
+                if (parsedQuery.TryGetValue("to", out List<string> to))
+                {
+                    conditions.Add("[to] LIKE $to");
+                }
+                if (parsedQuery.TryGetValue("cc", out List<string> cc))
+                {
+                    conditions.Add("cc LIKE $cc");
+                }
+                if (parsedQuery.TryGetValue("bcc", out List<string> bcc))
+                {
+                    conditions.Add("bcc LIKE $bcc");
+                }
+                if (parsedQuery.TryGetValue("subject", out List<string> subject))
+                {
+                    conditions.Add("subject LIKE $subject");
+                }
+
+                // Combine all conditions into a single WHERE clause
+                if (conditions.Count > 0)
+                {
+                    command.CommandText += " WHERE " + string.Join(" AND ", conditions);
+                }
+
+                // Add parameters to the command
+                foreach (var param in parsedQuery)
+                {
+                    // Assuming param.Value is a list of strings you want to bind
+                    foreach (var value in param.Value)
+                    {
+                        command.Parameters.AddWithValue($"${param.Key}", value);
+                    }
+                }
+
+
 
                 //command.Parameters.AddWithValue("$folder", folderName);
 
