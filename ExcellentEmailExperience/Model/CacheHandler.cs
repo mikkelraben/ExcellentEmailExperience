@@ -9,6 +9,7 @@ using System.Diagnostics;
 using System.Text;
 using ExcellentEmailExperience.Interfaces;
 using System.Text.Json;
+using System.Data.Common;
 using System.Text.RegularExpressions;
 
 namespace ExcellentEmailExperience.Model
@@ -111,6 +112,61 @@ namespace ExcellentEmailExperience.Model
                     }
                 }
             }
+
+            UpdateTable();
+        }
+
+        /// <summary>
+        /// Adds backwards compatibility to the flags update. Should probs be removed or at least updated cus it be very cursed
+        /// </summary>
+        private void UpdateTable()
+        {
+            List<string> columnNames = new List<string>();
+
+            using (var connection = new SqliteConnection(connectionString))
+            {
+                connection.Open();
+                try
+                {
+                    using (var command = connection.CreateCommand())
+                    {
+                        // add the column if it doesn't exist
+                        command.CommandText = $@"
+                        ALTER TABLE MailContent
+                        ADD COLUMN flags INTEGER;
+                        ";
+                        command.ExecuteNonQuery();
+
+                        // fill it with elements
+                        command.CommandText = $@"
+                        UPDATE MailContent
+                        SET flags = 0
+                        ";
+                        command.ExecuteNonQuery();
+
+                        // fix the FolderIds
+                        command.CommandText = $@"
+                        UPDATE MailContent
+                        SET FolderId = $folder
+                        ";
+                        var folder = new List<string>();
+                        command.Parameters.AddWithValue("$folder", JsonSerializer.Serialize(folder));
+                        command.ExecuteNonQuery();
+                    }
+                }
+                catch (SqliteException ex)
+                {
+                    if (ex.SqliteErrorCode == 1)
+                    {
+                        // table already exists
+                    }
+                    else
+                    {
+                        throw new Exception(ex.Message);
+                    }
+                }
+            }
+
         }
 
         public void CacheMessage(MailContent mail, string folderName)
@@ -149,10 +205,11 @@ namespace ExcellentEmailExperience.Model
                         }
                     }
                     command.Parameters.AddWithValue("$attach", attach);
-
                     command.Parameters.AddWithValue("$date", mail.date.ToString());
                     command.Parameters.AddWithValue("$thread", mail.ThreadId);
-                    command.Parameters.AddWithValue("$folder", folderName);
+
+                    List<string> folders = new List<string> { folderName };
+                    command.Parameters.AddWithValue("$folder", JsonSerializer.Serialize(folders));
                     command.Parameters.AddWithValue("$flags", (int)mail.flags);
 
                     command.ExecuteNonQuery();
@@ -200,7 +257,7 @@ namespace ExcellentEmailExperience.Model
 
                 mail.date = DateTime.Parse(reader.GetString(9));
                 mail.ThreadId = reader.GetString(10);
-                mail.flags = (MailFlag)reader.GetInt32(5);
+                mail.flags = (MailFlag)reader.GetInt32(12);
 
                 return mail;
             }
@@ -235,6 +292,90 @@ namespace ExcellentEmailExperience.Model
             }
         }
 
+        public void UpdateFlagsAndFolders(string messageId, string folderName)
+
+                List<string>? folders;
+                int? flags;
+
+                using (var command = connection.CreateCommand())
+                {
+                    command.CommandText = $@"
+                    SELECT *
+                    FROM MailContent
+                    WHERE MessageId = $id
+                    ";
+                    command.Parameters.AddWithValue("$id", messageId);
+
+                    var reader = command.ExecuteReader();
+                    reader.Read();
+
+                    var getstringthing = reader.GetString(11);
+                    folders = JsonSerializer.Deserialize<List<string>>(getstringthing);
+                    if (!folders.Contains(folderName))
+                    {
+                        folders.Add(folderName);
+                    }
+
+                    flags = reader.GetInt32(12);
+                    switch (folderName)
+                    {
+                        case "UNREAD":  
+                            flags |= (int)MailFlag.unread;
+                            break;
+                        case "STARRED":
+                            flags |= (int)MailFlag.favorite;
+                            break;
+                    }
+                }
+
+                using (var command = connection.CreateCommand())
+                {
+                    command.CommandText = $@"
+                    UPDATE MailContent
+                    SET FolderId = $folder, flags = $flags
+                    WHERE MessageId = $id
+                    ";
+                    command.Parameters.AddWithValue("$folder", JsonSerializer.Serialize(folders));
+                    command.Parameters.AddWithValue("$flags", flags);
+                    command.Parameters.AddWithValue("$id", messageId);
+                    command.ExecuteNonQuery();
+                }
+            }
+        }
+
+        public void UpdateFlags(string messageId, MailFlag flag)
+        {
+            using (var connection = new SqliteConnection(connectionString))
+            {
+                connection.Open();
+              var command = connection.CreateCommand();
+                command.CommandText = $@"
+                SELECT *
+                FROM MailContent
+                WHERE MessageId = $id
+                ";
+                command.Parameters.AddWithValue("$id", messageId);
+
+                var reader = command.ExecuteReader();
+                reader.Read();
+
+                var flags = reader.GetInt32(12);
+                flags |= (int)flag;
+                reader.Close();
+
+                command.CommandText = $@"
+                UPDATE MailContent
+                SET flags = $flags
+                WHERE MessageId = $id
+                ";
+
+                command.Parameters.AddWithValue("$flags", flags);
+                command.Parameters.AddWithValue("$id", messageId);
+                command.ExecuteNonQuery();
+            }
+        }
+
+
         public void ClearCache()
         {
             using (var connection = new SqliteConnection(connectionString))
@@ -260,6 +401,7 @@ namespace ExcellentEmailExperience.Model
                 
 
                 if (query == "") yield break;
+
                 var command = connection.CreateCommand();
                 command.CommandText = $@"
                 SELECT *
@@ -341,6 +483,7 @@ namespace ExcellentEmailExperience.Model
 
             }
         }
+
 
     }
 }
