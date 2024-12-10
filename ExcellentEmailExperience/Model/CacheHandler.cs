@@ -10,6 +10,7 @@ using System.Text;
 using ExcellentEmailExperience.Interfaces;
 using System.Text.Json;
 using System.Data.Common;
+using System.Text.RegularExpressions;
 
 namespace ExcellentEmailExperience.Model
 {
@@ -19,6 +20,53 @@ namespace ExcellentEmailExperience.Model
         // this is a means of counteracting that to give the cache more time by having its own cache, cache jr. (legal name: shortTermCache)
         private List<string> shortTermCache = new();
         private string connectionString;
+
+        public static Dictionary<string, List<string>> ParseMailQuery(string query)
+        {
+            // Dictionary to store the parsed fields
+            var result = new Dictionary<string, List<string>>(StringComparer.OrdinalIgnoreCase);
+
+            // Regex to match fields like "from:", "cc:", "subject:", followed by their values
+            string pattern = @"(?<field>from|cc|bcc|subject|to|after|before|newer|older|older_than|newer_than|flag|has|filename|is):(?<value>.*?)(?=(\s+\w+:|$))";
+            var matches = Regex.Matches(query, pattern, RegexOptions.IgnoreCase);
+
+            // To track the end of the last match
+            int lastMatchEnd = 0;
+
+            foreach (Match match in matches)
+            {
+                string field = match.Groups["field"].Value.ToLower();
+                string value = match.Groups["value"].Value.Trim();
+
+                if (!result.ContainsKey(field))
+                {
+                    result[field] = new List<string>();
+                }
+
+                result[field].Add(value);
+
+                // Update last match end position
+                lastMatchEnd = match.Index + match.Length;
+            }
+
+            // Capture free text after the last matched field
+            if (lastMatchEnd < query.Length)
+            {
+                string freeText = query.Substring(lastMatchEnd).Trim();
+                if (!string.IsNullOrEmpty(freeText))
+                {
+                    // Store free text under a default field (e.g., "search")
+                    const string defaultField = "search";
+                    if (!result.ContainsKey(defaultField))
+                    {
+                        result[defaultField] = new List<string>();
+                    }
+                    result[defaultField].Add(freeText);
+                }
+            }
+
+            return result;
+        }
 
         public CacheHandler(string accountAddress)
         {
@@ -245,10 +293,6 @@ namespace ExcellentEmailExperience.Model
         }
 
         public void UpdateFlagsAndFolders(string messageId, string folderName)
-        {
-            using (var connection = new SqliteConnection(connectionString))
-            {
-                connection.Open();
 
                 List<string>? folders;
                 int? flags;
@@ -304,8 +348,7 @@ namespace ExcellentEmailExperience.Model
             using (var connection = new SqliteConnection(connectionString))
             {
                 connection.Open();
-
-                var command = connection.CreateCommand();
+              var command = connection.CreateCommand();
                 command.CommandText = $@"
                 SELECT *
                 FROM MailContent
@@ -331,5 +374,116 @@ namespace ExcellentEmailExperience.Model
                 command.ExecuteNonQuery();
             }
         }
+
+
+        public void ClearCache()
+        {
+            using (var connection = new SqliteConnection(connectionString))
+            {
+                connection.Open();
+
+                var command = connection.CreateCommand();
+                command.CommandText = "TRUNCATE TABLE MailContent";
+                command.ExecuteNonQuery();
+            }
+        }
+
+        public IEnumerable<MailContent> SearchCache(string query)
+        {
+            var options = new JsonSerializerOptions
+            {
+                Converters = { new MailAddressConverter() }
+            };
+
+            using (var connection = new SqliteConnection(connectionString))
+            {
+                connection.Open();
+                
+
+                if (query == "") yield break;
+
+                var command = connection.CreateCommand();
+                command.CommandText = $@"
+                SELECT *
+                FROM MailContent
+                ";
+
+
+                Dictionary<string, List<string>> parsedQuery = ParseMailQuery(query);
+
+                var conditions = new List<string>();
+
+                if (parsedQuery.TryGetValue("from", out List<string> from))
+                {
+                    conditions.Add("[from] LIKE $from");
+                }
+                if (parsedQuery.TryGetValue("to", out List<string> to))
+                {
+                    conditions.Add("[to] LIKE $to");
+                }
+                if (parsedQuery.TryGetValue("cc", out List<string> cc))
+                {
+                    conditions.Add("cc LIKE $cc");
+                }
+                if (parsedQuery.TryGetValue("bcc", out List<string> bcc))
+                {
+                    conditions.Add("bcc LIKE $bcc");
+                }
+                if (parsedQuery.TryGetValue("subject", out List<string> subject))
+                {
+                    conditions.Add("subject LIKE $subject");
+                }
+
+                // Combine all conditions into a single WHERE clause
+                if (conditions.Count > 0)
+                {
+                    command.CommandText += " WHERE " + string.Join(" AND ", conditions);
+                }
+
+                // Add parameters to the command
+                foreach (var param in parsedQuery)
+                {
+                    // Assuming param.Value is a list of strings you want to bind
+                    foreach (var value in param.Value)
+                    {
+                        command.Parameters.AddWithValue($"${param.Key}", value);
+                    }
+                }
+
+
+
+                //command.Parameters.AddWithValue("$folder", folderName);
+
+                var reader = command.ExecuteReader();
+
+                IEnumerable<MailContent> mails = new List<MailContent>();
+                while (reader.Read())
+                {
+                    MailContent mail = new MailContent();
+                    mail.MessageId = reader.GetString(0);
+                    mail.from = JsonSerializer.Deserialize<MailAddress>(reader.GetString(1), options);
+                    mail.to = JsonSerializer.Deserialize<List<MailAddress>>(reader.GetString(2), options);
+                    mail.bcc = JsonSerializer.Deserialize<List<MailAddress>>(reader.GetString(3), options);
+                    mail.cc = JsonSerializer.Deserialize<List<MailAddress>>(reader.GetString(4), options);
+                    mail.bodyType = (BodyType)reader.GetInt32(5);
+                    mail.subject = reader.GetString(6);
+                    mail.body = reader.GetString(7);
+
+                    var attachments = reader.GetString(8);
+                    if (attachments != "")
+                        mail.attachments = reader.GetString(8).Split(';').ToList();
+
+                    mail.date = DateTime.Parse(reader.GetString(9));
+                    mail.ThreadId = reader.GetString(10);
+                    mail.flags = (MailFlag)reader.GetInt32(11);
+
+                    mails.Append(mail);
+                    yield return mail;
+                }
+
+            }
+        }
+
+
     }
 }
