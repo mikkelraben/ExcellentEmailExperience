@@ -9,6 +9,7 @@ using System.Diagnostics;
 using System.Text;
 using ExcellentEmailExperience.Interfaces;
 using System.Text.Json;
+using System.Data.Common;
 
 namespace ExcellentEmailExperience.Model
 {
@@ -63,6 +64,61 @@ namespace ExcellentEmailExperience.Model
                     }
                 }
             }
+
+            UpdateTable();
+        }
+
+        /// <summary>
+        /// Adds backwards compatibility to the flags update. Should probs be removed or at least updated cus it be very cursed
+        /// </summary>
+        private void UpdateTable()
+        {
+            List<string> columnNames = new List<string>();
+
+            using (var connection = new SqliteConnection(connectionString))
+            {
+                connection.Open();
+                try
+                {
+                    using (var command = connection.CreateCommand())
+                    {
+                        // add the column if it doesn't exist
+                        command.CommandText = $@"
+                        ALTER TABLE MailContent
+                        ADD COLUMN flags INTEGER;
+                        ";
+                        command.ExecuteNonQuery();
+
+                        // fill it with elements
+                        command.CommandText = $@"
+                        UPDATE MailContent
+                        SET flags = 0
+                        ";
+                        command.ExecuteNonQuery();
+
+                        // fix the FolderIds
+                        command.CommandText = $@"
+                        UPDATE MailContent
+                        SET FolderId = $folder
+                        ";
+                        var folder = new List<string>();
+                        command.Parameters.AddWithValue("$folder", JsonSerializer.Serialize(folder));
+                        command.ExecuteNonQuery();
+                    }
+                }
+                catch (SqliteException ex)
+                {
+                    if (ex.SqliteErrorCode == 1)
+                    {
+                        // table already exists
+                    }
+                    else
+                    {
+                        throw new Exception(ex.Message);
+                    }
+                }
+            }
+
         }
 
         public void CacheMessage(MailContent mail, string folderName)
@@ -209,7 +265,8 @@ namespace ExcellentEmailExperience.Model
                     var reader = command.ExecuteReader();
                     reader.Read();
 
-                    folders = JsonSerializer.Deserialize<List<string>>(reader.GetString(11));
+                    var getstringthing = reader.GetString(11);
+                    folders = JsonSerializer.Deserialize<List<string>>(getstringthing);
                     if (!folders.Contains(folderName))
                     {
                         folders.Add(folderName);
