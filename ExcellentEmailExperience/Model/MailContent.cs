@@ -19,7 +19,9 @@ namespace ExcellentEmailExperience.Model
         none = 0,
         unread = 1,
         favorite = 2,
-        flagged = 4
+        flagged = 4,
+        spam = 8,
+        trash = 16
     }
 
     public class MailContent

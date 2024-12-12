@@ -24,7 +24,7 @@ namespace ExcellentEmailExperience.Interfaces
         void ReplyAll(MailContent content, string Response);
         void Send(MailContent content);
 
-        void TrashMail(string MessageId);
+        void DeleteMail(string MessageId);
 
         /// <summary>
         /// Retrieves the names for every mail folder the user has made.
@@ -55,5 +55,7 @@ namespace ExcellentEmailExperience.Interfaces
         /// <param name="count"> the number of mails to retrieve </param>
         /// <returns> IEnumerable of mail suiting query</returns>
         IEnumerable<MailContent> Search(string query, int count);
+
+        MailContent UpdateFlag(MailContent content, MailFlag flagtype);
     }
 }
