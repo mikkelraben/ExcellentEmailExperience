@@ -187,12 +187,12 @@ namespace ExcellentEmailExperience.Views
 
         private void MailBox_PointerExited(object sender, Microsoft.UI.Xaml.Input.PointerRoutedEventArgs e)
         {
-            RefreshButton.Opacity = 0;
+            RefreshButton.Opacity = 1;
         }
 
         private void RefreshButton_Click(object sender, RoutedEventArgs e)
         {
-
+            currentFolder.RefreshFolder();
         }
 
         bool sidebarLarge = false;
