@@ -65,15 +65,23 @@ namespace ExcellentEmailExperience.ViewModel
                     mailsContent.Add(mail);
                     mailsContent.Sort((x, y) => -x.date.CompareTo(y.date));
 
-                    inboxMail.from = mail.from;
-                    inboxMail.to = mail.to;
-                    inboxMail.subject = mail.subject.Replace("\n", "").Replace("\r", "");
-                    inboxMail.date = mail.date.ToLocalTime();
-                    if (dispatcherQueue != null)
-                    {
-                        dispatcherQueue.TryEnqueue(() =>
+                        if (mail.from.DisplayName == "")
                         {
-                            int insertIndex = mails.Count;
+                            inboxMail.from = new System.Net.Mail.MailAddress(mail.from.Address, mail.from.Address);
+                        }
+                        else
+                        {
+                            inboxMail.from = mail.from;
+                        }
+
+                        inboxMail.to = mail.to;
+                        inboxMail.subject = mail.subject.Replace("\n", "").Replace("\r", "");
+                        inboxMail.date = mail.date.ToLocalTime();
+                        if (dispatcherQueue != null)
+                        {
+                            dispatcherQueue.TryEnqueue(() =>
+                            {
+                                int insertIndex = mails.Count;
 
                             for (int i = 0; i < mails.Count; i++)
                             {

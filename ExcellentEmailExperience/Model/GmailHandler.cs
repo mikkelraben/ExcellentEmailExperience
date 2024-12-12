@@ -170,12 +170,13 @@ namespace ExcellentEmailExperience.Model
             {
                 if (cache.CheckCache(message.Id))
                 {
+                    cache.UpdateFlagsAndFolders(message.Id, name);
                     yield return cache.GetCache(message.Id);
                 }
                 else
                 {
                     var msg = service.Users.Messages.Get("me", message.Id).Execute();
-                    MailContent mailContent = BuildMailContent(msg);
+                    MailContent mailContent = BuildMailContent(msg, name);
                     cache.CacheMessage(mailContent, name);
                     yield return mailContent;
                 }
@@ -189,13 +190,21 @@ namespace ExcellentEmailExperience.Model
             yield break;
         }
 
-
-
-        private MailContent BuildMailContent(Google.Apis.Gmail.v1.Data.Message msg)
+        private MailContent BuildMailContent(Google.Apis.Gmail.v1.Data.Message msg, string folderName)
         {
             MailContent mailContent = new();
             mailContent.MessageId = msg.Id;
             mailContent.ThreadId = msg.ThreadId;
+
+            switch (folderName)
+            {
+                case "UNREAD":
+                    mailContent.flags = MailFlag.unread;
+                    break;
+                case "STARRED":
+                    mailContent.flags = MailFlag.favorite;
+                    break;
+            }
 
             try
             {
@@ -430,5 +439,35 @@ namespace ExcellentEmailExperience.Model
             }
 
         }
+
+        public IEnumerable<MailContent> Search(string query, int count)
+        {
+            var request = service.Users.Messages.List("me");
+            request.Q = query;
+            request.MaxResults = count;
+            IList<Google.Apis.Gmail.v1.Data.Message> messages = request.Execute().Messages;
+
+            if (messages == null)
+            {
+                yield break;
+            }
+
+            foreach (var message in messages)
+            {
+                if (cache.CheckCache(message.Id))
+                {
+                    yield return cache.GetCache(message.Id);
+                }
+                else
+                {
+                    var msg = service.Users.Messages.Get("me", message.Id).Execute();
+                    MailContent mailContent = BuildMailContent(msg, "Search");
+                    cache.CacheMessage(mailContent, "Search");
+                    yield return mailContent;
+                }
+            }
+            yield break;
+        }
+
     }
 }

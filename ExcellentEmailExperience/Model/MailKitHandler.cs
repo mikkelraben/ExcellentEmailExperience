@@ -95,5 +95,10 @@ namespace ExcellentEmailExperience.Model
         {
             throw new NotImplementedException();
         }
+
+        public IEnumerable<MailContent> Search(string query, int count)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

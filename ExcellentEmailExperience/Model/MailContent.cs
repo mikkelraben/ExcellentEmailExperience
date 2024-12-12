@@ -13,6 +13,15 @@ namespace ExcellentEmailExperience.Model
         Html
     }
 
+    [Flags]
+    public enum MailFlag
+    {
+        none = 0,
+        unread = 1,
+        favorite = 2,
+        flagged = 4
+    }
+
     public class MailContent
     {
         public MailAddress? from;
@@ -28,6 +37,7 @@ namespace ExcellentEmailExperience.Model
         public DateTime date = new();
         public string ThreadId = "";
         public string MessageId = "";
+        public MailFlag flags = MailFlag.none;
 
         // for some reason if we dont define how to compare this class. the test code shits itself.
         public override bool Equals(object? obj)
@@ -46,7 +56,8 @@ namespace ExcellentEmailExperience.Model
                 attachments.Count == other.attachments.Count && attachments.TrueForAll(other.attachments.Contains) &&
                 date == other.date &&
                 ThreadId == other.ThreadId &&
-                MessageId == other.MessageId;
+                MessageId == other.MessageId &&
+                flags == other.flags;
         }
 
         public static bool operator ==(MailContent? left, MailContent? right)
