@@ -2,9 +2,6 @@
 using Google.Apis.Auth.OAuth2;
 using Google.Apis.Gmail.v1;
 using Google.Apis.Gmail.v1.Data;
-using Microsoft.Data.Sqlite;
-using MimeKit;
-using RtfPipe.Tokens;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -13,13 +10,25 @@ using System.Net.Mail;
 using System.Text;
 using System.Xml.Linq;
 using Windows.Storage;
-using WinUIEx.Messaging;
-using static Google.Apis.Requests.BatchRequest;
 
 namespace ExcellentEmailExperience.Model
 {
     public class GmailHandler : IMailHandler
     {
+        private Dictionary<MailFlag, string> Flag2Label = new Dictionary<MailFlag, string>() {
+            { MailFlag.unread, "UNREAD" },
+            { MailFlag.favorite, "STARRED" },
+            { MailFlag.spam, "SPAM" },
+            { MailFlag.trash, "TRASH" }
+        };
+        private Dictionary<string, MailFlag> Label2Flag = new Dictionary<string, MailFlag>()
+        {
+            { "UNREAD", MailFlag.unread },
+            { "STARRED", MailFlag.favorite },
+            { "SPAM", MailFlag.spam },
+            { "TRASH", MailFlag.trash }
+        };
+
         public List<MailAddress> flaggedMails { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
 
         private UserCredential userCredential;
@@ -214,7 +223,7 @@ namespace ExcellentEmailExperience.Model
             {
                 if (cache.CheckCache(message.Id))
                 {
-                    cache.UpdateFlagsAndFolders(message.Id, name);
+                    cache.AddFolders(message.Id, name, Label2Flag, "INBOX");
                     yield return cache.GetCache(message.Id);
                 }
                 else
@@ -240,14 +249,9 @@ namespace ExcellentEmailExperience.Model
             mailContent.MessageId = msg.Id;
             mailContent.ThreadId = msg.ThreadId;
 
-            switch (folderName)
+            if (Label2Flag.ContainsKey(folderName))
             {
-                case "UNREAD":
-                    mailContent.flags = MailFlag.unread;
-                    break;
-                case "STARRED":
-                    mailContent.flags = MailFlag.favorite;
-                    break;
+                mailContent.flags = Label2Flag[folderName];
             }
 
             try
@@ -470,11 +474,11 @@ namespace ExcellentEmailExperience.Model
                 sendRequest.Execute();
             }
         }
-        public void TrashMail(string MessageId)
+        public void DeleteMail(string MessageId)
         {
             try
             {
-                service.Users.Messages.Trash("me", MessageId);
+                service.Users.Messages.Delete("me", MessageId);
             }
             catch (Exception ex)
             {
@@ -512,5 +516,33 @@ namespace ExcellentEmailExperience.Model
             yield break;
         }
 
+        public MailContent UpdateFlag(MailContent content, MailFlag flagtype)
+        {
+            var request = new ModifyMessageRequest();
+            var folder = Flag2Label[flagtype];
+
+            if (content.flags.HasFlag(flagtype))
+            {
+                request.RemoveLabelIds = new List<string>() { Flag2Label[flagtype] };
+                var modifyRequest = service.Users.Messages.Modify(request, "me", content.MessageId);
+                modifyRequest.Execute();
+                        
+                content.flags &= ~flagtype;
+
+                cache.RemoveFolders(content.MessageId, folder, Label2Flag, "INBOX");
+            }
+            else
+            {
+                request.AddLabelIds = new List<string>() { Flag2Label[flagtype] };
+                var modifyRequest = service.Users.Messages.Modify(request, "me", content.MessageId);
+                modifyRequest.Execute();
+
+                content.flags |= flagtype;
+
+                cache.AddFolders(content.MessageId, folder, Label2Flag, "INBOX"); 
+            }
+
+            return content;
+        }
     }
 }

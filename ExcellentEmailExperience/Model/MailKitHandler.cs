@@ -98,13 +98,18 @@ namespace ExcellentEmailExperience.Model
         {
             throw new NotImplementedException();
         }
-
-        public void TrashMail(string MessageId)
+        
+        public void DeleteMail(string MessageId)
         {
             throw new NotImplementedException();
         }
 
         public IEnumerable<MailContent> Search(string query, int count)
+        {
+            throw new NotImplementedException();
+        }
+
+        public MailContent UpdateFlag(MailContent content, MailFlag flagtype)
         {
             throw new NotImplementedException();
         }
