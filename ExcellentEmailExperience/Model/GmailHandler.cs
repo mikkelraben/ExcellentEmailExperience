@@ -158,7 +158,7 @@ namespace ExcellentEmailExperience.Model
                             var msg = service.Users.Messages.Get("me", addedMessage.Message.Id).Execute();
 
                             // im just going to assume that when you get a new mail that hasnt been seen before that its also unread. 
-                            MailContent mailContent = BuildMailContent(msg, "UNREAD");
+                            MailContent mailContent = BuildMailContent(msg, msg.LabelIds[0]);
                             foreach (string foldername in addedMessage.Message.LabelIds)
                             {
                                 cache.CacheMessage(mailContent,foldername);
@@ -193,7 +193,7 @@ namespace ExcellentEmailExperience.Model
                         var msg = service.Users.Messages.Get("me", message.Id).Execute();
 
                         // this probably is not the correct label but i cant for the life of me figure out how to pass the labes in correctly here. 
-                        MailContent mailContent = BuildMailContent(msg, "UNREAD");
+                        MailContent mailContent = BuildMailContent(msg, msg.LabelIds[0]);
                         foreach (string foldername in msg.LabelIds)
                         {
                             cache.CacheMessage(mailContent, foldername);
