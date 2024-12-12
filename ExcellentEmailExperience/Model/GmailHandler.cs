@@ -120,7 +120,7 @@ namespace ExcellentEmailExperience.Model
                         else
                         {
                             var msg = service.Users.Messages.Get("me", addedMessage.Message.Id).Execute();
-                            MailContent mailContent = BuildMailContent(msg);
+                            MailContent mailContent = BuildMailContent(msg, name);
                             cache.CacheMessage(mailContent, name);
                             yield return mailContent;
                         }
@@ -153,7 +153,7 @@ namespace ExcellentEmailExperience.Model
                     else
                     {
                         var msg = service.Users.Messages.Get("me", message.Id).Execute();
-                        MailContent mailContent = BuildMailContent(msg);
+                        MailContent mailContent = BuildMailContent(msg, name);
                         cache.CacheMessage(mailContent, name);
                         yield return mailContent;
                     }
