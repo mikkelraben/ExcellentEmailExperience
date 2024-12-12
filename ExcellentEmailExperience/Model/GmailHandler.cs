@@ -2,22 +2,13 @@
 using Google.Apis.Auth.OAuth2;
 using Google.Apis.Gmail.v1;
 using Google.Apis.Gmail.v1.Data;
-using Microsoft.Data.Sqlite;
-using MimeKit;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
 using System.Diagnostics;
 using System.IO;
 using System.Net.Mail;
 using System.Text;
-using Windows.ApplicationModel.Email;
 using Windows.Storage;
-using WinUIEx.Messaging;
-<<<<<<< HEAD
-=======
-using static Google.Apis.Requests.BatchRequest;
->>>>>>> 528cb355b2f128163e963efc5e288bf37d07c34b
 
 namespace ExcellentEmailExperience.Model
 {
