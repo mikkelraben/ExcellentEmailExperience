@@ -29,6 +29,10 @@ namespace ExcellentEmailExperience.Model
             smtpClient.ConnectAsync("smtp.friends.com", 587, true);
             smtpClient.AuthenticateAsync(mailAddress, password);
         }
+        public ulong[] GetNewIds()
+        {
+            throw new NotImplementedException();
+        }
 
         public bool CheckSpam(MailContent content)
         {
@@ -39,8 +43,12 @@ namespace ExcellentEmailExperience.Model
         {
             throw new NotImplementedException();
         }
+        public IEnumerable<MailContent> Refresh(string name, bool old, int count, ulong lastId, ulong newestId)
+        {
+            throw new NotImplementedException();
+        }
 
-        public IEnumerable<MailContent> GetFolder(string name, bool old, bool refresh, int count)
+        public IEnumerable<MailContent> GetFolder(string name, int count)
         {
             throw new NotImplementedException();
         }

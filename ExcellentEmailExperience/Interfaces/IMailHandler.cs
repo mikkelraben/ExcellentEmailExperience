@@ -34,6 +34,10 @@ namespace ExcellentEmailExperience.Interfaces
         /// </returns>
         string[] GetFolderNames();
 
+        ulong[] GetNewIds();
+
+        IEnumerable<MailContent> Refresh(string name,bool old, int count, ulong lastId, ulong newestId);
+
         /// <summary>
         /// Retrieves batch mails from a folder determined by <paramref name="name"/>. 
         /// Gets the newest mail if <paramref name="refresh"/> is true, 
@@ -44,7 +48,7 @@ namespace ExcellentEmailExperience.Interfaces
         /// <param name="refresh"> True if the mail list should restart at the newest mail </param>
         /// <param name="count"> The number of mails to retrieve </param>
         /// <returns>IEnumerable containing MailContent, with an upper bound of 50? elements</returns>
-        IEnumerable<MailContent> GetFolder(string name, bool old, bool refresh,int count);
+        IEnumerable<MailContent> GetFolder(string name,int count);
 
 
         /// <summary>
