@@ -38,6 +38,10 @@ namespace ExcellentEmailExperience.Model
                     message.To.Add(recipient);
                 }
             }
+            catch
+            {
+
+            }
 
             //TODO: if these fields are empty, the program will crash. please rethrow the exceptions below
 

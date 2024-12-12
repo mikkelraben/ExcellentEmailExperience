@@ -45,11 +45,5 @@ namespace ExcellentEmailExperience.Interfaces
         /// <returns>List containing MailContent, with an upper bound of 50? elements</returns>
         IEnumerable<MailContent> GetFolder(string name, bool old, bool refresh,int count);
 
-        /// <summary>
-        /// Refreshes the mail retrieved in all folders. Calls GetFolder with refresh = true.
-        /// </summary>
-        /// <param name="name"> Name of the current active folder that mail is retrieved from </param>
-        /// <returns>List containing MailContent, with an upper bound of 50? elements</returns>
-        List<MailContent> Refresh(string name);
     }
 }

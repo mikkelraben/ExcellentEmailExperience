@@ -11,6 +11,7 @@ using System.IO;
 using System.Net.Mail;
 using System.Text;
 using Windows.Storage;
+using WinUIEx.Messaging;
 using static Google.Apis.Requests.BatchRequest;
 
 namespace ExcellentEmailExperience.Model
@@ -75,10 +76,21 @@ namespace ExcellentEmailExperience.Model
         {
             if (refresh && !old)
             {
+                Debug.WriteLine(name);
                 var refreq = service.Users.History.List("me");
                 refreq.LabelId = name;
                 refreq.StartHistoryId = NewestId;
                 var historyResponse = refreq.Execute();
+                // Update the newest history ID after processing the refresh
+                if (historyResponse.HistoryId.HasValue)
+                {
+                    NewestId = historyResponse.HistoryId.Value;
+                }
+
+                //if (historyResponse.NextPageToken == null)
+                //{
+                //    yield break;
+                //}
                 if (historyResponse.History == null)
                 {
                     yield break;
@@ -91,18 +103,21 @@ namespace ExcellentEmailExperience.Model
                     }
                     foreach (var addedMessage in history.MessagesAdded)
                     {
-                        var msg = service.Users.Messages.Get("me", addedMessage.Message.Id).Execute();
-                        MailContent mailContent = BuildMailContent(msg);
-                        cache.CacheMessage(mailContent, name);
-                        yield return mailContent;
+                        if (cache.CheckCache(addedMessage.Message.Id))
+                        {
+                            yield return cache.GetCache(addedMessage.Message.Id);
+                        }
+                        else
+                        {
+                            var msg = service.Users.Messages.Get("me", addedMessage.Message.Id).Execute();
+                            MailContent mailContent = BuildMailContent(msg);
+                            cache.CacheMessage(mailContent, name);
+                            yield return mailContent;
+                        }
                     }
                 }
 
-                // Update the newest history ID after processing the refresh
-                if (historyResponse.HistoryId.HasValue)
-                {
-                    NewestId = historyResponse.HistoryId.Value;
-                }
+                
                 yield break;
             }
             else if (refresh && old)
@@ -121,14 +136,22 @@ namespace ExcellentEmailExperience.Model
 
                 foreach(var message in messageListResponse.Messages)
                 {
-                    var msg = service.Users.Messages.Get("me", message.Id).Execute();
-                    MailContent mailContent = BuildMailContent(msg);
-                    cache.CacheMessage(mailContent, name);
-                    yield return mailContent;
+                    if (cache.CheckCache(message.Id))
+                    {
+                        yield return cache.GetCache(message.Id);
+                    }
+                    else
+                    {
+                        var msg = service.Users.Messages.Get("me", message.Id).Execute();
+                        MailContent mailContent = BuildMailContent(msg);
+                        cache.CacheMessage(mailContent, name);
+                        yield return mailContent;
+                    }
                 }
 
                 var NewLastMessage = service.Users.Messages.Get("me", messageListResponse.Messages[^1].Id).Execute();
                 LastId = NewLastMessage.HistoryId.Value;
+
 
             }
 
