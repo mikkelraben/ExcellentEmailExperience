@@ -4,12 +4,14 @@ using Google.Apis.Gmail.v1;
 using Google.Apis.Gmail.v1.Data;
 using Microsoft.Data.Sqlite;
 using MimeKit;
+using RtfPipe.Tokens;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Net.Mail;
 using System.Text;
+using System.Xml.Linq;
 using Windows.Storage;
 using WinUIEx.Messaging;
 using static Google.Apis.Requests.BatchRequest;
@@ -23,8 +25,8 @@ namespace ExcellentEmailExperience.Model
         private UserCredential userCredential;
         private GmailService service;
         private MailAddress mailAddress;
-        private ulong NewestId;
-        private ulong LastId;
+        public ulong NewestId;
+        public ulong LastId;
 
         // modifies the body string so that google doesn't shit itself in fear and panic
         // and therefore modifies the message to fit its asinine standards
@@ -37,7 +39,43 @@ namespace ExcellentEmailExperience.Model
             return body;
         }
         private CacheHandler cache;
+        public ulong[] GetNewIds()
+        {
+            var request = service.Users.Messages.List("me");
+            
+            request.MaxResults = 20;
+            ulong[] Ids = new ulong[2];
+            Ids[0] = NewestId;
+            Ids[1] = LastId;
+            var refreq = service.Users.History.List("me");
+            refreq.StartHistoryId = NewestId;
+            var historyResponse = refreq.Execute();
+            // Update the newest history ID after processing the refresh
+            if (historyResponse.HistoryId.HasValue)
+            {
+                NewestId = historyResponse.HistoryId.Value;
+            }
 
+            var refreqOld = service.Users.Messages.List("me");
+            refreqOld.MaxResults = 20;
+
+            refreqOld.Q = $"before:{LastId}";
+
+            var messageListResponse = refreqOld.Execute();
+            if (messageListResponse.Messages == null || messageListResponse.Messages.Count == 0)
+            {
+                Ids[1] = LastId;
+                return Ids;
+            }
+
+            var NewLastMessage = service.Users.Messages.Get("me", messageListResponse.Messages[^1].Id).Execute();
+            LastId = NewLastMessage.HistoryId.Value;
+
+            Ids[0] = NewestId;
+            Ids[1] = LastId;
+            return Ids;
+
+        }
         public GmailHandler(UserCredential credential, MailAddress mailAddress)
         {
             userCredential = credential;
@@ -72,20 +110,19 @@ namespace ExcellentEmailExperience.Model
             Send(Mail);
         }
 
-        public IEnumerable<MailContent> GetFolder(string name, bool old, bool refresh, int count)
+        public IEnumerable<MailContent> Refresh(string name,bool old, int count, ulong lastId, ulong newestId)
         {
-            if (refresh && !old)
+            if (!old)
             {
-                Debug.WriteLine(name);
                 var refreq = service.Users.History.List("me");
+                refreq.StartHistoryId = newestId;
                 refreq.LabelId = name;
-                refreq.StartHistoryId = NewestId;
                 var historyResponse = refreq.Execute();
                 // Update the newest history ID after processing the refresh
-                if (historyResponse.HistoryId.HasValue)
-                {
-                    NewestId = historyResponse.HistoryId.Value;
-                }
+                //if (historyResponse.HistoryId.HasValue)
+                //{
+                //    newestId = historyResponse.HistoryId.Value;
+                //}
 
                 //if (historyResponse.NextPageToken == null)
                 //{
@@ -110,23 +147,25 @@ namespace ExcellentEmailExperience.Model
                         else
                         {
                             var msg = service.Users.Messages.Get("me", addedMessage.Message.Id).Execute();
-                            MailContent mailContent = BuildMailContent(msg);
-                            cache.CacheMessage(mailContent, name);
+
+                            // im just going to assume that when you get a new mail that hasnt been seen before that its also unread. 
+                            MailContent mailContent = BuildMailContent(msg, "UNREAD");
+                            foreach (string foldername in addedMessage.Message.LabelIds)
+                            {
+                                cache.CacheMessage(mailContent,foldername);
+                            }
                             yield return mailContent;
                         }
                     }
                 }
-
-                
                 yield break;
             }
-            else if (refresh && old)
+            else
             {
                 var refreqOld = service.Users.Messages.List("me");
-                refreqOld.LabelIds = name;
                 refreqOld.MaxResults = count;
 
-                refreqOld.Q = $"before:{LastId}";
+                refreqOld.Q = $"before:{lastId}";
 
                 var messageListResponse = refreqOld.Execute();
                 if (messageListResponse.Messages == null || messageListResponse.Messages.Count == 0)
@@ -134,7 +173,7 @@ namespace ExcellentEmailExperience.Model
                     yield break;
                 }
 
-                foreach(var message in messageListResponse.Messages)
+                foreach (var message in messageListResponse.Messages)
                 {
                     if (cache.CheckCache(message.Id))
                     {
@@ -143,17 +182,24 @@ namespace ExcellentEmailExperience.Model
                     else
                     {
                         var msg = service.Users.Messages.Get("me", message.Id).Execute();
-                        MailContent mailContent = BuildMailContent(msg);
-                        cache.CacheMessage(mailContent, name);
+
+                        // this probably is not the correct label but i cant for the life of me figure out how to pass the labes in correctly here. 
+                        MailContent mailContent = BuildMailContent(msg, "UNREAD");
+                        foreach (string foldername in msg.LabelIds)
+                        {
+                            cache.CacheMessage(mailContent, foldername);
+                        }
                         yield return mailContent;
                     }
                 }
 
-                var NewLastMessage = service.Users.Messages.Get("me", messageListResponse.Messages[^1].Id).Execute();
-                LastId = NewLastMessage.HistoryId.Value;
-
-
+                //var NewLastMessage = service.Users.Messages.Get("me", messageListResponse.Messages[^1].Id).Execute();
+                //LastId = NewLastMessage.HistoryId.Value;
             }
+        }
+
+        public IEnumerable<MailContent> GetFolder(string name, int count)
+        {
 
             var request = service.Users.Messages.List("me");
             request.LabelIds = name;
@@ -164,8 +210,6 @@ namespace ExcellentEmailExperience.Model
             {
                 yield break;
             }
-            
-
             foreach (var message in messages)
             {
                 if (cache.CheckCache(message.Id))
@@ -302,8 +346,6 @@ namespace ExcellentEmailExperience.Model
                     }
                 }
 
-
-
                 var filePath = folder.Path + $"\\attachments\\{mailContent.MessageId}\\{fileName}";
 
                 mailContent.attachments.Add(filePath);
@@ -371,6 +413,7 @@ namespace ExcellentEmailExperience.Model
             reply.subject = "Re: " + content.subject;
             reply.body = Response;
             Send(reply);
+
         }
 
         // call this with the mailcontent currently being displayed. should only be called when a mail is displayed

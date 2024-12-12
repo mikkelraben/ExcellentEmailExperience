@@ -27,7 +27,7 @@ namespace ExcellentEmailExperience.ViewModel
         CancellationToken CancelToken;
 
         // DO NOT USE ON UI SIDE. THIS IS INTERNAL 
-        string FolderName;
+        public string FolderName;
         public FolderViewModel(IMailHandler mailHandler, string name, DispatcherQueue dispatcherQueue, CancellationToken cancellationToken)
         {
             FolderName = name;
@@ -39,63 +39,25 @@ namespace ExcellentEmailExperience.ViewModel
 
             Thread thread = new(() =>
             {
-                UpdateViewMails(
+                GetViewMails(
                     mailHandler,
                     name,
                     dispatcherQueue,
-                    cancellationToken,
-                    false,
-                    false
+                    cancellationToken
                     );
             });
             thread.Start();
         }
 
-        private void UpdateViewMails(IMailHandler mailHandler, string name, DispatcherQueue dispatcherQueue, CancellationToken cancellationToken, bool old, bool refresh)
+        private void GetViewMails(IMailHandler mailHandler, string name, DispatcherQueue dispatcherQueue, CancellationToken cancellationToken)
         {
             try
             {
-                foreach (var mail in mailHandler.GetFolder(name,old, refresh, 20))
+                foreach (var mail in mailHandler.GetFolder(name, 20))
                 {
-                    if (cancellationToken.IsCancellationRequested)
-                    {
-                        return;
-                    }
-                    var inboxMail = new InboxMail();
-                    mailsContent.Add(mail);
-                    mailsContent.Sort((x, y) => -x.date.CompareTo(y.date));
-
-                        if (mail.from.DisplayName == "")
-                        {
-                            inboxMail.from = new System.Net.Mail.MailAddress(mail.from.Address, mail.from.Address);
-                        }
-                        else
-                        {
-                            inboxMail.from = mail.from;
-                        }
-
-                        inboxMail.to = mail.to;
-                        inboxMail.subject = mail.subject.Replace("\n", "").Replace("\r", "");
-                        inboxMail.date = mail.date.ToLocalTime();
-                        if (dispatcherQueue != null)
-                        {
-                            dispatcherQueue.TryEnqueue(() =>
-                            {
-                                int insertIndex = mails.Count;
-
-                            for (int i = 0; i < mails.Count; i++)
-                            {
-                                if (mails[i].date < inboxMail.date)
-                                {
-                                    insertIndex = i;
-                                    break;
-                                }
-                            }
-
-                            mails.Insert(insertIndex, inboxMail);
-                        });
-                    }
+                    HandleMessage(dispatcherQueue, mail, cancellationToken);
                 }
+
             }
             catch (System.Runtime.InteropServices.COMException)
             {
@@ -109,23 +71,71 @@ namespace ExcellentEmailExperience.ViewModel
             }
         }
 
-        public void RefreshFolder()
+        public void UpdateViewMails(IMailHandler mailHandler, string name, DispatcherQueue dispatcherQueue, CancellationToken cancellationToken, bool old, ulong lastId, ulong newestId)
         {
-            
-            Thread thread = new(() =>
+            try
             {
-                UpdateViewMails(
-                MailHandler,
-                FolderName,
-                DispatchQueue,
-                CancelToken,
-                false,
-                true
-                );
+                foreach (var mail in mailHandler.Refresh(name,old, 20,lastId,newestId))
+                {
+                    HandleMessage(dispatcherQueue, mail, cancellationToken);
+                }
 
-            });
-            thread.Start();
+            }
+            catch (System.Runtime.InteropServices.COMException)
+            {
+                // Application probably exited
+                return;
+            }
+            catch (Exception)
+            {
+                MessageHandler.AddMessage("Failed to load mails", MessageSeverity.Error);
+                return;
+            }
         }
+
+        private void HandleMessage(DispatcherQueue dispatcherQueue, MailContent mail, CancellationToken cancellationToken)
+        {
+            if (cancellationToken.IsCancellationRequested)
+            {
+                return;
+            }
+            var inboxMail = new InboxMail();
+            mailsContent.Add(mail);
+            mailsContent.Sort((x, y) => -x.date.CompareTo(y.date));
+
+            if (mail.from.DisplayName == "")
+            {
+                inboxMail.from = new System.Net.Mail.MailAddress(mail.from.Address, mail.from.Address);
+            }
+            else
+            {
+                inboxMail.from = mail.from;
+            }
+
+            inboxMail.to = mail.to;
+            inboxMail.subject = mail.subject.Replace("\n", "").Replace("\r", "");
+            inboxMail.date = mail.date.ToLocalTime();
+            if (dispatcherQueue != null)
+            {
+                dispatcherQueue.TryEnqueue(() =>
+                {
+                    int insertIndex = mails.Count;
+
+                    for (int i = 0; i < mails.Count; i++)
+                    {
+                        if (mails[i].date < inboxMail.date)
+                        {
+                            insertIndex = i;
+                            break;
+                        }
+                    }
+
+                    mails.Insert(insertIndex, inboxMail);
+                });
+            }
+        }
+
+
 
         [ObservableProperty]
         public string name;

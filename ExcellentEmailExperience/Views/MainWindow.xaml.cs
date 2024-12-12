@@ -192,7 +192,7 @@ namespace ExcellentEmailExperience.Views
 
         private void RefreshButton_Click(object sender, RoutedEventArgs e)
         {
-            currentFolder.RefreshFolder();
+            accounts[0].mailHandlerViewModel.Refresh(false);
         }
 
         bool sidebarLarge = false;
