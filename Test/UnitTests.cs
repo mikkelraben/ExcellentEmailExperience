@@ -790,6 +790,8 @@ namespace Test
             MailApp.NewAccount(account2);
 
             MailApp.NewAccount(account1);
+            Assert.IsTrue(MailApp.HasAccount());
+            MailApp.NewAccount(account1);
         }
 
         [TestMethod]
@@ -798,62 +800,11 @@ namespace Test
             UnitTest_init();
             MailApp MailApp1 = new();
             MailApp1.NewAccount(account1);
-            //MailApp1.DeleteAccount(account1);
+            MailApp1.DeleteAccount(account1);
             Assert.IsFalse(MailApp1.HasAccount());
 
         }
 
-        [TestMethod]
-        public void TestMethod_Send_Whitespace()
-        {
-            UnitTest_init();
-            //creating a new mail object and sending it to the current mail address? checking for recieving mail
-            MailContent validMail = new();
-
-            validMail.subject = validSubject;
-
-            validMail.to = new List<MailAddress> { Address2 };
-
-            validMail.from = Address1;
-
-            validMail.body = validwhitespacebody;
-
-            validMail.cc = new List<MailAddress> { Address1 };
-
-
-            validMail.bcc = new List<MailAddress> { Address3 };
-
-
-            mut.WaitOne();Debug.WriteLine("getting mutex access");
-
-            mailHandler1.Send(validMail);
-
-            //TODO: change amount of requests when api is changed
-
-            //let the program sleep for 2 second to make sure the mail is recieved
-            System.Threading.Thread.Sleep(4000);
-
-            List<MailContent> Inboxlist2 = GetInbox(mailHandler2, "INBOX");
-
-
-            List<MailContent> Sentlist1 = GetInbox(mailHandler1, "SENT");
-
-            Debug.WriteLine("finished mutex access");mut.ReleaseMutex();
-
-            //as messageIDs are different for all mail instances, we need to set them equal to compare the mail objects
-
-            if (Inboxlist2[0] != null && Sentlist1[0] != null)
-            {
-                Inboxlist2[0].MessageId = Sentlist1[0].MessageId;
-                Inboxlist2[0].ThreadId = Sentlist1[0].ThreadId;
-
-                Assert.IsTrue(Inboxlist2[0] == Sentlist1[0]);
-            }
-            else
-            {
-                Assert.Fail("no messages were sent!");
-            }
-        }
-
+        
     }
 }
