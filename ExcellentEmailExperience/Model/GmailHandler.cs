@@ -127,7 +127,7 @@ namespace ExcellentEmailExperience.Model
                     }
                 }
 
-                
+
                 yield break;
             }
             else if (refresh && old)
@@ -144,7 +144,7 @@ namespace ExcellentEmailExperience.Model
                     yield break;
                 }
 
-                foreach(var message in messageListResponse.Messages)
+                foreach (var message in messageListResponse.Messages)
                 {
                     if (cache.CheckCache(message.Id))
                     {
@@ -269,8 +269,11 @@ namespace ExcellentEmailExperience.Model
             {
                 if (mailContent.bodyType == BodyType.Plain)
                 {
-                    mailContent.body = Encoding.UTF8.GetString(Convert.FromBase64String(messagePart.Body.Data.Replace('-', '+').Replace('_', '/')));
-                    mailContent.bodyType = BodyType.Html;
+                    if (messagePart.Body.Data != null)
+                    {
+                        mailContent.body = Encoding.UTF8.GetString(Convert.FromBase64String(messagePart.Body.Data.Replace('-', '+').Replace('_', '/')));
+                        mailContent.bodyType = BodyType.Html;
+                    }
                 }
             }
             else if (messagePart.MimeType.StartsWith("image/"))

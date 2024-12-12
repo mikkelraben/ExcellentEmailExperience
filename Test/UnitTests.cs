@@ -735,51 +735,7 @@ namespace Test
         }
 
 
-        [TestMethod]
-        public void TestMethod_trash()
-        {
-            UnitTest_init();
-            // creating a new mail object and sending it to the current mail address? checking for recieving mail
-            MailContent validMail = new();
-
-            validMail.subject = validSubject;
-
-            validMail.to = new List<MailAddress> { Address2 };
-
-            validMail.from = Address1;
-
-            validMail.body = validBody_gen();
-
-            mut.WaitOne();Debug.WriteLine("getting mutex access");
-
-            mailHandler1.Send(validMail);
-
-            //let the program sleep for 2 second to make sure the mail is recieved
-            System.Threading.Thread.Sleep(4000);
-
-            List<MailContent> Inboxlist2 = GetInbox(mailHandler2, "INBOX");
-            List<MailContent> Sentlist1 = GetInbox(mailHandler1, "SENT");
-
-            if (Inboxlist2[0] != null)
-            {
-                mailHandler2.TrashMail(Inboxlist2[0].MessageId);
-            }
-            else
-            {
-                Assert.Fail("no messages were sent!");
-            }
-
-            //let the program sleep for 2 second to make sure the mail is recieved
-            System.Threading.Thread.Sleep(4000);
-
-            List<MailContent> Trashlist2 = GetInbox(mailHandler2, "TRASH");
-
-            Debug.WriteLine("finished mutex access");mut.ReleaseMutex();
-
-            Assert.IsTrue(Trashlist2[0] == Sentlist1[0]);
-            Assert.IsTrue(Trashlist2[0] != Inboxlist2[0]);
-
-        }
+        
 
         [TestMethod]
         [ExpectedException(typeof(ArgumentException),

@@ -32,7 +32,7 @@ namespace ExcellentEmailExperience.Views
         FolderViewModel currentFolder;
         ObservableCollection<AccountViewModel> accounts = new();
         CancellationTokenSource cancellationToken = new();
-        UserMessageViewModel MessageViewModel = new();
+        UserMessageViewModel MessageViewModel ;
         public static List<object> DraggedItems = new();
 
         public MainWindow(MailApp mailApp)
@@ -40,7 +40,7 @@ namespace ExcellentEmailExperience.Views
             this.mailApp = mailApp;
 
             this.InitializeComponent();
-
+            MessageViewModel = new(DispatcherQueue);
             this.ExtendsContentIntoTitleBar = true;
             this.AppWindow.TitleBar.PreferredHeightOption = TitleBarHeightOption.Tall;
             Titlebar.Loaded += Titlebar_Loaded;
