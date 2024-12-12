@@ -293,9 +293,13 @@ namespace ExcellentEmailExperience.Model
         }
 
         public void UpdateFlagsAndFolders(string messageId, string folderName)
+        {
+            using (var connection = new SqliteConnection(connectionString))
+            {
+                connection.Open();
 
-                List<string>? folders;
-                int? flags;
+                List<string>? folders = new();
+                int? flags = 0;
 
                 using (var command = connection.CreateCommand())
                 {
@@ -348,7 +352,8 @@ namespace ExcellentEmailExperience.Model
             using (var connection = new SqliteConnection(connectionString))
             {
                 connection.Open();
-              var command = connection.CreateCommand();
+                
+                var command = connection.CreateCommand();
                 command.CommandText = $@"
                 SELECT *
                 FROM MailContent
@@ -483,7 +488,5 @@ namespace ExcellentEmailExperience.Model
 
             }
         }
-
-
     }
 }
