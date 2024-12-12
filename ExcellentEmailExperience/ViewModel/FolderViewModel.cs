@@ -36,7 +36,15 @@ namespace ExcellentEmailExperience.ViewModel
                         mailsContent.Add(mail);
                         mailsContent.Sort((x, y) => -x.date.CompareTo(y.date));
 
-                        inboxMail.from = mail.from;
+                        if (mail.from.DisplayName == "")
+                        {
+                            inboxMail.from = new System.Net.Mail.MailAddress(mail.from.Address, mail.from.Address);
+                        }
+                        else
+                        {
+                            inboxMail.from = mail.from;
+                        }
+
                         inboxMail.to = mail.to;
                         inboxMail.subject = mail.subject.Replace("\n", "").Replace("\r", "");
                         inboxMail.date = mail.date.ToLocalTime();
