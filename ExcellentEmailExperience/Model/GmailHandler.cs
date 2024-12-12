@@ -48,10 +48,25 @@ namespace ExcellentEmailExperience.Model
             return body;
         }
         private CacheHandler cache;
+        
+        public GmailHandler(UserCredential credential, MailAddress mailAddress)
+        {
+            userCredential = credential;
+            this.mailAddress = mailAddress;
+            cache = new CacheHandler(mailAddress.Address);
+
+            service = new GmailService(new Google.Apis.Services.BaseClientService.Initializer()
+            {
+                HttpClientInitializer = userCredential,
+                ApplicationName = "ExcellentEmailExperience",
+            });
+        }
+
+
         public ulong[] GetNewIds()
         {
             var request = service.Users.Messages.List("me");
-            
+
             request.MaxResults = 20;
             ulong[] Ids = new ulong[2];
             Ids[0] = NewestId;
@@ -84,18 +99,6 @@ namespace ExcellentEmailExperience.Model
             Ids[1] = LastId;
             return Ids;
 
-        }
-        public GmailHandler(UserCredential credential, MailAddress mailAddress)
-        {
-            userCredential = credential;
-            this.mailAddress = mailAddress;
-            cache = new CacheHandler(mailAddress.Address);
-
-            service = new GmailService(new Google.Apis.Services.BaseClientService.Initializer()
-            {
-                HttpClientInitializer = userCredential,
-                ApplicationName = "ExcellentEmailExperience",
-            });
         }
 
         public bool CheckSpam(MailContent content)
