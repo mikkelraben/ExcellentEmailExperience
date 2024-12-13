@@ -132,7 +132,7 @@
                             <FontIcon Glyph="&#xE72C;" FontSize="16"/>
                         </Button>
                     </Grid>
-                    <AutoSuggestBox PlaceholderText="Search" Grid.Row="1" Margin="8,0,8,16" QueryIcon="Find" TextChanged="AutoSuggestBox_TextChanged" QuerySubmitted="AutoSuggestBox_QuerySubmitted"/>
+                    <AutoSuggestBox PlaceholderText="Search" Grid.Row="1" Margin="8,0,8,16" QueryIcon="Find" QuerySubmitted="AutoSuggestBox_QuerySubmitted"/>
                     <StackPanel Orientation="Horizontal" Grid.Row="2" Name="MassEditMenu" Visibility="Collapsed">
                         <Button Margin="8,0,0,0" Padding="8,4" Content="Delete??"/>
                     </StackPanel>
