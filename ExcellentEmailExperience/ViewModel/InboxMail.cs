@@ -19,5 +19,8 @@ namespace ExcellentEmailExperience.ViewModel
         [ObservableProperty]
         public bool selected = false;
 
+        [ObservableProperty]
+        public bool unread = true;
+
     }
 }

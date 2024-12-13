@@ -34,9 +34,11 @@
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="auto"/>
+                                <ColumnDefinition Width="auto"/>
                             </Grid.ColumnDefinitions>
                             <TextBlock Text="{x:Bind from.DisplayName}" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap" Grid.Column="0" VerticalAlignment="Bottom" Style="{ThemeResource BodyStrongTextBlockStyle}" ToolTipService.ToolTip="{Binding from.Address}"/>
                             <TextBlock Text="{Binding date, Converter={StaticResource DateToNiceString}}" Grid.Column="1" VerticalAlignment="Bottom" Style="{ThemeResource CaptionTextBlockStyle}" ToolTipService.ToolTip="{Binding date}"/>
+                            <InfoBadge Opacity="{Binding Unread,Converter={StaticResource SelectedToOpacity},Mode=OneWay}" Grid.Column="2" VerticalAlignment="Top" HorizontalAlignment="Right"/>
                         </Grid>
                         <TextBlock Text="{Binding subject}" TextTrimming="CharacterEllipsis" ToolTipService.ToolTip="{Binding subject}"/>
                     </StackPanel>

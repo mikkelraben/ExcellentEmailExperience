@@ -144,6 +144,7 @@ namespace ExcellentEmailExperience.ViewModel
             inboxMail.to = mail.to;
             inboxMail.subject = mail.subject.Replace("\n", "").Replace("\r", "");
             inboxMail.date = mail.date.ToLocalTime();
+            inboxMail.Unread = mail.flags.HasFlag(MailFlag.unread);
             if (dispatcherQueue != null)
             {
                 dispatcherQueue.TryEnqueue(() =>
