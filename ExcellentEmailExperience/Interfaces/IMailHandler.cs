@@ -19,9 +19,9 @@ namespace ExcellentEmailExperience.Interfaces
         /// </summary>
         /// <param name="content"></param> this is the mail that we received, the one we want to forward
         /// <param name="NewTo"></param> this is the list of people to whom we want to forward to. 
-        void Forward(MailContent content, List<MailAddress> NewTo);
-        void Reply(MailContent content, string Response);
-        void ReplyAll(MailContent content, string Response);
+        MailContent Forward(MailContent content);
+        MailContent Reply(MailContent content);
+        MailContent ReplyAll(MailContent content);
         void Send(MailContent content);
 
         void TrashMail(string MessageId);
@@ -44,7 +44,7 @@ namespace ExcellentEmailExperience.Interfaces
         /// <param name="refresh"> True if the mail list should restart at the newest mail </param>
         /// <param name="count"> The number of mails to retrieve </param>
         /// <returns>IEnumerable containing MailContent, with an upper bound of 50? elements</returns>
-        IEnumerable<MailContent> GetFolder(string name, bool old, bool refresh,int count);
+        IEnumerable<MailContent> GetFolder(string name, bool old, bool refresh, int count);
 
 
         /// <summary>

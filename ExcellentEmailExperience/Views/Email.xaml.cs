@@ -28,6 +28,7 @@ namespace ExcellentEmailExperience.Views
     {
         MailContentViewModel viewModel = new();
         ObservableCollection<AccountViewModel> accounts;
+
         public Email(ObservableCollection<AccountViewModel> accounts)
         {
             this.accounts = accounts;
@@ -201,8 +202,7 @@ namespace ExcellentEmailExperience.Views
                 return;
             }
             mail.subject = viewModel.Subject;
-            mail.body = "Hello There this is mail";
-            mail.bodyType = BodyType.Plain;
+            mail.bodyType = BodyType.Html;
             mail.attachments = viewModel.Attachments;
             mail.cc = viewModel.Cc;
             mail.bcc = viewModel.Bcc;
@@ -214,6 +214,9 @@ namespace ExcellentEmailExperience.Views
 
             //mail.body = Rtf.ToHtml(bla);
             MailEditor.Document.GetText(TextGetOptions.None, out mail.body);
+
+            mail.body = mail.body + viewModel.Body;
+
             try
             {
                 account.account.GetMailHandler().Send(mail);

@@ -41,10 +41,17 @@ namespace ExcellentEmailExperience.Model
 
         public static void RemoveCredential(string email)
         {
-            var credential = vault.FindAllByUserName(email).FirstOrDefault();
-            if (credential != null)
+            try
             {
-                vault.Remove(credential);
+                var credential = vault.FindAllByUserName(email).FirstOrDefault();
+                if (credential != null)
+                {
+                    vault.Remove(credential);
+                }
+            }
+            catch (Exception)
+            {
+                MessageHandler.AddMessage($"Could not remove account: {email}", MessageSeverity.Warning);
             }
         }
 

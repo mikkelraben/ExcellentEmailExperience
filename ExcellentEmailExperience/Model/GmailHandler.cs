@@ -11,6 +11,7 @@ using System.IO;
 using System.Net.Mail;
 using System.Text;
 using Windows.Storage;
+using static Google.Apis.Requests.BatchRequest;
 
 namespace ExcellentEmailExperience.Model
 {
@@ -50,22 +51,6 @@ namespace ExcellentEmailExperience.Model
         public bool CheckSpam(MailContent content)
         {
             throw new NotImplementedException();
-        }
-
-        // this function creates a new mailcontent and sends this one
-        // so the original message wont be modified. 
-        public void Forward(MailContent content, List<MailAddress> NewTo)
-        {
-            var Mail = new MailContent();
-            Mail.subject = "Forward: " + content.subject;
-            Mail.body = $"Forwarded from {content.from}\n {content.body} \n\n Originally sent to:{content.to}";
-
-            //making the currect account the sender. 
-            Mail.from = mailAddress;
-            Mail.ThreadId = content.ThreadId;
-            //changes the receiver to the person who is being forwarded to. 
-            Mail.to = NewTo;
-            Send(Mail);
         }
 
         public IEnumerable<MailContent> GetFolder(string name, bool old, bool refresh, int count)
@@ -272,36 +257,6 @@ namespace ExcellentEmailExperience.Model
             throw new NotImplementedException();
         }
 
-        // when calling reply. it is important that you give it the exact mailcontent you want to reply to
-        // dont change the (to) and (from) fields beforehand, the code will handle that for you. you can change the body. 
-
-        // call this with the mailcontent currently being displayed. should only be called when a mail is displayed
-        public void Reply(MailContent content, string Response)
-        {
-            MailContent reply = new MailContent();
-            reply.ThreadId = content.ThreadId;
-            reply.to = new List<MailAddress> { content.from };
-            reply.from = mailAddress;
-            reply.subject = "Re: " + content.subject;
-            reply.body = Response;
-            Send(reply);
-        }
-
-        // call this with the mailcontent currently being displayed. should only be called when a mail is displayed
-        public void ReplyAll(MailContent content, string Response)
-        {
-            MailContent reply = new MailContent();
-            reply.ThreadId = content.ThreadId;
-            reply.to = new List<MailAddress> { content.from };
-            reply.to.AddRange(content.to);
-            reply.from = mailAddress;
-            reply.body = Response;
-            reply.to.Remove(reply.from);
-            reply.subject = "Re: " + content.subject;
-            Send(reply);
-            //throw new NotImplementedException();
-        }
-
         public void Send(MailContent content)
         {
 
@@ -383,5 +338,40 @@ namespace ExcellentEmailExperience.Model
             yield break;
         }
 
+        public MailContent Forward(MailContent content)
+        {
+            var Mail = new MailContent();
+            Mail.subject = "Forward: " + content.subject;
+            Mail.body = $"Forwarded from {content.from}\n {content.body} \n\n Originally sent to:{content.to}";
+
+            //making the currect account the sender. 
+            Mail.from = mailAddress;
+            Mail.ThreadId = content.ThreadId;
+            return Mail;
+        }
+
+        public MailContent Reply(MailContent content)
+        {
+            MailContent reply = new MailContent();
+            reply.ThreadId = content.ThreadId;
+            reply.to = new List<MailAddress> { content.from };
+            reply.from = mailAddress;
+            reply.body = content.body;
+            reply.bodyType = content.bodyType;
+            reply.subject = "Re: " + content.subject;
+            return reply;
+        }
+
+        public MailContent ReplyAll(MailContent content)
+        {
+            MailContent reply = new MailContent();
+            reply.ThreadId = content.ThreadId;
+            reply.to = new List<MailAddress> { content.from };
+            reply.to.AddRange(content.to);
+            reply.from = mailAddress;
+            reply.to.Remove(reply.from);
+            reply.subject = "Re: " + content.subject;
+            return reply;
+        }
     }
 }
