@@ -36,6 +36,8 @@ namespace ExcellentEmailExperience.ViewModel
             MailHandler = mailHandler;
   
             this.name = name.Substring(0, 1).ToUpper() + name.Substring(1).ToLower();
+            this.mailHandler = mailHandler;
+
 
             Thread thread = new(() =>
             {
@@ -149,5 +151,7 @@ namespace ExcellentEmailExperience.ViewModel
         /// List of mails in the folder currently used to store the mails for the backend
         /// </summary>
         public List<MailContent> mailsContent = new();
+
+        public IMailHandler mailHandler;
     }
 }

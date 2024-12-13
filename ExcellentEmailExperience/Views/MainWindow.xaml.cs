@@ -98,6 +98,11 @@ namespace ExcellentEmailExperience.Views
                 }
                 if (e.Action == System.Collections.Specialized.NotifyCollectionChangedAction.Add)
                 {
+                    if (mailApp.Accounts.Contains((e.NewItems[0] as AccountViewModel).account))
+                    {
+                        return;
+                    }
+
                     mailApp.Accounts.Insert(e.NewStartingIndex, (e.NewItems[0] as AccountViewModel).account);
                     mailApp.SaveAccounts();
                 }
@@ -335,6 +340,61 @@ namespace ExcellentEmailExperience.Views
         {
             e.AcceptedOperation = DataPackageOperation.None;
             Debug.WriteLine(e);
+        }
+
+        private void AutoSuggestBox_TextChanged(AutoSuggestBox sender, AutoSuggestBoxTextChangedEventArgs args)
+        {
+            if (args.Reason == AutoSuggestionBoxTextChangeReason.UserInput)
+            {
+                var search = sender.Text;
+
+            }
+        }
+
+        private void AutoSuggestBox_QuerySubmitted(AutoSuggestBox sender, AutoSuggestBoxQuerySubmittedEventArgs args)
+        {
+
+        }
+
+        private void Reply_Click(object sender, RoutedEventArgs e)
+        {
+            if (MailList.SelectedItems.Count != 1)
+            {
+                MessageHandler.AddMessage("Select one mail to reply", MessageSeverity.Error);
+                return;
+            }
+            MailContent mailContent = currentFolder.mailsContent[MailList.SelectedIndex];
+
+            var reply = currentFolder.mailHandler.Reply(mailContent);
+            (MainFrame.Content as Email).ChangeMail(reply, true);
+        }
+
+        private void ReplyAll_Click(object sender, RoutedEventArgs e)
+        {
+            if (MailList.SelectedItems.Count != 1)
+            {
+                MessageHandler.AddMessage("Select one mail to reply", MessageSeverity.Error);
+                return;
+            }
+            MailContent mailContent = currentFolder.mailsContent[MailList.SelectedIndex];
+
+            var reply = currentFolder.mailHandler.ReplyAll(mailContent);
+            (MainFrame.Content as Email).ChangeMail(reply, true);
+
+        }
+
+        private void Forward_Click(object sender, RoutedEventArgs e)
+        {
+            if (MailList.SelectedItems.Count != 1)
+            {
+                MessageHandler.AddMessage("Select one mail to reply", MessageSeverity.Error);
+                return;
+            }
+            MailContent mailContent = currentFolder.mailsContent[MailList.SelectedIndex];
+
+            var reply = currentFolder.mailHandler.Forward(mailContent);
+            (MainFrame.Content as Email).ChangeMail(reply, true);
+
         }
     }
 

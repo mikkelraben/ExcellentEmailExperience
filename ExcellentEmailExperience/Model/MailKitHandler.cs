@@ -39,7 +39,7 @@ namespace ExcellentEmailExperience.Model
             throw new NotImplementedException();
         }
 
-        public void Forward(MailContent content, List<MailAddress> NewTo)
+        public MailContent Forward(MailContent content)
         {
             throw new NotImplementedException();
         }
@@ -74,12 +74,12 @@ namespace ExcellentEmailExperience.Model
             throw new NotImplementedException();
         }
 
-        public void Reply(MailContent content)
+        public MailContent Reply(MailContent content)
         {
             throw new NotImplementedException();
         }
 
-        public void ReplyAll(MailContent content)
+        public MailContent ReplyAll(MailContent content)
         {
             throw new NotImplementedException();
         }

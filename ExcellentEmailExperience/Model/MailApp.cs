@@ -34,12 +34,14 @@ namespace ExcellentEmailExperience.Model
         public void NewAccount(IAccount account)
         {
             accounts.Add(account);
+            SaveAccounts();
         }
 
         public void DeleteAccount(IAccount account)
         {
             CredentialHandler.RemoveCredential(account.GetEmail().Address);
             accounts.Remove(account);
+            SaveAccounts();
         }
 
         public bool HasAccount()

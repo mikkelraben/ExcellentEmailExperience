@@ -10,6 +10,7 @@ using System.Net.Mail;
 using System.Text;
 using System.Xml.Linq;
 using Windows.Storage;
+using static Google.Apis.Requests.BatchRequest;
 
 namespace ExcellentEmailExperience.Model
 {
@@ -48,10 +49,25 @@ namespace ExcellentEmailExperience.Model
             return body;
         }
         private CacheHandler cache;
+
+        public GmailHandler(UserCredential credential, MailAddress mailAddress)
+        {
+            userCredential = credential;
+            this.mailAddress = mailAddress;
+            cache = new CacheHandler(mailAddress.Address);
+
+            service = new GmailService(new Google.Apis.Services.BaseClientService.Initializer()
+            {
+                HttpClientInitializer = userCredential,
+                ApplicationName = "ExcellentEmailExperience",
+            });
+        }
+
+
         public ulong[] GetNewIds()
         {
             var request = service.Users.Messages.List("me");
-            
+
             request.MaxResults = 20;
             ulong[] Ids = new ulong[2];
             Ids[0] = NewestId;
@@ -85,41 +101,13 @@ namespace ExcellentEmailExperience.Model
             return Ids;
 
         }
-        public GmailHandler(UserCredential credential, MailAddress mailAddress)
-        {
-            userCredential = credential;
-            this.mailAddress = mailAddress;
-            cache = new CacheHandler(mailAddress.Address);
-
-            service = new GmailService(new Google.Apis.Services.BaseClientService.Initializer()
-            {
-                HttpClientInitializer = userCredential,
-                ApplicationName = "ExcellentEmailExperience",
-            });
-        }
 
         public bool CheckSpam(MailContent content)
         {
             throw new NotImplementedException();
         }
 
-        // this function creates a new mailcontent and sends this one
-        // so the original message wont be modified. 
-        public void Forward(MailContent content, List<MailAddress> NewTo)
-        {
-            var Mail = new MailContent();
-            Mail.subject = "Forward: " + content.subject;
-            Mail.body = $"Forwarded from {content.from}\n {content.body} \n\n Originally sent to:{content.to}";
-
-            //making the currect account the sender. 
-            Mail.from = mailAddress;
-            Mail.ThreadId = content.ThreadId;
-            //changes the receiver to the person who is being forwarded to. 
-            Mail.to = NewTo;
-            Send(Mail);
-        }
-
-        public IEnumerable<MailContent> Refresh(string name,bool old, int count, ulong lastId, ulong newestId)
+        public IEnumerable<MailContent> Refresh(string name, bool old, int count, ulong lastId, ulong newestId)
         {
             if (!old)
             {
@@ -161,7 +149,7 @@ namespace ExcellentEmailExperience.Model
                             MailContent mailContent = BuildMailContent(msg, msg.LabelIds[0]);
                             foreach (string foldername in addedMessage.Message.LabelIds)
                             {
-                                cache.CacheMessage(mailContent,foldername);
+                                cache.CacheMessage(mailContent, foldername);
                             }
                             yield return mailContent;
                         }
@@ -407,37 +395,6 @@ namespace ExcellentEmailExperience.Model
             return labelNames.ToArray();
         }
 
-        // when calling reply. it is important that you give it the exact mailcontent you want to reply to
-        // dont change the (to) and (from) fields beforehand, the code will handle that for you. you can change the body. 
-
-        // call this with the mailcontent currently being displayed. should only be called when a mail is displayed
-        public void Reply(MailContent content, string Response)
-        {
-            MailContent reply = new MailContent();
-            reply.ThreadId = content.ThreadId;
-            reply.to = new List<MailAddress> { content.from };
-            reply.from = mailAddress;
-            reply.subject = "Re: " + content.subject;
-            reply.body = Response;
-            Send(reply);
-
-        }
-
-        // call this with the mailcontent currently being displayed. should only be called when a mail is displayed
-        public void ReplyAll(MailContent content, string Response)
-        {
-            MailContent reply = new MailContent();
-            reply.ThreadId = content.ThreadId;
-            reply.to = new List<MailAddress> { content.from };
-            reply.to.AddRange(content.to);
-            reply.from = mailAddress;
-            reply.body = Response;
-            reply.to.Remove(reply.from);
-            reply.subject = "Re: " + content.subject;
-            Send(reply);
-            //throw new NotImplementedException();
-        }
-
         public void Send(MailContent content)
         {
 
@@ -519,6 +476,52 @@ namespace ExcellentEmailExperience.Model
             yield break;
         }
 
+        public MailContent Forward(MailContent content)
+        {
+            var Mail = new MailContent();
+            Mail.subject = "Forward: " + content.subject;
+
+            string to = "";
+            foreach (var address in content.to)
+            {
+                to += address.Address + ", ";
+            }
+
+            to = to.Remove(to.Length - 2);
+
+            Mail.body = $"Forwarded from {content.from}\n {content.body} \n\n Originally sent to:{to}";
+
+            //making the currect account the sender. 
+            Mail.from = mailAddress;
+            Mail.ThreadId = content.ThreadId;
+            return Mail;
+        }
+
+        public MailContent Reply(MailContent content)
+        {
+            MailContent reply = new MailContent();
+            reply.ThreadId = content.ThreadId;
+            reply.to = new List<MailAddress> { content.from };
+            reply.from = mailAddress;
+            reply.body = content.body;
+            reply.bodyType = content.bodyType;
+            reply.subject = "Re: " + content.subject;
+            return reply;
+        }
+
+        public MailContent ReplyAll(MailContent content)
+        {
+            MailContent reply = new MailContent();
+            reply.ThreadId = content.ThreadId;
+            reply.to = new List<MailAddress> { content.from };
+            reply.to.AddRange(content.to);
+            reply.from = mailAddress;
+            reply.to.Remove(reply.from);
+            reply.body = content.body;
+            reply.bodyType = content.bodyType;
+            reply.subject = "Re: " + content.subject;
+            return reply;
+        }
         public MailContent UpdateFlag(MailContent content, MailFlag flagtype)
         {
             var request = new ModifyMessageRequest();
@@ -529,7 +532,7 @@ namespace ExcellentEmailExperience.Model
                 request.RemoveLabelIds = new List<string>() { Flag2Label[flagtype] };
                 var modifyRequest = service.Users.Messages.Modify(request, "me", content.MessageId);
                 modifyRequest.Execute();
-                        
+
                 content.flags &= ~flagtype;
 
                 cache.RemoveFolders(content.MessageId, folder, Label2Flag, "INBOX");
@@ -542,7 +545,7 @@ namespace ExcellentEmailExperience.Model
 
                 content.flags |= flagtype;
 
-                cache.AddFolders(content.MessageId, folder, Label2Flag, "INBOX"); 
+                cache.AddFolders(content.MessageId, folder, Label2Flag, "INBOX");
             }
 
             return content;

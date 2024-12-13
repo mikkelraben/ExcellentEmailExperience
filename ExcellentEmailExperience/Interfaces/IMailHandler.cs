@@ -19,9 +19,9 @@ namespace ExcellentEmailExperience.Interfaces
         /// </summary>
         /// <param name="content"></param> this is the mail that we received, the one we want to forward
         /// <param name="NewTo"></param> this is the list of people to whom we want to forward to. 
-        void Forward(MailContent content, List<MailAddress> NewTo);
-        void Reply(MailContent content, string Response);
-        void ReplyAll(MailContent content, string Response);
+        MailContent Forward(MailContent content);
+        MailContent Reply(MailContent content);
+        MailContent ReplyAll(MailContent content);
         void Send(MailContent content);
 
         void DeleteMail(string MessageId);
