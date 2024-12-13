@@ -6,18 +6,22 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.UI.Dispatching;
 
 namespace ExcellentEmailExperience.ViewModel
 {
     [ObservableObject]
     public partial class UserMessageViewModel
     {
-        public UserMessageViewModel()
+        public UserMessageViewModel(DispatcherQueue dispatcherQueue)
         {
             MessageHandler.GetMessages().ForEach(message => messages.Add(message));
             MessageHandler.MessageAdded += (sender, e) =>
             {
-                messages.Insert(0, MessageHandler.GetFirstMessage());
+                dispatcherQueue.TryEnqueue(() =>
+                {
+                    messages.Insert(0, MessageHandler.GetFirstMessage());
+                });
             };
             messages.CollectionChanged += (sender, e) =>
             {

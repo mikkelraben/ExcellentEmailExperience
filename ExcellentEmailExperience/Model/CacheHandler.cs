@@ -292,14 +292,100 @@ namespace ExcellentEmailExperience.Model
             }
         }
 
-        public void UpdateFlagsAndFolders(string messageId, string folderName)
+        /// <summary>
+        /// A function that adds a folder (<paramref name="folderName"/>) belonging to a mail (<paramref name="messageId"/>) to the cache.
+        /// It also sets the flag to true if the folder indicates as such (e.g. if the folder is UNREAD).
+        /// </summary>
+        /// <param name="messageId"> Id for the mail which is also the SQL table's row id </param>
+        /// <param name="folderName"> FolderId which should be added to cache for the given <paramref name="messageId"/> </param>
+        /// <param name="flagDict"> Dictionary that translates the folderId of folders containing flagging info into the corresponding MailFlag value </param>
+        /// <param name="inbox"> Inbox folder id, which is used to remove mail from inbox when it is added to trash or spam </param>
+        public void AddFolders(string messageId, string folderName, Dictionary<string, MailFlag> flagDict, string inbox)
         {
             using (var connection = new SqliteConnection(connectionString))
             {
                 connection.Open();
 
-                List<string>? folders = new();
-                int? flags = 0;
+                List<string>? folderList = new();
+                int? flagList = 0;
+
+                using (var command = connection.CreateCommand())
+                {
+                    command.CommandText = $@"
+                    SELECT *
+                    FROM MailContent
+                    WHERE MessageId = $id
+                    ";
+                    command.Parameters.AddWithValue("$id", messageId);
+
+                    try
+                    {
+                        var reader = command.ExecuteReader();
+                        reader.Read();
+                        folderList = JsonSerializer.Deserialize<List<string>>(reader.GetString(11));
+                        if (!folderList.Contains(folderName))
+                        {
+                            folderList.Add(folderName);
+
+                            // in the backend of gmail it seems like only inbox label is removed when things become spam/trash
+                            // this mimics the same behavior, but idk how other email servers implement this
+                            bool updateInbox = flagDict.ContainsKey(folderName) && (flagDict[folderName] == MailFlag.spam || flagDict[folderName] == MailFlag.trash) && folderList.Contains(inbox);
+                            if (updateInbox)
+                            {
+                                folderList.Remove(inbox);
+                            }
+                        }
+
+                        flagList = reader.GetInt32(12);
+                        if (flagDict.ContainsKey(folderName))
+                        {
+                            flagList |= (int)flagDict[folderName];
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Debug.WriteLine("Reader says: " + ex.Message);
+                    }
+                }
+
+                using (var command = connection.CreateCommand())
+                {
+                    command.CommandText = $@"
+                    UPDATE MailContent
+                    SET FolderId = $folders, flags = $flags
+                    WHERE MessageId = $id
+                    ";
+                    command.Parameters.AddWithValue("$folders", JsonSerializer.Serialize(folderList));
+                    command.Parameters.AddWithValue("$flags", flagList);
+                    command.Parameters.AddWithValue("$id", messageId);
+                    try
+                    {
+                        command.ExecuteNonQuery();
+                    }
+                    catch (Exception ex)
+                    {
+                        Debug.WriteLine("NonQuery sys: " + ex.Message);
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// A function that is very similar to <see cref="RemoveFolders(string, string, Dictionary{string, MailFlag}, string)"/>.
+        /// The difference is that this function only removes folders from cache and sets corresponding flags to false.
+        /// </summary>
+        /// <param name="messageId"> Id for the mail which is also the SQL table's row id </param>
+        /// <param name="folderName"> FolderId which should be removed from cache for the given <paramref name="messageId"/> </param>
+        /// <param name="flagDict"> Dictionary that translates the folderId of folders containing flagging info into the corresponding MailFlag value </param>
+        /// <param name="inbox"> Inbox folder id, which is used to add mail to inbox when it is removed from trash or spam </param>
+        public void RemoveFolders(string messageId, string folderName, Dictionary<string, MailFlag> flagDict, string inbox)
+        {
+            using (var connection = new SqliteConnection(connectionString))
+            {
+                connection.Open();
+
+                List<string>? folderList = new();
+                int? flagList = 0;
 
                 using (var command = connection.CreateCommand())
                 {
@@ -313,22 +399,22 @@ namespace ExcellentEmailExperience.Model
                     var reader = command.ExecuteReader();
                     reader.Read();
 
-                    var getstringthing = reader.GetString(11);
-                    folders = JsonSerializer.Deserialize<List<string>>(getstringthing);
-                    if (!folders.Contains(folderName))
+                    folderList = JsonSerializer.Deserialize<List<string>>(reader.GetString(11));
+                    if (folderList.Contains(folderName))
                     {
-                        folders.Add(folderName);
+                        folderList.Remove(folderName);
+
+                        bool updateInbox = flagDict.ContainsKey(folderName) && (flagDict[folderName] == MailFlag.spam || flagDict[folderName] == MailFlag.trash) && folderList.Contains(inbox);
+                        if (updateInbox)
+                        {
+                            folderList.Add(inbox);
+                        }
                     }
 
-                    flags = reader.GetInt32(12);
-                    switch (folderName)
+                    flagList = reader.GetInt32(12);
+                    if (flagDict.ContainsKey(folderName))
                     {
-                        case "UNREAD":  
-                            flags |= (int)MailFlag.unread;
-                            break;
-                        case "STARRED":
-                            flags |= (int)MailFlag.favorite;
-                            break;
+                        flagList &= ~(int)flagDict[folderName];
                     }
                 }
 
@@ -336,50 +422,16 @@ namespace ExcellentEmailExperience.Model
                 {
                     command.CommandText = $@"
                     UPDATE MailContent
-                    SET FolderId = $folder, flags = $flags
+                    SET FolderId = $folders, flags = $flags
                     WHERE MessageId = $id
                     ";
-                    command.Parameters.AddWithValue("$folder", JsonSerializer.Serialize(folders));
-                    command.Parameters.AddWithValue("$flags", flags);
+                    command.Parameters.AddWithValue("$folders", JsonSerializer.Serialize(folderList));
+                    command.Parameters.AddWithValue("$flags", flagList);
                     command.Parameters.AddWithValue("$id", messageId);
                     command.ExecuteNonQuery();
                 }
             }
         }
-
-        public void UpdateFlags(string messageId, MailFlag flag)
-        {
-            using (var connection = new SqliteConnection(connectionString))
-            {
-                connection.Open();
-                
-                var command = connection.CreateCommand();
-                command.CommandText = $@"
-                SELECT *
-                FROM MailContent
-                WHERE MessageId = $id
-                ";
-                command.Parameters.AddWithValue("$id", messageId);
-
-                var reader = command.ExecuteReader();
-                reader.Read();
-
-                var flags = reader.GetInt32(12);
-                flags |= (int)flag;
-                reader.Close();
-
-                command.CommandText = $@"
-                UPDATE MailContent
-                SET flags = $flags
-                WHERE MessageId = $id
-                ";
-
-                command.Parameters.AddWithValue("$flags", flags);
-                command.Parameters.AddWithValue("$id", messageId);
-                command.ExecuteNonQuery();
-            }
-        }
-
 
         public void ClearCache()
         {

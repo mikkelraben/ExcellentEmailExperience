@@ -24,7 +24,7 @@ namespace ExcellentEmailExperience.Interfaces
         MailContent ReplyAll(MailContent content);
         void Send(MailContent content);
 
-        void TrashMail(string MessageId);
+        void DeleteMail(string MessageId);
 
         /// <summary>
         /// Retrieves the names for every mail folder the user has made.
@@ -33,6 +33,10 @@ namespace ExcellentEmailExperience.Interfaces
         /// Array containing folder name strings.
         /// </returns>
         string[] GetFolderNames();
+
+        ulong[] GetNewIds();
+
+        IEnumerable<MailContent> Refresh(string name,bool old, int count, ulong lastId, ulong newestId);
 
         /// <summary>
         /// Retrieves batch mails from a folder determined by <paramref name="name"/>. 
@@ -44,7 +48,7 @@ namespace ExcellentEmailExperience.Interfaces
         /// <param name="refresh"> True if the mail list should restart at the newest mail </param>
         /// <param name="count"> The number of mails to retrieve </param>
         /// <returns>IEnumerable containing MailContent, with an upper bound of 50? elements</returns>
-        IEnumerable<MailContent> GetFolder(string name, bool old, bool refresh, int count);
+        IEnumerable<MailContent> GetFolder(string name,int count);
 
 
         /// <summary>
@@ -55,5 +59,7 @@ namespace ExcellentEmailExperience.Interfaces
         /// <param name="count"> the number of mails to retrieve </param>
         /// <returns> IEnumerable of mail suiting query</returns>
         IEnumerable<MailContent> Search(string query, int count);
+
+        MailContent UpdateFlag(MailContent content, MailFlag flagtype);
     }
 }
