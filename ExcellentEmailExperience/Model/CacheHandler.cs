@@ -410,7 +410,6 @@ namespace ExcellentEmailExperience.Model
 
             foreach (var id in deltaIdList)
             {
-                Debug.WriteLine("Uhhhm guys you probably wanna see msg id: " + id);
                 RemoveFolder(id, folderName, flagDict, inbox);
             }
         }
