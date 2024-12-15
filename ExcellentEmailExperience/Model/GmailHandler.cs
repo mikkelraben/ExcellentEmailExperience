@@ -2,10 +2,12 @@
 using Google.Apis.Auth.OAuth2;
 using Google.Apis.Gmail.v1;
 using Google.Apis.Gmail.v1.Data;
+using Org.BouncyCastle.Asn1.Cmp;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Net.Mail;
 using System.Text;
 using System.Xml.Linq;
@@ -129,12 +131,20 @@ namespace ExcellentEmailExperience.Model
                 {
                     yield break;
                 }
+
                 foreach (var history in historyResponse.History)
                 {
                     if (history.MessagesAdded == null)
                     {
                         yield break;
                     }
+
+                    if (Label2Flag.ContainsKey(name))
+                    {
+                        var idList = history.MessagesAdded.Select(message => message.Message.Id).Distinct().ToList();
+                        cache.UpdateFolder(idList, name, Label2Flag, "INBOX");
+                    }
+
                     foreach (var addedMessage in history.MessagesAdded)
                     {
                         if (cache.CheckCache(addedMessage.Message.Id))
@@ -146,11 +156,8 @@ namespace ExcellentEmailExperience.Model
                             var msg = service.Users.Messages.Get("me", addedMessage.Message.Id).Execute();
 
                             // im just going to assume that when you get a new mail that hasnt been seen before that its also unread. 
-                            MailContent mailContent = BuildMailContent(msg, msg.LabelIds[0]);
-                            foreach (string foldername in addedMessage.Message.LabelIds)
-                            {
-                                cache.CacheMessage(mailContent, foldername);
-                            }
+                            MailContent mailContent = BuildMailContent(msg, name);
+                            cache.CacheMessage(mailContent, name);
                             yield return mailContent;
                         }
                     }
@@ -170,6 +177,12 @@ namespace ExcellentEmailExperience.Model
                     yield break;
                 }
 
+                if (Label2Flag.ContainsKey(name))
+                {
+                    var idList = messageListResponse.Messages.Select(message => message.Id).Distinct().ToList();
+                    cache.UpdateFolder(idList, name, Label2Flag, "INBOX");
+                }
+
                 foreach (var message in messageListResponse.Messages)
                 {
                     if (cache.CheckCache(message.Id))
@@ -181,11 +194,8 @@ namespace ExcellentEmailExperience.Model
                         var msg = service.Users.Messages.Get("me", message.Id).Execute();
 
                         // this probably is not the correct label but i cant for the life of me figure out how to pass the labes in correctly here. 
-                        MailContent mailContent = BuildMailContent(msg, msg.LabelIds[0]);
-                        foreach (string foldername in msg.LabelIds)
-                        {
-                            cache.CacheMessage(mailContent, foldername);
-                        }
+                        MailContent mailContent = BuildMailContent(msg, name);
+                        cache.CacheMessage(mailContent, name);
                         yield return mailContent;
                     }
                 }
@@ -207,11 +217,18 @@ namespace ExcellentEmailExperience.Model
             {
                 yield break;
             }
+
+            if (Label2Flag.ContainsKey(name))
+            {
+                var idList = messages.Select(message => message.Id).Distinct().ToList();
+                cache.UpdateFolder(idList, name, Label2Flag, "INBOX");
+            }
+
             foreach (var message in messages)
             {
                 if (cache.CheckCache(message.Id))
                 {
-                    cache.AddFolders(message.Id, name, Label2Flag, "INBOX");
+                    cache.AddFolder(message.Id, name, Label2Flag, "INBOX");
                     yield return cache.GetCache(message.Id);
                 }
                 else
@@ -522,6 +539,7 @@ namespace ExcellentEmailExperience.Model
             reply.subject = "Re: " + content.subject;
             return reply;
         }
+
         public MailContent UpdateFlag(MailContent content, MailFlag flagtype)
         {
             var request = new ModifyMessageRequest();
@@ -535,7 +553,7 @@ namespace ExcellentEmailExperience.Model
 
                 content.flags &= ~flagtype;
 
-                cache.RemoveFolders(content.MessageId, folder, Label2Flag, "INBOX");
+                cache.RemoveFolder(content.MessageId, folder, Label2Flag, "INBOX");
             }
             else
             {
@@ -545,7 +563,7 @@ namespace ExcellentEmailExperience.Model
 
                 content.flags |= flagtype;
 
-                cache.AddFolders(content.MessageId, folder, Label2Flag, "INBOX");
+                cache.AddFolder(content.MessageId, folder, Label2Flag, "INBOX");
             }
 
             return content;

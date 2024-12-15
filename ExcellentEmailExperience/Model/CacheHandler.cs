@@ -112,61 +112,6 @@ namespace ExcellentEmailExperience.Model
                     }
                 }
             }
-
-            UpdateTable();
-        }
-
-        /// <summary>
-        /// Adds backwards compatibility to the flags update. Should probs be removed or at least updated cus it be very cursed
-        /// </summary>
-        private void UpdateTable()
-        {
-            List<string> columnNames = new List<string>();
-
-            using (var connection = new SqliteConnection(connectionString))
-            {
-                connection.Open();
-                try
-                {
-                    using (var command = connection.CreateCommand())
-                    {
-                        // add the column if it doesn't exist
-                        command.CommandText = $@"
-                        ALTER TABLE MailContent
-                        ADD COLUMN flags INTEGER;
-                        ";
-                        command.ExecuteNonQuery();
-
-                        // fill it with elements
-                        command.CommandText = $@"
-                        UPDATE MailContent
-                        SET flags = 0
-                        ";
-                        command.ExecuteNonQuery();
-
-                        // fix the FolderIds
-                        command.CommandText = $@"
-                        UPDATE MailContent
-                        SET FolderId = $folder
-                        ";
-                        var folder = new List<string>();
-                        command.Parameters.AddWithValue("$folder", JsonSerializer.Serialize(folder));
-                        command.ExecuteNonQuery();
-                    }
-                }
-                catch (SqliteException ex)
-                {
-                    if (ex.SqliteErrorCode == 1)
-                    {
-                        // table already exists
-                    }
-                    else
-                    {
-                        throw new Exception(ex.Message);
-                    }
-                }
-            }
-
         }
 
         public void CacheMessage(MailContent mail, string folderName)
@@ -219,6 +164,11 @@ namespace ExcellentEmailExperience.Model
             }
         }
 
+        /// <summary>
+        /// Function that returns a selected MailContent from the database based on a messageId. It should maybe be renamed to GetMessage og GetMail instead of GetCache.
+        /// </summary>
+        /// <param name="messageId"> The id of the requested message. </param>
+        /// <returns> MailContent corresponding to the inputted messageId </returns>
         public MailContent GetCache(string messageId)
         {
             var options = new JsonSerializerOptions
@@ -300,7 +250,7 @@ namespace ExcellentEmailExperience.Model
         /// <param name="folderName"> FolderId which should be added to cache for the given <paramref name="messageId"/> </param>
         /// <param name="flagDict"> Dictionary that translates the folderId of folders containing flagging info into the corresponding MailFlag value </param>
         /// <param name="inbox"> Inbox folder id, which is used to remove mail from inbox when it is added to trash or spam </param>
-        public void AddFolders(string messageId, string folderName, Dictionary<string, MailFlag> flagDict, string inbox)
+        public void AddFolder(string messageId, string folderName, Dictionary<string, MailFlag> flagDict, string inbox)
         {
             using (var connection = new SqliteConnection(connectionString))
             {
@@ -312,7 +262,7 @@ namespace ExcellentEmailExperience.Model
                 using (var command = connection.CreateCommand())
                 {
                     command.CommandText = $@"
-                    SELECT *
+                    SELECT FolderId, flags
                     FROM MailContent
                     WHERE MessageId = $id
                     ";
@@ -322,7 +272,7 @@ namespace ExcellentEmailExperience.Model
                     {
                         var reader = command.ExecuteReader();
                         reader.Read();
-                        folderList = JsonSerializer.Deserialize<List<string>>(reader.GetString(11));
+                        folderList = JsonSerializer.Deserialize<List<string>>(reader.GetString(0));
                         if (!folderList.Contains(folderName))
                         {
                             folderList.Add(folderName);
@@ -336,7 +286,7 @@ namespace ExcellentEmailExperience.Model
                             }
                         }
 
-                        flagList = reader.GetInt32(12);
+                        flagList = reader.GetInt32(1);
                         if (flagDict.ContainsKey(folderName))
                         {
                             flagList |= (int)flagDict[folderName];
@@ -371,14 +321,14 @@ namespace ExcellentEmailExperience.Model
         }
 
         /// <summary>
-        /// A function that is very similar to <see cref="RemoveFolders(string, string, Dictionary{string, MailFlag}, string)"/>.
+        /// A function that is very similar to <see cref="AddFolder(string, string, Dictionary{string, MailFlag}, string)"/>.
         /// The difference is that this function only removes folders from cache and sets corresponding flags to false.
         /// </summary>
         /// <param name="messageId"> Id for the mail which is also the SQL table's row id </param>
         /// <param name="folderName"> FolderId which should be removed from cache for the given <paramref name="messageId"/> </param>
         /// <param name="flagDict"> Dictionary that translates the folderId of folders containing flagging info into the corresponding MailFlag value </param>
         /// <param name="inbox"> Inbox folder id, which is used to add mail to inbox when it is removed from trash or spam </param>
-        public void RemoveFolders(string messageId, string folderName, Dictionary<string, MailFlag> flagDict, string inbox)
+        public void RemoveFolder(string messageId, string folderName, Dictionary<string, MailFlag> flagDict, string inbox)
         {
             using (var connection = new SqliteConnection(connectionString))
             {
@@ -390,7 +340,7 @@ namespace ExcellentEmailExperience.Model
                 using (var command = connection.CreateCommand())
                 {
                     command.CommandText = $@"
-                    SELECT *
+                    SELECT FolderId, flags
                     FROM MailContent
                     WHERE MessageId = $id
                     ";
@@ -399,7 +349,7 @@ namespace ExcellentEmailExperience.Model
                     var reader = command.ExecuteReader();
                     reader.Read();
 
-                    folderList = JsonSerializer.Deserialize<List<string>>(reader.GetString(11));
+                    folderList = JsonSerializer.Deserialize<List<string>>(reader.GetString(0));
                     if (folderList.Contains(folderName))
                     {
                         folderList.Remove(folderName);
@@ -411,7 +361,7 @@ namespace ExcellentEmailExperience.Model
                         }
                     }
 
-                    flagList = reader.GetInt32(12);
+                    flagList = reader.GetInt32(1);
                     if (flagDict.ContainsKey(folderName))
                     {
                         flagList &= ~(int)flagDict[folderName];
@@ -430,6 +380,38 @@ namespace ExcellentEmailExperience.Model
                     command.Parameters.AddWithValue("$id", messageId);
                     command.ExecuteNonQuery();
                 }
+            }
+        }
+
+        public void UpdateFolder(List<string> newIdList, string folderName, Dictionary<string, MailFlag> flagDict, string inbox)
+        {
+            List<string> oldIdList = new();
+            using (var connection = new SqliteConnection(connectionString))
+            {
+                connection.Open();
+
+                var command = connection.CreateCommand();
+                command.CommandText = $@"
+                SELECT MessageId
+                FROM MailContent
+                WHERE FolderId LIKE $folder
+                ";
+                command.Parameters.AddWithValue("$folder", "%" + folderName + "%");
+
+                var reader = command.ExecuteReader();
+
+                while (reader.Read())
+                {
+                    oldIdList.Add(reader.GetString(0));
+                }
+            }
+
+            var deltaIdList = oldIdList.Except(newIdList);
+
+            foreach (var id in deltaIdList)
+            {
+                Debug.WriteLine("Uhhhm guys you probably wanna see msg id: " + id);
+                RemoveFolder(id, folderName, flagDict, inbox);
             }
         }
 
@@ -532,7 +514,7 @@ namespace ExcellentEmailExperience.Model
 
                     mail.date = DateTime.Parse(reader.GetString(9));
                     mail.ThreadId = reader.GetString(10);
-                    mail.flags = (MailFlag)reader.GetInt32(11);
+                    mail.flags = (MailFlag)reader.GetInt32(12);
 
                     mails.Append(mail);
                     yield return mail;
