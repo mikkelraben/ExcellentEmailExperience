@@ -32,7 +32,7 @@ namespace ExcellentEmailExperience.Views
         FolderViewModel currentFolder;
         ObservableCollection<AccountViewModel> accounts = new();
         CancellationTokenSource cancellationToken = new();
-        UserMessageViewModel MessageViewModel ;
+        UserMessageViewModel MessageViewModel;
         public static List<object> DraggedItems = new();
 
         public MainWindow(MailApp mailApp)
@@ -342,18 +342,24 @@ namespace ExcellentEmailExperience.Views
             Debug.WriteLine(e);
         }
 
-        private void AutoSuggestBox_TextChanged(AutoSuggestBox sender, AutoSuggestBoxTextChangedEventArgs args)
-        {
-            if (args.Reason == AutoSuggestionBoxTextChangeReason.UserInput)
-            {
-                var search = sender.Text;
-
-            }
-        }
-
         private void AutoSuggestBox_QuerySubmitted(AutoSuggestBox sender, AutoSuggestBoxQuerySubmittedEventArgs args)
         {
+            var search = sender.Text;
 
+            if (search == "")
+            {
+                MessageHandler.AddMessage("No search query", MessageSeverity.Info);
+                return;
+            }
+
+            var mails = currentFolder.mailHandler.Search(search, 20);
+
+            FolderViewModel searchFolder = new(mails, DispatcherQueue, cancellationToken.Token);
+
+            searchFolder.mailHandler = currentFolder.mailHandler;
+            currentFolder = searchFolder;
+            FolderName.Text = currentFolder.Name;
+            MailList.ItemsSource = currentFolder.mails;
         }
 
         private void Reply_Click(object sender, RoutedEventArgs e)

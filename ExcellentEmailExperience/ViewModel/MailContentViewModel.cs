@@ -22,6 +22,7 @@ namespace ExcellentEmailExperience.ViewModel
             Date = mailContent.date;
             bodyType = mailContent.bodyType;
             messageId = mailContent.MessageId;
+            Unread = mailContent.flags.HasFlag(MailFlag.unread);
 
             recipients.Clear();
             mailContent.to.ForEach(x => recipients.Add(new(x.Address)));
@@ -57,6 +58,9 @@ namespace ExcellentEmailExperience.ViewModel
 
         [ObservableProperty]
         public bool isEditable = false;
+
+        [ObservableProperty]
+        public bool unread = false;
 
         public string messageId;
 

@@ -34,9 +34,11 @@
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="auto"/>
+                                <ColumnDefinition Width="auto"/>
                             </Grid.ColumnDefinitions>
                             <TextBlock Text="{x:Bind from.DisplayName}" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap" Grid.Column="0" VerticalAlignment="Bottom" Style="{ThemeResource BodyStrongTextBlockStyle}" ToolTipService.ToolTip="{Binding from.Address}"/>
                             <TextBlock Text="{Binding date, Converter={StaticResource DateToNiceString}}" Grid.Column="1" VerticalAlignment="Bottom" Style="{ThemeResource CaptionTextBlockStyle}" ToolTipService.ToolTip="{Binding date}"/>
+                            <InfoBadge Opacity="{Binding Unread,Converter={StaticResource SelectedToOpacity},Mode=OneWay}" Grid.Column="2" VerticalAlignment="Top" HorizontalAlignment="Right"/>
                         </Grid>
                         <TextBlock Text="{Binding subject}" TextTrimming="CharacterEllipsis" ToolTipService.ToolTip="{Binding subject}"/>
                     </StackPanel>
@@ -132,7 +134,7 @@
                             <FontIcon Glyph="&#xE72C;" FontSize="16"/>
                         </Button>
                     </Grid>
-                    <AutoSuggestBox PlaceholderText="Search" Grid.Row="1" Margin="8,0,8,16" QueryIcon="Find" TextChanged="AutoSuggestBox_TextChanged" QuerySubmitted="AutoSuggestBox_QuerySubmitted"/>
+                    <AutoSuggestBox PlaceholderText="Search" Grid.Row="1" Margin="8,0,8,16" QueryIcon="Find" QuerySubmitted="AutoSuggestBox_QuerySubmitted"/>
                     <StackPanel Orientation="Horizontal" Grid.Row="2" Name="MassEditMenu" Visibility="Collapsed">
                         <Button Margin="8,0,0,0" Padding="8,4" Content="Delete??"/>
                     </StackPanel>

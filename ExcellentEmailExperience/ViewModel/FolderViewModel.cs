@@ -28,13 +28,21 @@ namespace ExcellentEmailExperience.ViewModel
 
         // DO NOT USE ON UI SIDE. THIS IS INTERNAL 
         public string FolderName;
+
+        /// <summary>
+        /// Constructor for FolderViewModel if mails should be loaded
+        /// </summary>
+        /// <param name="mailHandler"></param>
+        /// <param name="name"></param>
+        /// <param name="dispatcherQueue"></param>
+        /// <param name="cancellationToken"></param>
         public FolderViewModel(IMailHandler mailHandler, string name, DispatcherQueue dispatcherQueue, CancellationToken cancellationToken)
         {
             FolderName = name;
             DispatchQueue = dispatcherQueue;
             CancelToken = cancellationToken;
             MailHandler = mailHandler;
-  
+
             this.name = name.Substring(0, 1).ToUpper() + name.Substring(1).ToLower();
             this.mailHandler = mailHandler;
 
@@ -49,6 +57,23 @@ namespace ExcellentEmailExperience.ViewModel
                     );
             });
             thread.Start();
+        }
+
+        /// <summary>
+        /// Constructor for FolderViewModel if this folder is for searching
+        /// </summary>
+        public FolderViewModel(IEnumerable<MailContent> mailContents, DispatcherQueue dispatcherQueue, CancellationToken cancellationToken)
+        {
+            this.Name = "Search";
+
+            foreach (var mail in mailContents)
+            {
+                if (cancellationToken.IsCancellationRequested)
+                {
+                    return;
+                }
+                HandleMessage(dispatcherQueue, mail, CancellationToken.None);
+            }
         }
 
         private void GetViewMails(IMailHandler mailHandler, string name, DispatcherQueue dispatcherQueue, CancellationToken cancellationToken)
@@ -77,7 +102,7 @@ namespace ExcellentEmailExperience.ViewModel
         {
             try
             {
-                foreach (var mail in mailHandler.Refresh(name,old, 20,lastId,newestId))
+                foreach (var mail in mailHandler.Refresh(name, old, 20, lastId, newestId))
                 {
                     HandleMessage(dispatcherQueue, mail, cancellationToken);
                 }
@@ -105,18 +130,21 @@ namespace ExcellentEmailExperience.ViewModel
             mailsContent.Add(mail);
             mailsContent.Sort((x, y) => -x.date.CompareTo(y.date));
 
-            if (mail.from.DisplayName == "")
+            if (mail.from != null)
             {
-                inboxMail.from = new System.Net.Mail.MailAddress(mail.from.Address, mail.from.Address);
+                if (mail.from.DisplayName == "")
+                {
+                    inboxMail.from = new System.Net.Mail.MailAddress(mail.from.Address, mail.from.Address);
+                }
+                else
+                {
+                    inboxMail.from = mail.from;
+                }
             }
-            else
-            {
-                inboxMail.from = mail.from;
-            }
-
             inboxMail.to = mail.to;
             inboxMail.subject = mail.subject.Replace("\n", "").Replace("\r", "");
             inboxMail.date = mail.date.ToLocalTime();
+            inboxMail.Unread = mail.flags.HasFlag(MailFlag.unread);
             if (dispatcherQueue != null)
             {
                 dispatcherQueue.TryEnqueue(() =>
