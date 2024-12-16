@@ -189,8 +189,6 @@ namespace ExcellentEmailExperience.Views
             mail.from = account.account.GetEmail();
             try
             {
-
-
                 foreach (var recipient in viewModel.recipients)
                 {
                     mail.to.Add(new(recipient.Value));
@@ -201,6 +199,13 @@ namespace ExcellentEmailExperience.Views
                 MessageHandler.AddMessage("A recipient mail is not valid please check your To field", MessageSeverity.Error);
                 return;
             }
+            if (mail.to.Count == 0)
+            {
+                MessageHandler.AddMessage("You need to have at least one recipient", MessageSeverity.Error);
+                return;
+            }
+
+
             mail.subject = viewModel.Subject;
             mail.bodyType = BodyType.Html;
             mail.attachments = viewModel.Attachments;

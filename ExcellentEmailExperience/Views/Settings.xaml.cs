@@ -58,15 +58,35 @@ namespace ExcellentEmailExperience.Views
 
         public void AddAccountButton_Click(object sender, RoutedEventArgs e)
         {
-            GmailAccount account = new GmailAccount();
+            AccountLoadingRing.IsActive = true;
+            Thread thread = new(() =>
+            {
+                GmailAccount account = new GmailAccount();
 
-            account.Login(null);
+                account.Login(null);
 
-            mailApp.NewAccount(account);
+                bool exists = false;
+                foreach (var otherAccount in accounts)
+                {
+                    if (otherAccount.account.GetEmail().Address == account.mailAddress.Address)
+                    {
+                        exists = true;
+                        MessageHandler.AddMessage("Account already exists", MessageSeverity.Error);
+                        break;
+                    }
+                }
+                if (!exists)
+                    mailApp.NewAccount(account);
 
-            account.SetName("New Account");
-
-            accounts.Add(new GmailAccountViewModel(account, DispatcherQueue, appClose));
+                account.SetName("New Account");
+                DispatcherQueue.TryEnqueue(() =>
+                {
+                    if (!exists)
+                        accounts.Add(new GmailAccountViewModel(account, DispatcherQueue, appClose));
+                    AccountLoadingRing.IsActive = false;
+                });
+            });
+            thread.Start();
         }
 
         private void RemoveAccount_Click(object sender, RoutedEventArgs e)
