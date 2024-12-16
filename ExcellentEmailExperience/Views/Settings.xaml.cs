@@ -1,3 +1,4 @@
+using ExcellentEmailExperience.Helpers;
 using ExcellentEmailExperience.Model;
 using ExcellentEmailExperience.ViewModel;
 using Microsoft.UI.Xaml;
@@ -34,24 +35,29 @@ namespace ExcellentEmailExperience.Views
 
         public SettingsWindow(MailApp mailApp, ObservableCollection<AccountViewModel> accounts, CancellationToken appClose)
         {
+            this.mailApp = mailApp;
+            this.accounts = accounts;
             DispatcherQueue.TryEnqueue(() =>
             {
                 this.InitializeComponent();
+
+                TitleBarHelper.ConfigureTitleBar(mailApp, AppWindow.TitleBar);
+
+                ThemeComboBox.SelectedIndex = (int)mailApp.settings.theme;
                 this.appClose = appClose;
                 this.ExtendsContentIntoTitleBar = true;
 
                 this.MinWidth = 500;
                 this.MinHeight = 300;
-                this.accounts = accounts;
                 AccountsListView.ItemsSource = this.accounts;
 
-                this.mailApp = mailApp;
 
                 Version.Text = "Version: " + AppInfo.Current.Package.Id.Version.Major + "." + AppInfo.Current.Package.Id.Version.Minor + "." + AppInfo.Current.Package.Id.Version.Build + "." + AppInfo.Current.Package.Id.Version.Revision;
 
                 Closed += (sender, e) =>
                 {
                     mailApp.SaveAccounts();
+                    mailApp.SaveAppSettings();
                 };
             });
         }
@@ -94,6 +100,23 @@ namespace ExcellentEmailExperience.Views
             object account = (sender as Button).DataContext;
             accounts.Remove(account as AccountViewModel);
             mailApp.DeleteAccount((account as AccountViewModel).account);
+        }
+
+        private void ThemeSelection_Changed(object sender, SelectionChangedEventArgs e)
+        {
+            switch (ThemeComboBox.SelectedIndex)
+            {
+                case 0:
+                    mailApp.settings.theme = Theme.System;
+                    break;
+                case 1:
+                    mailApp.settings.theme = Theme.Light;
+                    break;
+                case 2:
+                    mailApp.settings.theme = Theme.Dark;
+                    break;
+            }
+            mailApp.SaveAppSettings();
         }
     }
 }

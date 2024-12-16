@@ -1,6 +1,8 @@
+using ExcellentEmailExperience.Helpers;
 using ExcellentEmailExperience.Interfaces;
 using ExcellentEmailExperience.Model;
 using ExcellentEmailExperience.ViewModel;
+using Microsoft.UI;
 using Microsoft.UI.Input;
 using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
@@ -12,6 +14,7 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Net.Mail;
 using System.Threading;
+using System.Threading.Tasks;
 using Windows.ApplicationModel.DataTransfer;
 using Windows.Foundation;
 using Windows.Graphics;
@@ -53,7 +56,9 @@ namespace ExcellentEmailExperience.Views
             //if the the app is not in debug mode then collapse the subtitle
 #if !DEBUG
             Subtitle.Visibility = Visibility.Collapsed;
-#endif      
+#endif
+
+            TitleBarHelper.ConfigureTitleBar(mailApp, AppWindow.TitleBar);
 
             mailApp.Accounts.ForEach(account =>
             {
@@ -69,7 +74,7 @@ namespace ExcellentEmailExperience.Views
             mailApp.SaveAppSettings();
 
             Email email = new(accounts);
-            email.Initialize();
+            Task task = email.Initialize();
             MainFrame.Content = email;
 
             SizeChanged += MainWindow_SizeChanged;
@@ -109,6 +114,7 @@ namespace ExcellentEmailExperience.Views
             };
 
         }
+
 
         private void MainWindow_SizeChanged(object sender, WindowSizeChangedEventArgs args)
         {

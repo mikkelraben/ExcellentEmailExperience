@@ -11,10 +11,14 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
+using System.Reflection;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Windows.Storage;
 using Windows.Storage.Pickers;
+using Windows.Storage.Streams;
+using Windows.UI.WebUI;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -37,16 +41,25 @@ namespace ExcellentEmailExperience.Views
 
         public async Task Initialize()
         {
+
+            CoreWebView2EnvironmentOptions options = new();
+            options.AreBrowserExtensionsEnabled = true;
+            options.EnableTrackingPrevention = true;
+            CoreWebView2Environment environment = await CoreWebView2Environment.CreateWithOptionsAsync(null, null, options);
+
             HTMLViewer.CanGoBack = false;
             HTMLViewer.CanGoForward = false;
-            await HTMLViewer.EnsureCoreWebView2Async();
+            await HTMLViewer.EnsureCoreWebView2Async(environment);
+
+
+            HTMLViewer.CoreWebView2.Profile.PreferredTrackingPreventionLevel = CoreWebView2TrackingPreventionLevel.Strict;
 
 #if !DEBUG
             HTMLViewer.CoreWebView2.Settings.AreDefaultContextMenusEnabled = false;
             HTMLViewer.CoreWebView2.Settings.AreDevToolsEnabled = false;
 #endif
             HTMLViewer.CoreWebView2.Settings.AreBrowserAcceleratorKeysEnabled = false;
-            HTMLViewer.CoreWebView2.Settings.IsScriptEnabled = false;
+            //HTMLViewer.CoreWebView2.Settings.IsScriptEnabled = false;
             HTMLViewer.CoreWebView2.Settings.IsSwipeNavigationEnabled = false;
             HTMLViewer.CoreWebView2.Settings.IsGeneralAutofillEnabled = false;
             HTMLViewer.CoreWebView2.Settings.IsPasswordAutosaveEnabled = false;
@@ -121,6 +134,15 @@ namespace ExcellentEmailExperience.Views
                     ScrollView.Visibility = Visibility.Collapsed;
 
                     HTMLViewer.NavigateToString(mail.body);
+
+                    var file = StorageFile.GetFileFromApplicationUriAsync(new Uri("ms-appx:///Assets/Extensions/DarkReader.txt")).AsTask().Result;
+                    var script = Windows.Storage.FileIO.ReadTextAsync(file).AsTask().Result;
+
+                    if (ActualTheme == ElementTheme.Dark)
+                    {
+                        HTMLViewer.CoreWebView2.ExecuteScriptAsync(script);
+                    }
+
                     break;
             }
         }

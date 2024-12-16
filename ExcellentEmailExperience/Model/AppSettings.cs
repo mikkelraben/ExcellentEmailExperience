@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Text.Json.Serialization;
 
 namespace ExcellentEmailExperience.Model
 {
@@ -11,10 +12,16 @@ namespace ExcellentEmailExperience.Model
 
     public class AppSettings
     {
+        [JsonInclude]
         public Theme theme;
+
+        [JsonInclude]
         public List<string> signatures;
+
+        [JsonInclude]
         public MessageSeverity logLevel;
-        public string mainMail;
+
+        [JsonInclude]
         public int mailFetchCount;
 
 

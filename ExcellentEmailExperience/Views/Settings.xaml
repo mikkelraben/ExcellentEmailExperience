@@ -48,7 +48,7 @@
                     <TextBlock Text="Theme"/>
                     <TextBlock Text="Select the theme you want to use" Style="{StaticResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
                 </StackPanel>
-                <ComboBox x:Name="ThemeComboBox" SelectedIndex="0" Grid.Column="2" MinWidth="150">
+                <ComboBox x:Name="ThemeComboBox" Grid.Column="2" MinWidth="150" SelectionChanged="ThemeSelection_Changed">
                     <ComboBoxItem Content="Use system setting"/>
                     <ComboBoxItem Content="Light"/>
                     <ComboBoxItem Content="Dark"/>

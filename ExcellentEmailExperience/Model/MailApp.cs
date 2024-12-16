@@ -13,7 +13,7 @@ namespace ExcellentEmailExperience.Model
     {
         private readonly List<IAccount> accounts = new();
 
-        AppSettings settings;
+        public AppSettings settings;
 
         public List<IAccount> Accounts { get => accounts; }
 
@@ -21,10 +21,10 @@ namespace ExcellentEmailExperience.Model
         {
         }
 
-        public async Task Initialize()
+        public void Initialize()
         {
             LoadAppSettings();
-            await LoadAccounts();
+            LoadAccounts();
         }
 
         /// <summary>
@@ -49,7 +49,7 @@ namespace ExcellentEmailExperience.Model
             return accounts.Count > 0;
         }
 
-        private async Task LoadAccounts()
+        private void LoadAccounts()
         {
             var options = new JsonSerializerOptions
             {
@@ -58,7 +58,7 @@ namespace ExcellentEmailExperience.Model
 
             try
             {
-                StorageFile file = await ApplicationData.Current.LocalFolder.GetFileAsync("accounts.json");
+                StorageFile file = ApplicationData.Current.LocalFolder.GetFileAsync("accounts.json").AsTask().Result;
                 JsonSerializer.Deserialize<List<IAccount>>(FileIO.ReadTextAsync(file)
                     .AsTask().Result, options).ForEach(account =>
                 {
@@ -104,6 +104,11 @@ namespace ExcellentEmailExperience.Model
             catch (FileNotFoundException e)
             {
                 MessageHandler.AddMessage("No settings file found, creating new settings file", MessageSeverity.Warning);
+                settings = new AppSettings();
+            }
+            if (settings == null)
+            {
+                MessageHandler.AddMessage("No settings exist, creating new settings file", MessageSeverity.Warning);
                 settings = new AppSettings();
             }
         }
