@@ -414,6 +414,22 @@ namespace ExcellentEmailExperience.Model
             }
         }
 
+        public void ClearRow(string messageId)
+        {
+            using (var connection = new SqliteConnection(connectionString))
+            {
+                connection.Open();
+
+                var command = connection.CreateCommand();
+                command.CommandText = @"
+                DELETE
+                FROM MailContent
+                WHERE MessageId = $id";
+                command.Parameters.AddWithValue("$id", messageId);
+                command.ExecuteNonQuery();
+            }
+        }
+
         public void ClearCache()
         {
             using (var connection = new SqliteConnection(connectionString))

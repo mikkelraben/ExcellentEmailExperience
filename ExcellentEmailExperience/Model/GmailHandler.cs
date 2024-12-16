@@ -456,6 +456,7 @@ namespace ExcellentEmailExperience.Model
             try
             {
                 service.Users.Messages.Delete("me", MessageId);
+                cache.ClearRow(MessageId);
             }
             catch (Exception ex)
             {
