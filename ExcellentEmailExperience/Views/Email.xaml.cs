@@ -6,19 +6,14 @@ using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Data;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.Web.WebView2.Core;
-using RtfPipe;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
-using System.Reflection;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 using Windows.Storage;
 using Windows.Storage.Pickers;
-using Windows.Storage.Streams;
-using Windows.UI.WebUI;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -32,6 +27,7 @@ namespace ExcellentEmailExperience.Views
     {
         MailContentViewModel viewModel = new();
         ObservableCollection<AccountViewModel> accounts;
+        Visibility displayCC = Visibility.Collapsed;
 
         public Email(ObservableCollection<AccountViewModel> accounts)
         {
@@ -154,7 +150,10 @@ namespace ExcellentEmailExperience.Views
 
         private void FromAddress_ItemInvoked(ItemsView sender, ItemsViewItemInvokedEventArgs args)
         {
-
+            if (!viewModel.IsEditable)
+            {
+                ChangeMail(new(), true);
+            }
         }
 
         private async void SaveAttachment(object sender, RoutedEventArgs e)
@@ -254,6 +253,44 @@ namespace ExcellentEmailExperience.Views
             {
                 MessageHandler.AddMessage("Could not send message", MessageSeverity.Error);
             }
+        }
+
+        private void CC_Expand(object sender, RoutedEventArgs e)
+        {
+            displayCC = displayCC == Visibility.Visible ? Visibility.Collapsed : Visibility.Visible;
+            CCField.Visibility = displayCC;
+            CCText.Visibility = displayCC;
+            BCCField.Visibility = displayCC;
+            BCCText.Visibility = displayCC;
+        }
+
+        private void AddCC_Click(object sender, RoutedEventArgs e)
+        {
+            if (!viewModel.IsEditable)
+                return;
+
+            viewModel.ccStrings.Add(new(""));
+        }
+
+        private void RemoveCC_Click(object sender, RoutedEventArgs e)
+        {
+            var stringThing = (sender as Button).DataContext as StringWrapper;
+            viewModel.ccStrings.Remove(stringThing);
+        }
+
+        private void RemoveBCC_Click(object sender, RoutedEventArgs e)
+        {
+            var stringThing = (sender as Button).DataContext as StringWrapper;
+            viewModel.bccStrings.Remove(stringThing);
+        }
+
+        private void AddBCC_Click(object sender, RoutedEventArgs e)
+        {
+            if (!viewModel.IsEditable)
+                return;
+
+            viewModel.bccStrings.Add(new(""));
+
         }
     }
 
