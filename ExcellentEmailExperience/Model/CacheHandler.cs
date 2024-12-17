@@ -201,7 +201,7 @@ namespace ExcellentEmailExperience.Model
             if (attachments != "")
                 mail.attachments = reader.GetString(8).Split(';').ToList();
 
-            mail.date = DateTime.ParseExact(reader.GetString(9), "yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture);
+            mail.date = DateTime.ParseExact(reader.GetString(9), "yyyy-MM-dd HH:mm:ss", null);
             mail.ThreadId = reader.GetString(10);
             mail.flags = (MailFlag)reader.GetInt32(12);
 
@@ -240,7 +240,7 @@ namespace ExcellentEmailExperience.Model
         /// <param name="folderName"> The folder, which mails are retrieved from </param>
         /// <param name="count"> The amount of mails retrieved. Given no coun parameter, the function returns the 20 newest mails by default. </param>
         /// <returns> List containing the newest mails stored as MailContent </returns>
-        public List<MailContent> GetFolder(string folderName, int count=20)
+        public List<MailContent> GetFolder(string folderName, int count = 20)
         {
             List<MailContent> mailList = new();
 
