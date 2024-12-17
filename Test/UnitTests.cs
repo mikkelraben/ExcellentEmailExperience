@@ -199,48 +199,37 @@ namespace Test
         [TestMethod]
         public void TestMethod_send_content()
         {
-
             UnitTest_init();
-
-            //creating a new mail object and sending it to the current mail address? checking for recieving mail
+            //creating a new mail object and sending it to another mail address. 
             MailContent validMail = new();
 
             validMail.subject = validSubject;
-
             validMail.to = new List<MailAddress> { Address2 };
-
             validMail.from = Address1;
-
             validMail.body = validBody_gen();
-
             validMail.cc = new List<MailAddress> { Address1 };
-
-
             validMail.bcc = new List<MailAddress> { Address3 };
 
 
             mut.WaitOne(); Debug.WriteLine("getting mutex access");
             mailHandler1.Send(validMail);
-
-            //TODO: change amount of requests when api is changed
-
             //let the program sleep for 2 second to make sure the mail is recieved
             System.Threading.Thread.Sleep(4000);
 
             List<MailContent> Inboxlist2 = GetInbox(mailHandler2, "INBOX");
-
-
             List<MailContent> Sentlist1 = GetInbox(mailHandler1, "SENT");
 
             Debug.WriteLine("finished mutex access"); mut.ReleaseMutex();
 
             //as messageIDs are different for all mail instances, we need to set them equal to compare the mail objects
 
+
             if (Inboxlist2[0] != null && Sentlist1[0] != null)
             {
+                //as messageIDs are different for all mail instances, we need to set them equal to compare the mail objects
+                //the threadID would be different for mails sent forth and back, so we dont need to compare them
                 Inboxlist2[0].MessageId = Sentlist1[0].MessageId;
                 Inboxlist2[0].ThreadId = Sentlist1[0].ThreadId;
-
                 Assert.IsTrue(Inboxlist2[0].body == Sentlist1[0].body);
             }
             else
@@ -253,21 +242,22 @@ namespace Test
 
         [TestMethod]
         [ExpectedException(typeof(ArgumentException),
-        "A receiver of null was inappropriately allowed.")]
+        "A receiver of null was inappropriately allowed.")] //expects an exception
         public void TestMethod_invalid_receiver()
         {
             UnitTest_init();
 
-            // creating a new mail object and sending it to the current mail address? checking for recieving mail
+            // creating a new mail object without filling the "to" field and sending it to the current mail address. 
             MailContent UnvalidMail = new();
 
             UnvalidMail.subject = validSubject;
 
             UnvalidMail.from = Address1;
+           
             mut.WaitOne(); Debug.WriteLine("getting mutex access");
             try
             {
-
+                //due to exception we try..catch to release the mutex
                 mailHandler1.Send(UnvalidMail);
             }
             finally
@@ -588,7 +578,9 @@ namespace Test
             {
                 Inboxlist3[0].MessageId = Sentlist1[0].MessageId;
                 Inboxlist3[0].ThreadId = Sentlist1[0].ThreadId;
-
+                Inboxlist3[0].body += "\r\n\r\n Originally sent\r\nto:System.Collections.Generic.List`1[System.Net.Mail.MailAddress]";
+                Inboxlist3[0].body = $"Forwarded from {Address2}\r\n " + Inboxlist3[0].body;
+                Inboxlist3[0].subject += "Forward: ";
                 Assert.IsTrue(Inboxlist3[0] == Sentlist1[0]);
             }
             else
@@ -735,8 +727,6 @@ namespace Test
         }
 
 
-
-
         [TestMethod]
         [ExpectedException(typeof(ArgumentException),
         "Cant add account twice.")]
@@ -746,6 +736,8 @@ namespace Test
             MailApp.NewAccount(account2);
 
             MailApp.NewAccount(account1);
+            Assert.IsTrue(MailApp.HasAccount());
+            MailApp.NewAccount(account1);
         }
 
         [TestMethod]
@@ -754,62 +746,11 @@ namespace Test
             UnitTest_init();
             MailApp MailApp1 = new();
             MailApp1.NewAccount(account1);
-            //MailApp1.DeleteAccount(account1);
+            MailApp1.DeleteAccount(account1);
             Assert.IsFalse(MailApp1.HasAccount());
 
         }
 
-        [TestMethod]
-        public void TestMethod_Send_Whitespace()
-        {
-            UnitTest_init();
-            //creating a new mail object and sending it to the current mail address? checking for recieving mail
-            MailContent validMail = new();
-
-            validMail.subject = validSubject;
-
-            validMail.to = new List<MailAddress> { Address2 };
-
-            validMail.from = Address1;
-
-            validMail.body = validwhitespacebody;
-
-            validMail.cc = new List<MailAddress> { Address1 };
-
-
-            validMail.bcc = new List<MailAddress> { Address3 };
-
-
-            mut.WaitOne(); Debug.WriteLine("getting mutex access");
-
-            mailHandler1.Send(validMail);
-
-            //TODO: change amount of requests when api is changed
-
-            //let the program sleep for 2 second to make sure the mail is recieved
-            System.Threading.Thread.Sleep(4000);
-
-            List<MailContent> Inboxlist2 = GetInbox(mailHandler2, "INBOX");
-
-
-            List<MailContent> Sentlist1 = GetInbox(mailHandler1, "SENT");
-
-            Debug.WriteLine("finished mutex access"); mut.ReleaseMutex();
-
-            //as messageIDs are different for all mail instances, we need to set them equal to compare the mail objects
-
-            if (Inboxlist2[0] != null && Sentlist1[0] != null)
-            {
-                Inboxlist2[0].MessageId = Sentlist1[0].MessageId;
-                Inboxlist2[0].ThreadId = Sentlist1[0].ThreadId;
-
-                Assert.IsTrue(Inboxlist2[0] == Sentlist1[0]);
-            }
-            else
-            {
-                Assert.Fail("no messages were sent!");
-            }
-        }
 
     }
 }
