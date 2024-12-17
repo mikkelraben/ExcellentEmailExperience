@@ -11,10 +11,14 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
+using System.Reflection;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Windows.Storage;
 using Windows.Storage.Pickers;
+using Windows.Storage.Streams;
+using Windows.UI.WebUI;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -28,6 +32,7 @@ namespace ExcellentEmailExperience.Views
     {
         MailContentViewModel viewModel = new();
         ObservableCollection<AccountViewModel> accounts;
+
         public Email(ObservableCollection<AccountViewModel> accounts)
         {
             this.accounts = accounts;
@@ -36,16 +41,25 @@ namespace ExcellentEmailExperience.Views
 
         public async Task Initialize()
         {
+
+            CoreWebView2EnvironmentOptions options = new();
+            options.AreBrowserExtensionsEnabled = true;
+            options.EnableTrackingPrevention = true;
+            CoreWebView2Environment environment = await CoreWebView2Environment.CreateWithOptionsAsync(null, null, options);
+
             HTMLViewer.CanGoBack = false;
             HTMLViewer.CanGoForward = false;
-            await HTMLViewer.EnsureCoreWebView2Async();
+            await HTMLViewer.EnsureCoreWebView2Async(environment);
+
+
+            HTMLViewer.CoreWebView2.Profile.PreferredTrackingPreventionLevel = CoreWebView2TrackingPreventionLevel.Strict;
 
 #if !DEBUG
             HTMLViewer.CoreWebView2.Settings.AreDefaultContextMenusEnabled = false;
             HTMLViewer.CoreWebView2.Settings.AreDevToolsEnabled = false;
 #endif
             HTMLViewer.CoreWebView2.Settings.AreBrowserAcceleratorKeysEnabled = false;
-            HTMLViewer.CoreWebView2.Settings.IsScriptEnabled = false;
+            //HTMLViewer.CoreWebView2.Settings.IsScriptEnabled = false;
             HTMLViewer.CoreWebView2.Settings.IsSwipeNavigationEnabled = false;
             HTMLViewer.CoreWebView2.Settings.IsGeneralAutofillEnabled = false;
             HTMLViewer.CoreWebView2.Settings.IsPasswordAutosaveEnabled = false;
@@ -120,6 +134,15 @@ namespace ExcellentEmailExperience.Views
                     ScrollView.Visibility = Visibility.Collapsed;
 
                     HTMLViewer.NavigateToString(mail.body);
+
+                    var file = StorageFile.GetFileFromApplicationUriAsync(new Uri("ms-appx:///Assets/Extensions/DarkReader.txt")).AsTask().Result;
+                    var script = Windows.Storage.FileIO.ReadTextAsync(file).AsTask().Result;
+
+                    if (ActualTheme == ElementTheme.Dark)
+                    {
+                        HTMLViewer.CoreWebView2.ExecuteScriptAsync(script);
+                    }
+
                     break;
             }
         }
@@ -188,8 +211,6 @@ namespace ExcellentEmailExperience.Views
             mail.from = account.account.GetEmail();
             try
             {
-
-
                 foreach (var recipient in viewModel.recipients)
                 {
                     mail.to.Add(new(recipient.Value));
@@ -200,9 +221,15 @@ namespace ExcellentEmailExperience.Views
                 MessageHandler.AddMessage("A recipient mail is not valid please check your To field", MessageSeverity.Error);
                 return;
             }
+            if (mail.to.Count == 0)
+            {
+                MessageHandler.AddMessage("You need to have at least one recipient", MessageSeverity.Error);
+                return;
+            }
+
+
             mail.subject = viewModel.Subject;
-            mail.body = "Hello There this is mail";
-            mail.bodyType = BodyType.Plain;
+            mail.bodyType = BodyType.Html;
             mail.attachments = viewModel.Attachments;
             mail.cc = viewModel.Cc;
             mail.bcc = viewModel.Bcc;
@@ -214,6 +241,9 @@ namespace ExcellentEmailExperience.Views
 
             //mail.body = Rtf.ToHtml(bla);
             MailEditor.Document.GetText(TextGetOptions.None, out mail.body);
+
+            mail.body = mail.body + viewModel.Body;
+
             try
             {
                 account.account.GetMailHandler().Send(mail);

@@ -13,7 +13,7 @@ namespace ExcellentEmailExperience.Model
     {
         private readonly List<IAccount> accounts = new();
 
-        AppSettings settings;
+        public AppSettings settings;
 
         public List<IAccount> Accounts { get => accounts; }
 
@@ -21,10 +21,10 @@ namespace ExcellentEmailExperience.Model
         {
         }
 
-        public async Task Initialize()
+        public void Initialize()
         {
             LoadAppSettings();
-            await LoadAccounts();
+            LoadAccounts();
         }
 
         /// <summary>
@@ -33,13 +33,17 @@ namespace ExcellentEmailExperience.Model
         /// <param name="account">The account to add to the mail app</param>
         public void NewAccount(IAccount account)
         {
+            if (accounts.Exists(a => a.GetEmail().Address == account.GetEmail().Address))
+                throw new ArgumentException("Cant add account twice.");
             accounts.Add(account);
+            SaveAccounts();
         }
 
         public void DeleteAccount(IAccount account)
         {
             CredentialHandler.RemoveCredential(account.GetEmail().Address);
             accounts.Remove(account);
+            SaveAccounts();
         }
 
         public bool HasAccount()
@@ -47,7 +51,7 @@ namespace ExcellentEmailExperience.Model
             return accounts.Count > 0;
         }
 
-        private async Task LoadAccounts()
+        private void LoadAccounts()
         {
             var options = new JsonSerializerOptions
             {
@@ -56,7 +60,7 @@ namespace ExcellentEmailExperience.Model
 
             try
             {
-                StorageFile file = await ApplicationData.Current.LocalFolder.GetFileAsync("accounts.json");
+                StorageFile file = ApplicationData.Current.LocalFolder.GetFileAsync("accounts.json").AsTask().Result;
                 JsonSerializer.Deserialize<List<IAccount>>(FileIO.ReadTextAsync(file)
                     .AsTask().Result, options).ForEach(account =>
                 {
@@ -85,11 +89,18 @@ namespace ExcellentEmailExperience.Model
 
         public void SaveAccounts()
         {
-            string output = JsonSerializer.Serialize(accounts);
+            try
+            {
+                string output = JsonSerializer.Serialize(accounts);
 
-            StorageFolder folder = ApplicationData.Current.LocalFolder;
-            StorageFile file = folder.CreateFileAsync("accounts.json", CreationCollisionOption.ReplaceExisting).AsTask().Result;
-            FileIO.WriteTextAsync(file, output).AsTask().Wait();
+                StorageFolder folder = ApplicationData.Current.LocalFolder;
+                StorageFile file = folder.CreateFileAsync("accounts.json", CreationCollisionOption.ReplaceExisting).AsTask().Result;
+                FileIO.WriteTextAsync(file, output).AsTask().Wait();
+            }
+            catch (Exception)
+            {
+                MessageHandler.AddMessage("Could not save accounts", MessageSeverity.Error);
+            }
         }
 
         private async Task LoadAppSettings()
@@ -102,6 +113,11 @@ namespace ExcellentEmailExperience.Model
             catch (FileNotFoundException e)
             {
                 MessageHandler.AddMessage("No settings file found, creating new settings file", MessageSeverity.Warning);
+                settings = new AppSettings();
+            }
+            if (settings == null)
+            {
+                MessageHandler.AddMessage("No settings exist, creating new settings file", MessageSeverity.Warning);
                 settings = new AppSettings();
             }
         }

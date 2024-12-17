@@ -34,9 +34,11 @@
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="auto"/>
+                                <ColumnDefinition Width="auto"/>
                             </Grid.ColumnDefinitions>
                             <TextBlock Text="{x:Bind from.DisplayName}" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap" Grid.Column="0" VerticalAlignment="Bottom" Style="{ThemeResource BodyStrongTextBlockStyle}" ToolTipService.ToolTip="{Binding from.Address}"/>
                             <TextBlock Text="{Binding date, Converter={StaticResource DateToNiceString}}" Grid.Column="1" VerticalAlignment="Bottom" Style="{ThemeResource CaptionTextBlockStyle}" ToolTipService.ToolTip="{Binding date}"/>
+                            <InfoBadge Opacity="{Binding Unread,Converter={StaticResource SelectedToOpacity},Mode=OneWay}" Grid.Column="2" VerticalAlignment="Top" HorizontalAlignment="Right"/>
                         </Grid>
                         <TextBlock Text="{Binding subject}" TextTrimming="CharacterEllipsis" ToolTipService.ToolTip="{Binding subject}"/>
                     </StackPanel>
@@ -71,12 +73,12 @@
             <TextBlock Text="Excellent Email Experience" FontSize="12" Margin="16,10,8,10" VerticalAlignment="Center" />
             <TextBlock Text="Debug" Name="Subtitle" FontSize="12" Margin="0,10,0,10" VerticalAlignment="Center" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
             <AppBarButton Icon="Mail" Click="NewMail_Click" LabelPosition="Collapsed" Margin="2,0,0,0" Padding="0,0" Width="40" ToolTipService.ToolTip="New Mail"/>
-            <AppBarButton Icon="MailReply" LabelPosition="Collapsed" Width="40" ToolTipService.ToolTip="Reply"/>
-            <AppBarButton Icon="MailReplyAll" LabelPosition="Collapsed" Width="40" ToolTipService.ToolTip="Reply All"/>
-            <AppBarButton Icon="MailForward" LabelPosition="Collapsed" Width="40" ToolTipService.ToolTip="Forward"/>
+            <AppBarButton Icon="MailReply" Click="Reply_Click" LabelPosition="Collapsed" Width="40" ToolTipService.ToolTip="Reply"/>
+            <AppBarButton Icon="MailReplyAll" Click="ReplyAll_Click" LabelPosition="Collapsed" Width="40" ToolTipService.ToolTip="Reply All"/>
+            <AppBarButton Icon="MailForward" Click="Forward_Click" LabelPosition="Collapsed" Width="40" ToolTipService.ToolTip="Forward"/>
             <AppBarSeparator Margin="18,0,18,0"/>
-            <AppBarButton Icon="Read" LabelPosition="Collapsed" Width="40" ToolTipService.ToolTip="Mark Read/Unread"/>
-            <AppBarButton Icon="Delete" LabelPosition="Collapsed" Width="40" ToolTipService.ToolTip="Delete"/>
+            <AppBarButton Icon="Read" Click="ReadUnread_Click" LabelPosition="Collapsed" Width="40" ToolTipService.ToolTip="Mark Read/Unread"/>
+            <AppBarButton Icon="Delete" Click="Delete_Click" LabelPosition="Collapsed" Width="40" ToolTipService.ToolTip="Delete"/>
             <AppBarButton Icon="More" LabelPosition="Collapsed" Width="40" ToolTipService.ToolTip="More" ToolTipService.Placement="Top"/>
         </StackPanel>
 
@@ -125,16 +127,16 @@
                             <ColumnDefinition Width="auto"/>
                         </Grid.ColumnDefinitions>
                         <TextBlock Name="FolderName" Text="No Folder" FontSize="24" Grid.Column="0" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap" Grid.Row="0" Style="{ThemeResource SubtitleTextBlockStyle}" />
-                        <Button x:Name="RefreshButton" Opacity="0" Grid.Column="1" Background="Transparent" BorderBrush="Transparent" Padding="4,4" Click="RefreshButton_Click">
+                        <Button x:Name="RefreshButton" Opacity="1" Grid.Column="1" Background="Transparent" BorderBrush="Transparent" Padding="4,4" Click="RefreshButton_Click">
                             <Button.OpacityTransition>
                                 <ScalarTransition />
                             </Button.OpacityTransition>
                             <FontIcon Glyph="&#xE72C;" FontSize="16"/>
                         </Button>
                     </Grid>
-                    <AutoSuggestBox PlaceholderText="Search" Grid.Row="1" Margin="8,0,8,16" QueryIcon="Find"/>
+                    <AutoSuggestBox PlaceholderText="Search" Grid.Row="1" Margin="8,0,8,16" QueryIcon="Find" QuerySubmitted="AutoSuggestBox_QuerySubmitted"/>
                     <StackPanel Orientation="Horizontal" Grid.Row="2" Name="MassEditMenu" Visibility="Collapsed">
-                        <Button Margin="8,0,0,0" Padding="8,4" Content="Delete??"/>
+                        <Button Margin="8,0,0,0" Click="MassDelete_Click" Padding="8,4" Content="Delete"/>
                     </StackPanel>
                     <ListView 
                         Grid.Row="3" 

@@ -1,0 +1,330 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1" MembersFormat="FullSignature">
+  <Class Name="ExcellentEmailExperience.Model.AccountSettings" Collapsed="true">
+    <Position X="14" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAFAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Model\AccountSettings.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ExcellentEmailExperience.Model.AppSettings" Collapsed="true">
+    <Position X="15.75" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAACAAAAABAAAQgAAAAAAAAAAAAAEAACAAAAgAAAAAA=</HashCode>
+      <FileName>Model\AppSettings.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ExcellentEmailExperience.Model.CacheHandler" Collapsed="true">
+    <Position X="21" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>QAAEAAAAAAAACBgAAAgAAAQgACAAAAAAAAAACQAAAAA=</HashCode>
+      <FileName>Model\CacheHandler.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ExcellentEmailExperience.Model.CredentialHandler" Collapsed="true">
+    <Position X="14" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAgAoAAIAAAAAAAAAAAAAAAABAAAAAAAA=</HashCode>
+      <FileName>Model\CredentialHandler.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ExcellentEmailExperience.Model.CredentialHandlerGoogleShim" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="15.75" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAIIAAAAAAAAAAAAIAAAAIA=</HashCode>
+      <FileName>Model\CredentialHandler.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" Collapsed="true" />
+  </Class>
+  <Class Name="ExcellentEmailExperience.Model.GmailAccount" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="19.25" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAgACAgAAAAABAAAAIIAAAAACAAAAAAQQgAEBAA=</HashCode>
+      <FileName>Model\GmailAccount.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" Collapsed="true" />
+  </Class>
+  <Class Name="ExcellentEmailExperience.Model.GmailHandler" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="21" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>ACBCAEAAAABAAUAAUEAAAYAAAMAACBAAAEAEIAEgAAM=</HashCode>
+      <FileName>Model\GmailHandler.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" Collapsed="true" />
+  </Class>
+  <Class Name="ExcellentEmailExperience.Model.MailApp" Collapsed="true">
+    <Position X="17.5" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AIAAQAAAAYAAQQAAAAAAAAAAAICAAACAAAAAAQAAEAA=</HashCode>
+      <FileName>Model\MailApp.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ExcellentEmailExperience.Model.MailContent">
+    <Position X="11.5" Y="5.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAGAIAAQAgAAAAgAAgAAiAAQAAAAAEAAAAAQAAAiQ=</HashCode>
+      <FileName>Model\MailContent.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ExcellentEmailExperience.Model.MailKitAccount" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="22.75" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAgACAAAAAAABAAAAIIAAAAAAAAAAAAQQgAEBAA=</HashCode>
+      <FileName>Model\MailKitAccount.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" Collapsed="true" />
+  </Class>
+  <Class Name="ExcellentEmailExperience.Model.MailKitHandler" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="14" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAACgAAAAABAAUAAAEAAAIAAAAAAABAAAAAEIgEgAAM=</HashCode>
+      <FileName>Model\MailKitHandler.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" Collapsed="true" />
+  </Class>
+  <Class Name="ExcellentEmailExperience.Model.MailSetup" Collapsed="true">
+    <Position X="15.75" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAAAAA=</HashCode>
+      <FileName>Model\MailSetup.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ExcellentEmailExperience.Model.Message" Collapsed="true">
+    <Position X="19.25" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>BAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACA=</HashCode>
+      <FileName>Model\MessageHandler.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ExcellentEmailExperience.Model.MessageHandler" Collapsed="true">
+    <Position X="21" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAEAAAAAAAABAAAAAAAAAAAACAAAEAABAAAAAAAAAAA=</HashCode>
+      <FileName>Model\MessageHandler.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MailAddressConverter" Collapsed="true">
+    <Position X="15.75" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAgAAAAAAAAAAAAAAEAAAA=</HashCode>
+      <FileName>Model\MailAddressConverter.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ExcellentEmailExperience.ViewModel.AccountViewModel">
+    <Position X="3.75" Y="3.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAQAAAAAA=</HashCode>
+      <FileName>ViewModel\AccountViewModel.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ExcellentEmailExperience.ViewModel.GmailAccountViewModel">
+    <Position X="2.5" Y="6.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAEAAACAAAAAAAAAAE=</HashCode>
+      <FileName>ViewModel\AccountViewModel.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="ExcellentEmailExperience.ViewModel.ImapAccountViewModel">
+    <Position X="4.75" Y="6.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAAAAAAAAAAA=</HashCode>
+      <FileName>ViewModel\AccountViewModel.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="ExcellentEmailExperience.ViewModel.FolderViewModel" BaseTypeListCollapsed="true">
+    <Position X="8.5" Y="5.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAQEBABAAAEAAAAAAAAAAABgAEAgKAAAAAAAAAAAA=</HashCode>
+      <FileName>ViewModel\FolderViewModel.cs</FileName>
+    </TypeIdentifier>
+    <ShowAsCollectionAssociation>
+      <Field Name="mailsContent" />
+    </ShowAsCollectionAssociation>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="ExcellentEmailExperience.ViewModel.InboxMail" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="22.75" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAIAAAAAAAAAAAAAAAiAAAAAAAAAAAAAAwAAAAA=</HashCode>
+      <FileName>ViewModel\InboxMail.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" Collapsed="true" />
+  </Class>
+  <Class Name="ExcellentEmailExperience.ViewModel.MailContentViewModel" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="19.25" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAQAGAIAAQAAAAAAAAAgAAiAASAAAABAAAAABQAAAAA=</HashCode>
+      <FileName>ViewModel\MailContentViewModel.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" Collapsed="true" />
+  </Class>
+  <Class Name="ExcellentEmailExperience.ViewModel.StringWrapper" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="19.25" Y="4.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAACAAAAAAAAAAAAA=</HashCode>
+      <FileName>ViewModel\MailContentViewModel.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" Collapsed="true" />
+  </Class>
+  <Class Name="ExcellentEmailExperience.ViewModel.MailHandlerViewModel" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="21" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AABAgAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAIAIA=</HashCode>
+      <FileName>ViewModel\MailHandlerViewModel.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" Collapsed="true" />
+  </Class>
+  <Class Name="ExcellentEmailExperience.ViewModel.UserMessageViewModel" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="21" Y="4.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAA=</HashCode>
+      <FileName>ViewModel\UserMessageViewModel.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" Collapsed="true" />
+  </Class>
+  <Class Name="ExcellentEmailExperience.Views.Email" BaseTypeListCollapsed="true">
+    <Position X="0.75" Y="0.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAgCAAAAQIBEAAwAAAAAMgAQAAAAQAAAIAAAAA=</HashCode>
+      <FileName>Views\Email.xaml.cs</FileName>
+    </TypeIdentifier>
+    <ShowAsCollectionAssociation>
+      <Field Name="accounts" />
+    </ShowAsCollectionAssociation>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="ExcellentEmailExperience.Views.CountToVisibility" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="22.75" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAIAAAAAAAAgAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Views\Email.xaml.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" Collapsed="true" />
+  </Class>
+  <Class Name="ExcellentEmailExperience.Views.BoolToVisibility" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="19.25" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAIAAAAAAAAgAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Views\Email.xaml.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" Collapsed="true" />
+  </Class>
+  <Class Name="ExcellentEmailExperience.Views.BoolToNotVisibility" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="17.5" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAIAAAAAAAAgAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Views\Email.xaml.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" Collapsed="true" />
+  </Class>
+  <Class Name="ExcellentEmailExperience.Views.Intro" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="14" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAIAAAAAIAAAAAAAAAAAAABAAAIAAAAAAAAAAAA=</HashCode>
+      <FileName>Views\Intro.xaml.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" Collapsed="true" />
+  </Class>
+  <Class Name="ExcellentEmailExperience.Views.MainWindow" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="17.5" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAIQAIFAQZAAoBAAAACRAQAIgICEAQLCAAEAACAAACA=</HashCode>
+      <FileName>Views\MainWindow.xaml.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" Collapsed="true" />
+  </Class>
+  <Class Name="ExcellentEmailExperience.Views.SelectedToOpacity" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="15.75" Y="4.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAIAAAAAAAAgAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Views\MainWindow.xaml.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" Collapsed="true" />
+  </Class>
+  <Class Name="ExcellentEmailExperience.Views.DateToNiceString" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="17.5" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAIAAAAAAAAgAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Views\MainWindow.xaml.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" Collapsed="true" />
+  </Class>
+  <Class Name="ExcellentEmailExperience.Views.MessageSeverityToInfoBarSeverity" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="22.75" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAIAAAAAAAAgAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Views\MainWindow.xaml.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" Collapsed="true" />
+  </Class>
+  <Class Name="ExcellentEmailExperience.Views.SiderbarTemplateSelector" Collapsed="true">
+    <Position X="17.5" Y="4.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAQAAAAAAAAAAAAAAAAAAAAABAAAAACAAAAAAAAAA=</HashCode>
+      <FileName>Views\MainWindow.xaml.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ExcellentEmailExperience.Views.MyTreeViewItem" Collapsed="true">
+    <Position X="14" Y="4.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AIAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAQAAAAAAA=</HashCode>
+      <FileName>Views\MainWindow.xaml.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ExcellentEmailExperience.Views.SettingsWindow" BaseTypeListCollapsed="true">
+    <Position X="3.75" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAIAAAAAAAAAAgAIAAAAAAAABAAAEAAAA=</HashCode>
+      <FileName>Views\Settings.xaml.cs</FileName>
+    </TypeIdentifier>
+    <ShowAsCollectionAssociation>
+      <Field Name="accounts" />
+    </ShowAsCollectionAssociation>
+    <Lollipop Position="0.2" Collapsed="true" />
+  </Class>
+  <Interface Name="ExcellentEmailExperience.Interfaces.IAccount">
+    <Position X="11.5" Y="2.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAgACAAAAAAABAAAAAIAAAAAAAAAAAAQQAAABAA=</HashCode>
+      <FileName>Interfaces\IAccount.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="ExcellentEmailExperience.Interfaces.IMailHandler" Collapsed="true">
+    <Position X="15.75" Y="5.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAACAAAAAABAAUAAAEAAAAAAAAAAABAAAAAEIAEgAAM=</HashCode>
+      <FileName>Interfaces\IMailHandler.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Enum Name="ExcellentEmailExperience.Model.Theme" Collapsed="true">
+    <Position X="19.25" Y="6.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAIAAAAAAAAAAAgAAAAAAAABAAAAAAAAAAAA=</HashCode>
+      <FileName>Model\AppSettings.cs</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Enum Name="ExcellentEmailExperience.Model.BodyType" Collapsed="true">
+    <Position X="14" Y="6.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAgAAAAAAAAA=</HashCode>
+      <FileName>Model\MailContent.cs</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Enum Name="ExcellentEmailExperience.Model.MailFlag" Collapsed="true">
+    <Position X="15.75" Y="6.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>EQAAAgAAAAAAAAAAAAAAAAgAAABAAIAAAAAAAAAAAAA=</HashCode>
+      <FileName>Model\MailContent.cs</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Enum Name="ExcellentEmailExperience.Model.MessageSeverity" Collapsed="true">
+    <Position X="17.5" Y="6.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAQAAAAAAABAAAgAAAAAAAAAAAEAAAAA=</HashCode>
+      <FileName>Model\MessageHandler.cs</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Font Name="Segoe UI" Size="9" />
+</ClassDiagram>

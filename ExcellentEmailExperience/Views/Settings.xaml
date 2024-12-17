@@ -48,7 +48,7 @@
                     <TextBlock Text="Theme"/>
                     <TextBlock Text="Select the theme you want to use" Style="{StaticResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
                 </StackPanel>
-                <ComboBox x:Name="ThemeComboBox" SelectedIndex="0" Grid.Column="2" MinWidth="150">
+                <ComboBox x:Name="ThemeComboBox" Grid.Column="2" MinWidth="150" SelectionChanged="ThemeSelection_Changed">
                     <ComboBoxItem Content="Use system setting"/>
                     <ComboBoxItem Content="Light"/>
                     <ComboBoxItem Content="Dark"/>
@@ -73,7 +73,10 @@
 
 
                 <TextBlock Text="Accounts" HorizontalAlignment="Left" VerticalAlignment="Center" Style="{ThemeResource SubtitleTextBlockStyle}"/>
-                <Button x:Name="AddAccountButton" Style="{ThemeResource AccentButtonStyle}" Content="Add Account" Grid.Column="1" MinWidth="150" Click="AddAccountButton_Click"/>
+                <StackPanel Grid.Column="1" Orientation="Horizontal">
+                    <Button x:Name="AddAccountButton" Style="{ThemeResource AccentButtonStyle}" Content="Add Account"  MinWidth="150" Click="AddAccountButton_Click"/>
+                    <ProgressRing x:Name="AccountLoadingRing" IsActive="False" Margin="4,0,0,0"/>
+                </StackPanel>
 
                 <ListView ReorderMode="Enabled" Grid.Row="1" Grid.ColumnSpan="2" Margin="0,16" x:Name="AccountsListView" SelectionMode="None">
                         <ListView.ItemContainerTransitions>

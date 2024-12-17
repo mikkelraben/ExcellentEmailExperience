@@ -2,25 +2,48 @@
 using Google.Apis.Auth.OAuth2;
 using Google.Apis.Gmail.v1;
 using Google.Apis.Gmail.v1.Data;
-using Microsoft.Data.Sqlite;
-using MimeKit;
+using Org.BouncyCastle.Asn1.Cmp;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Net.Mail;
 using System.Text;
+using System.Xml.Linq;
 using Windows.Storage;
+using static Google.Apis.Requests.BatchRequest;
 
 namespace ExcellentEmailExperience.Model
 {
     public class GmailHandler : IMailHandler
     {
+        private Dictionary<MailFlag, string> Flag2Label = new Dictionary<MailFlag, string>() {
+            { MailFlag.unread, "UNREAD" },
+            { MailFlag.favorite, "STARRED" },
+            { MailFlag.spam, "SPAM" },
+            { MailFlag.trash, "TRASH" }
+        };
+        private Dictionary<string, MailFlag> Label2Flag = new Dictionary<string, MailFlag>()
+        {
+            { "UNREAD", MailFlag.unread },
+            { "STARRED", MailFlag.favorite },
+            { "SPAM", MailFlag.spam },
+            { "TRASH", MailFlag.trash }
+        };
+
         public List<MailAddress> flaggedMails { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
 
         private UserCredential userCredential;
         private GmailService service;
         private MailAddress mailAddress;
+        public ulong NewestId;
+        public ulong LastId;
+
+        /// <summary>
+        /// Adds the option to disable cache if it is run on the TestServer. Cache disabled if TestServer == true.
+        /// </summary>
+        private bool TestServer;
 
         // modifies the body string so that google doesn't shit itself in fear and panic
         // and therefore modifies the message to fit its asinine standards
@@ -32,19 +55,63 @@ namespace ExcellentEmailExperience.Model
 
             return body;
         }
-        private CacheHandler cache;
+        private CacheHandler? cache;
 
-        public GmailHandler(UserCredential credential, MailAddress mailAddress)
+        public GmailHandler(UserCredential credential, MailAddress mailAddress, bool testServer = false)
         {
             userCredential = credential;
             this.mailAddress = mailAddress;
-            cache = new CacheHandler(mailAddress.Address);
 
             service = new GmailService(new Google.Apis.Services.BaseClientService.Initializer()
             {
                 HttpClientInitializer = userCredential,
                 ApplicationName = "ExcellentEmailExperience",
             });
+
+            TestServer = testServer;
+            if (!testServer)
+            {
+                cache = new CacheHandler(mailAddress.Address);
+            }
+        }
+
+
+        public ulong[] GetNewIds()
+        {
+            var request = service.Users.Messages.List("me");
+
+            request.MaxResults = 20;
+            ulong[] Ids = new ulong[2];
+            Ids[0] = NewestId;
+            Ids[1] = LastId;
+            var refreq = service.Users.History.List("me");
+            refreq.StartHistoryId = NewestId;
+            var historyResponse = refreq.Execute();
+            // Update the newest history ID after processing the refresh
+            if (historyResponse.HistoryId.HasValue)
+            {
+                NewestId = historyResponse.HistoryId.Value;
+            }
+
+            var refreqOld = service.Users.Messages.List("me");
+            refreqOld.MaxResults = 20;
+
+            refreqOld.Q = $"before:{LastId}";
+
+            var messageListResponse = refreqOld.Execute();
+            if (messageListResponse.Messages == null || messageListResponse.Messages.Count == 0)
+            {
+                Ids[1] = LastId;
+                return Ids;
+            }
+
+            var NewLastMessage = service.Users.Messages.Get("me", messageListResponse.Messages[^1].Id).Execute();
+            LastId = NewLastMessage.HistoryId.Value;
+
+            Ids[0] = NewestId;
+            Ids[1] = LastId;
+            return Ids;
+
         }
 
         public bool CheckSpam(MailContent content)
@@ -52,49 +119,157 @@ namespace ExcellentEmailExperience.Model
             throw new NotImplementedException();
         }
 
-        // this function creates a new mailcontent and sends this one
-        // so the original message wont be modified. 
-        public void Forward(MailContent content, List<MailAddress> NewTo)
+        public IEnumerable<MailContent> Refresh(string name, bool old, int count, ulong lastId, ulong newestId)
         {
-            var Mail = new MailContent();
-            Mail.subject = "Forward: " + content.subject;
-            Mail.body = $"Forwarded from {content.from}\n {content.body} \n\n Originally sent to:{content.to}";
+            if (!old)
+            {
+                var refreq = service.Users.History.List("me");
+                refreq.StartHistoryId = newestId;
+                refreq.LabelId = name;
+                var historyResponse = refreq.Execute();
+                // Update the newest history ID after processing the refresh
+                //if (historyResponse.HistoryId.HasValue)
+                //{
+                //    newestId = historyResponse.HistoryId.Value;
+                //}
 
-            //making the currect account the sender. 
-            Mail.from = mailAddress;
-            Mail.ThreadId = content.ThreadId;
-            //changes the receiver to the person who is being forwarded to. 
-            Mail.to = NewTo;
-            Send(Mail);
+                //if (historyResponse.NextPageToken == null)
+                //{
+                //    yield break;
+                //}
+                if (historyResponse.History == null)
+                {
+                    yield break;
+                }
+
+                foreach (var history in historyResponse.History)
+                {
+                    if (history.MessagesAdded == null)
+                    {
+                        yield break;
+                    }
+
+                    if (!TestServer && Label2Flag.ContainsKey(name))
+                    {
+                        var idList = history.MessagesAdded.Select(message => message.Message.Id).Distinct().ToList();
+                        cache.UpdateFolder(idList, name, Label2Flag, "INBOX");
+                    }
+
+                    foreach (var addedMessage in history.MessagesAdded)
+                    {
+                        if (!TestServer && cache.CheckCache(addedMessage.Message.Id))
+                        {
+                            yield return cache.GetCache(addedMessage.Message.Id);
+                        }
+                        else
+                        {
+                            var msg = service.Users.Messages.Get("me", addedMessage.Message.Id).Execute();
+
+                            // im just going to assume that when you get a new mail that hasnt been seen before that its also unread. 
+                            MailContent mailContent = BuildMailContent(msg, name);
+
+                            if (!TestServer)
+                            {
+                                cache.CacheMessage(mailContent, name);
+                            }
+
+                            yield return mailContent;
+                        }
+                    }
+                }
+                yield break;
+            }
+            else
+            {
+                var refreqOld = service.Users.Messages.List("me");
+                refreqOld.MaxResults = count;
+
+                refreqOld.Q = $"before:{lastId}";
+
+                var messageListResponse = refreqOld.Execute();
+                if (messageListResponse.Messages == null || messageListResponse.Messages.Count == 0)
+                {
+                    yield break;
+                }
+
+                if (!TestServer && Label2Flag.ContainsKey(name))
+                {
+                    var idList = messageListResponse.Messages.Select(message => message.Id).Distinct().ToList();
+                    cache.UpdateFolder(idList, name, Label2Flag, "INBOX");
+                }
+
+                foreach (var message in messageListResponse.Messages)
+                {
+                    if (!TestServer && cache.CheckCache(message.Id))
+                    {
+                        yield return cache.GetCache(message.Id);
+                    }
+                    else
+                    {
+                        var msg = service.Users.Messages.Get("me", message.Id).Execute();
+
+                        // this probably is not the correct label but i cant for the life of me figure out how to pass the labes in correctly here. 
+                        MailContent mailContent = BuildMailContent(msg, name);
+
+                        if (!TestServer)
+                        {
+                            cache.CacheMessage(mailContent, name);
+                        }
+
+                        yield return mailContent;
+                    }
+                }
+
+                //var NewLastMessage = service.Users.Messages.Get("me", messageListResponse.Messages[^1].Id).Execute();
+                //LastId = NewLastMessage.HistoryId.Value;
+            }
         }
 
-        public IEnumerable<MailContent> GetFolder(string name, bool old, bool refresh, int count)
+        public IEnumerable<MailContent> GetFolder(string name, int count)
         {
+
             var request = service.Users.Messages.List("me");
             request.LabelIds = name;
             request.MaxResults = count;
-            IList<Google.Apis.Gmail.v1.Data.Message> messages = request.Execute().Messages;
 
+            IList<Google.Apis.Gmail.v1.Data.Message> messages = request.Execute().Messages;
             if (messages == null)
             {
                 yield break;
             }
 
+            if (!TestServer && Label2Flag.ContainsKey(name))
+            {
+                var idList = messages.Select(message => message.Id).Distinct().ToList();
+                cache.UpdateFolder(idList, name, Label2Flag, "INBOX");
+            }
+
             foreach (var message in messages)
             {
-                if (cache.CheckCache(message.Id))
+                if (!TestServer && cache.CheckCache(message.Id))
                 {
-                    cache.UpdateFlagsAndFolders(message.Id, name);
+                    cache.AddFolder(message.Id, name, Label2Flag, "INBOX");
                     yield return cache.GetCache(message.Id);
                 }
                 else
                 {
                     var msg = service.Users.Messages.Get("me", message.Id).Execute();
                     MailContent mailContent = BuildMailContent(msg, name);
-                    cache.CacheMessage(mailContent, name);
+
+                    if (!TestServer)
+                    {
+                        cache.CacheMessage(mailContent, name);
+                    }
+                    
                     yield return mailContent;
                 }
             }
+            var NewestMessage = service.Users.Messages.Get("me", messages[0].Id).Execute();
+            NewestId = NewestMessage.HistoryId.Value;
+
+            var LastMessage = service.Users.Messages.Get("me", messages[^1].Id).Execute();
+            LastId = LastMessage.HistoryId.Value;
+
             yield break;
         }
 
@@ -104,14 +279,9 @@ namespace ExcellentEmailExperience.Model
             mailContent.MessageId = msg.Id;
             mailContent.ThreadId = msg.ThreadId;
 
-            switch (folderName)
+            if (Label2Flag.ContainsKey(folderName))
             {
-                case "UNREAD":
-                    mailContent.flags = MailFlag.unread;
-                    break;
-                case "STARRED":
-                    mailContent.flags = MailFlag.favorite;
-                    break;
+                mailContent.flags = Label2Flag[folderName];
             }
 
             try
@@ -172,14 +342,27 @@ namespace ExcellentEmailExperience.Model
             {
                 if (mailContent.bodyType == BodyType.Plain)
                 {
-                    mailContent.body = Encoding.UTF8.GetString(Convert.FromBase64String(messagePart.Body.Data.Replace('-', '+').Replace('_', '/')));
-                    mailContent.bodyType = BodyType.Html;
+                    if (messagePart.Body.Data != null)
+                    {
+                        mailContent.body = Encoding.UTF8.GetString(Convert.FromBase64String(messagePart.Body.Data.Replace('-', '+').Replace('_', '/')));
+                        mailContent.bodyType = BodyType.Html;
+                    }
                 }
             }
             else if (messagePart.MimeType.StartsWith("image/"))
             {
-                StorageFolder folder = ApplicationData.Current.LocalFolder;
+                string path;
+                try
+                {
 
+                    StorageFolder folder = ApplicationData.Current.LocalFolder;
+                    path = folder.Path;
+
+                }
+                catch (Exception)
+                {
+                    path = Directory.GetCurrentDirectory();
+                }
                 var extension = messagePart.MimeType.Split('/')[1];
 
                 switch (extension)
@@ -205,14 +388,12 @@ namespace ExcellentEmailExperience.Model
                             if (cid == "")
                                 break;
                             cid = Convert.ToHexString(Encoding.UTF8.GetBytes(cid));
-                            cid = folder.Path + $"\\attachments\\{mailContent.MessageId}\\{cid}";
+                            cid = path + $"\\attachments\\{mailContent.MessageId}\\{cid}";
                             break;
                     }
                 }
 
-
-
-                var filePath = folder.Path + $"\\attachments\\{mailContent.MessageId}\\{fileName}";
+                var filePath = path + $"\\attachments\\{mailContent.MessageId}\\{fileName}";
 
                 mailContent.attachments.Add(filePath);
 
@@ -223,7 +404,7 @@ namespace ExcellentEmailExperience.Model
                 var attachment = service.Users.Messages.Attachments.Get("me", mailContent.MessageId, messagePart.Body.AttachmentId).Execute();
                 var attachmentData = Convert.FromBase64String(attachment.Data.Replace('-', '+').Replace('_', '/'));
 
-                Directory.CreateDirectory(folder.Path + $"\\attachments\\{mailContent.MessageId}");
+                Directory.CreateDirectory(path + $"\\attachments\\{mailContent.MessageId}");
                 File.WriteAllBytes(filePath, attachmentData);
                 try
                 {
@@ -263,43 +444,11 @@ namespace ExcellentEmailExperience.Model
                 }
             }
 
+            // Sort the inbox to the top
+            labelNames.Remove("INBOX");
+            labelNames.Insert(0, "INBOX");
+
             return labelNames.ToArray();
-        }
-
-        // we might need to consider implimenting this later.
-        public List<MailContent> Refresh(string name)
-        {
-            throw new NotImplementedException();
-        }
-
-        // when calling reply. it is important that you give it the exact mailcontent you want to reply to
-        // dont change the (to) and (from) fields beforehand, the code will handle that for you. you can change the body. 
-
-        // call this with the mailcontent currently being displayed. should only be called when a mail is displayed
-        public void Reply(MailContent content, string Response)
-        {
-            MailContent reply = new MailContent();
-            reply.ThreadId = content.ThreadId;
-            reply.to = new List<MailAddress> { content.from };
-            reply.from = mailAddress;
-            reply.subject = "Re: " + content.subject;
-            reply.body = Response;
-            Send(reply);
-        }
-
-        // call this with the mailcontent currently being displayed. should only be called when a mail is displayed
-        public void ReplyAll(MailContent content, string Response)
-        {
-            MailContent reply = new MailContent();
-            reply.ThreadId = content.ThreadId;
-            reply.to = new List<MailAddress> { content.from };
-            reply.to.AddRange(content.to);
-            reply.from = mailAddress;
-            reply.body = Response;
-            reply.to.Remove(reply.from);
-            reply.subject = "Re: " + content.subject;
-            Send(reply);
-            //throw new NotImplementedException();
         }
 
         public void Send(MailContent content)
@@ -341,11 +490,17 @@ namespace ExcellentEmailExperience.Model
                 sendRequest.Execute();
             }
         }
-        public void TrashMail(string MessageId)
+
+        public void DeleteMail(string MessageId)
         {
             try
             {
-                service.Users.Messages.Trash("me", MessageId);
+                service.Users.Messages.Delete("me", MessageId);
+                
+                if (!TestServer)
+                {
+                    cache.ClearRow(MessageId);
+                }
             }
             catch (Exception ex)
             {
@@ -368,7 +523,7 @@ namespace ExcellentEmailExperience.Model
 
             foreach (var message in messages)
             {
-                if (cache.CheckCache(message.Id))
+                if (!TestServer && cache.CheckCache(message.Id))
                 {
                     yield return cache.GetCache(message.Id);
                 }
@@ -376,12 +531,98 @@ namespace ExcellentEmailExperience.Model
                 {
                     var msg = service.Users.Messages.Get("me", message.Id).Execute();
                     MailContent mailContent = BuildMailContent(msg, "Search");
-                    cache.CacheMessage(mailContent, "Search");
+
+                    if (!TestServer)
+                    {
+                        cache.CacheMessage(mailContent, "Search");
+                    }
+
                     yield return mailContent;
                 }
             }
             yield break;
         }
 
+        public MailContent Forward(MailContent content)
+        {
+            var Mail = new MailContent();
+            Mail.subject = "Forward: " + content.subject;
+
+            string to = "";
+            foreach (var address in content.to)
+            {
+                to += address.Address + ", ";
+            }
+
+            to = to.Remove(to.Length - 2);
+
+            Mail.body = $"Forwarded from {content.from}\n {content.body} \n\n Originally sent to:{to}";
+
+            //making the currect account the sender. 
+            Mail.from = mailAddress;
+            Mail.ThreadId = content.ThreadId;
+            return Mail;
+        }
+
+        public MailContent Reply(MailContent content)
+        {
+            MailContent reply = new MailContent();
+            reply.ThreadId = content.ThreadId;
+            reply.to = new List<MailAddress> { content.from };
+            reply.from = mailAddress;
+            reply.body = content.body;
+            reply.bodyType = content.bodyType;
+            reply.subject = "Re: " + content.subject;
+            return reply;
+        }
+
+        public MailContent ReplyAll(MailContent content)
+        {
+            MailContent reply = new MailContent();
+            reply.ThreadId = content.ThreadId;
+            reply.to = new List<MailAddress> { content.from };
+            reply.to.AddRange(content.to);
+            reply.from = mailAddress;
+            reply.to.Remove(reply.from);
+            reply.body = content.body;
+            reply.bodyType = content.bodyType;
+            reply.subject = "Re: " + content.subject;
+            return reply;
+        }
+
+        public MailContent UpdateFlag(MailContent content, MailFlag flagtype)
+        {
+            var request = new ModifyMessageRequest();
+            var folder = Flag2Label[flagtype];
+
+            if (content.flags.HasFlag(flagtype))
+            {
+                request.RemoveLabelIds = new List<string>() { Flag2Label[flagtype] };
+                var modifyRequest = service.Users.Messages.Modify(request, "me", content.MessageId);
+                modifyRequest.Execute();
+
+                content.flags &= ~flagtype;
+
+                if (!TestServer)
+                {
+                    cache.RemoveFolder(content.MessageId, folder, Label2Flag, "INBOX");
+                }
+            }
+            else
+            {
+                request.AddLabelIds = new List<string>() { Flag2Label[flagtype] };
+                var modifyRequest = service.Users.Messages.Modify(request, "me", content.MessageId);
+                modifyRequest.Execute();
+
+                content.flags |= flagtype;
+
+                if (!TestServer)
+                {
+                    cache.AddFolder(content.MessageId, folder, Label2Flag, "INBOX");
+                }
+            }
+
+            return content;
+        }
     }
 }

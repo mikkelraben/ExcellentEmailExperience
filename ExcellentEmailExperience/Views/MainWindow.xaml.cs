@@ -1,6 +1,8 @@
+using ExcellentEmailExperience.Helpers;
 using ExcellentEmailExperience.Interfaces;
 using ExcellentEmailExperience.Model;
 using ExcellentEmailExperience.ViewModel;
+using Microsoft.UI;
 using Microsoft.UI.Input;
 using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
@@ -12,6 +14,7 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Net.Mail;
 using System.Threading;
+using System.Threading.Tasks;
 using Windows.ApplicationModel.DataTransfer;
 using Windows.Foundation;
 using Windows.Graphics;
@@ -32,7 +35,7 @@ namespace ExcellentEmailExperience.Views
         FolderViewModel currentFolder;
         ObservableCollection<AccountViewModel> accounts = new();
         CancellationTokenSource cancellationToken = new();
-        UserMessageViewModel MessageViewModel = new();
+        UserMessageViewModel MessageViewModel;
         public static List<object> DraggedItems = new();
 
         public MainWindow(MailApp mailApp)
@@ -40,7 +43,7 @@ namespace ExcellentEmailExperience.Views
             this.mailApp = mailApp;
 
             this.InitializeComponent();
-
+            MessageViewModel = new(DispatcherQueue);
             this.ExtendsContentIntoTitleBar = true;
             this.AppWindow.TitleBar.PreferredHeightOption = TitleBarHeightOption.Tall;
             Titlebar.Loaded += Titlebar_Loaded;
@@ -53,7 +56,9 @@ namespace ExcellentEmailExperience.Views
             //if the the app is not in debug mode then collapse the subtitle
 #if !DEBUG
             Subtitle.Visibility = Visibility.Collapsed;
-#endif      
+#endif
+
+            TitleBarHelper.ConfigureTitleBar(mailApp, AppWindow.TitleBar);
 
             mailApp.Accounts.ForEach(account =>
             {
@@ -69,7 +74,7 @@ namespace ExcellentEmailExperience.Views
             mailApp.SaveAppSettings();
 
             Email email = new(accounts);
-            email.Initialize();
+            Task task = email.Initialize();
             MainFrame.Content = email;
 
             SizeChanged += MainWindow_SizeChanged;
@@ -98,12 +103,18 @@ namespace ExcellentEmailExperience.Views
                 }
                 if (e.Action == System.Collections.Specialized.NotifyCollectionChangedAction.Add)
                 {
+                    if (mailApp.Accounts.Contains((e.NewItems[0] as AccountViewModel).account))
+                    {
+                        return;
+                    }
+
                     mailApp.Accounts.Insert(e.NewStartingIndex, (e.NewItems[0] as AccountViewModel).account);
                     mailApp.SaveAccounts();
                 }
             };
 
         }
+
 
         private void MainWindow_SizeChanged(object sender, WindowSizeChangedEventArgs args)
         {
@@ -160,6 +171,13 @@ namespace ExcellentEmailExperience.Views
 
                 (MainFrame.Content as Email).ChangeMail(mailContent, false);
                 MassEditMenu.Visibility = Visibility.Collapsed;
+                if (selectedMail.Unread)
+                {
+                    _ = currentFolder.mailHandler.UpdateFlag(mailContent, MailFlag.unread);
+
+                    currentFolder.mails[MailList.SelectedIndex].Unread = false;
+                }
+
             }
             else if (selectedCount > 1)
             {
@@ -187,12 +205,13 @@ namespace ExcellentEmailExperience.Views
 
         private void MailBox_PointerExited(object sender, Microsoft.UI.Xaml.Input.PointerRoutedEventArgs e)
         {
-            RefreshButton.Opacity = 0;
+            RefreshButton.Opacity = 1;
         }
 
         private void RefreshButton_Click(object sender, RoutedEventArgs e)
         {
-
+            // TODO: Does this work with multiple accounts?
+            accounts[0].mailHandlerViewModel.Refresh(false);
         }
 
         bool sidebarLarge = false;
@@ -335,6 +354,108 @@ namespace ExcellentEmailExperience.Views
         {
             e.AcceptedOperation = DataPackageOperation.None;
             Debug.WriteLine(e);
+        }
+
+        private void AutoSuggestBox_QuerySubmitted(AutoSuggestBox sender, AutoSuggestBoxQuerySubmittedEventArgs args)
+        {
+            var search = sender.Text;
+
+            if (search == "")
+            {
+                MessageHandler.AddMessage("No search query", MessageSeverity.Info);
+                return;
+            }
+
+            var mails = currentFolder.mailHandler.Search(search, 20);
+
+            FolderViewModel searchFolder = new(mails, DispatcherQueue, cancellationToken.Token);
+
+            searchFolder.mailHandler = currentFolder.mailHandler;
+            currentFolder = searchFolder;
+            FolderName.Text = currentFolder.Name;
+            MailList.ItemsSource = currentFolder.mails;
+            Siderbar.SelectedItem = null;
+        }
+
+        private void Reply_Click(object sender, RoutedEventArgs e)
+        {
+            if (MailList.SelectedItems.Count != 1)
+            {
+                MessageHandler.AddMessage("Select one mail to reply", MessageSeverity.Error);
+                return;
+            }
+            MailContent mailContent = currentFolder.mailsContent[MailList.SelectedIndex];
+
+            var reply = currentFolder.mailHandler.Reply(mailContent);
+            (MainFrame.Content as Email).ChangeMail(reply, true);
+        }
+
+        private void ReplyAll_Click(object sender, RoutedEventArgs e)
+        {
+            if (MailList.SelectedItems.Count != 1)
+            {
+                MessageHandler.AddMessage("Select one mail to reply", MessageSeverity.Error);
+                return;
+            }
+            MailContent mailContent = currentFolder.mailsContent[MailList.SelectedIndex];
+
+            var reply = currentFolder.mailHandler.ReplyAll(mailContent);
+            (MainFrame.Content as Email).ChangeMail(reply, true);
+
+        }
+
+        private void Forward_Click(object sender, RoutedEventArgs e)
+        {
+            if (MailList.SelectedItems.Count != 1)
+            {
+                MessageHandler.AddMessage("Select one mail to forward", MessageSeverity.Error);
+                return;
+            }
+            MailContent mailContent = currentFolder.mailsContent[MailList.SelectedIndex];
+
+            var reply = currentFolder.mailHandler.Forward(mailContent);
+            (MainFrame.Content as Email).ChangeMail(reply, true);
+
+        }
+
+        private void ReadUnread_Click(object sender, RoutedEventArgs e)
+        {
+            if (MailList.SelectedItems.Count != 1)
+            {
+                MessageHandler.AddMessage("Select one mail to mark as unread/read", MessageSeverity.Error);
+                return;
+            }
+
+            MailContent mailContent = currentFolder.mailsContent[MailList.SelectedIndex];
+
+            var reply = currentFolder.mailHandler.UpdateFlag(mailContent, MailFlag.unread);
+
+            currentFolder.mails[MailList.SelectedIndex].Unread = !currentFolder.mails[MailList.SelectedIndex].Unread;
+        }
+
+        private void Delete_Click(object sender, RoutedEventArgs e)
+        {
+            if (MailList.SelectedItems.Count != 1)
+            {
+                MessageHandler.AddMessage("Select a mail to delete it", MessageSeverity.Error);
+                return;
+            }
+            MailContent mailContent = currentFolder.mailsContent[MailList.SelectedIndex];
+
+            var reply = currentFolder.mailHandler.UpdateFlag(mailContent, MailFlag.trash);
+
+        }
+
+        private void MassDelete_Click(object sender, RoutedEventArgs e)
+        {
+            if (MailList.SelectedItems.Count > 0)
+            {
+                MessageHandler.AddMessage("Select at least one mail", MessageSeverity.Error);
+                return;
+            }
+
+
+
         }
     }
 

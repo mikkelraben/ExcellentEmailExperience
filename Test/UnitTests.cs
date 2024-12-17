@@ -127,7 +127,7 @@ namespace Test
             List<MailContent> inbox = new();
 
 
-            foreach (var mail in mailHandler.GetFolder(folder, false, false, 20))
+            foreach (var mail in mailHandler.GetFolder(folder, 20))
             {
                 inbox.Add(mail);
                 inbox.Sort((x, y) => -x.date.CompareTo(y.date));
@@ -220,6 +220,9 @@ namespace Test
             List<MailContent> Sentlist1 = GetInbox(mailHandler1, "SENT");
 
             Debug.WriteLine("finished mutex access"); mut.ReleaseMutex();
+
+            //as messageIDs are different for all mail instances, we need to set them equal to compare the mail objects
+
 
             if (Inboxlist2[0] != null && Sentlist1[0] != null)
             {
@@ -422,7 +425,7 @@ namespace Test
 
             if (Inboxlist3[0] != null)
             {
-                mailHandler3.Reply(Inboxlist3[0], response);
+                mailHandler3.Reply(Inboxlist3[0]);
             }
             else
             {
@@ -488,7 +491,7 @@ namespace Test
 
             if (Inboxlist3[0] != null)
             {
-                mailHandler3.ReplyAll(Inboxlist3[0], response);
+                mailHandler3.ReplyAll(Inboxlist3[0]);
             }
             else
             {
@@ -553,7 +556,7 @@ namespace Test
 
             if (Inboxlist2[0] != null)
             {
-                mailHandler2.Forward(Inboxlist2[0], new List<MailAddress> { Address3 });
+                mailHandler2.Forward(Inboxlist2[0]);
             }
             else
             {
@@ -723,7 +726,7 @@ namespace Test
             }
         }
 
-        
+
         [TestMethod]
         [ExpectedException(typeof(ArgumentException),
         "Cant add account twice.")]

@@ -29,18 +29,26 @@ namespace ExcellentEmailExperience.Model
             smtpClient.ConnectAsync("smtp.friends.com", 587, true);
             smtpClient.AuthenticateAsync(mailAddress, password);
         }
+        public ulong[] GetNewIds()
+        {
+            throw new NotImplementedException();
+        }
 
         public bool CheckSpam(MailContent content)
         {
             throw new NotImplementedException();
         }
 
-        public void Forward(MailContent content, List<MailAddress> NewTo)
+        public MailContent Forward(MailContent content)
+        {
+            throw new NotImplementedException();
+        }
+        public IEnumerable<MailContent> Refresh(string name, bool old, int count, ulong lastId, ulong newestId)
         {
             throw new NotImplementedException();
         }
 
-        public IEnumerable<MailContent> GetFolder(string name, bool old, bool refresh, int count)
+        public IEnumerable<MailContent> GetFolder(string name, int count)
         {
             throw new NotImplementedException();
         }
@@ -66,12 +74,12 @@ namespace ExcellentEmailExperience.Model
             throw new NotImplementedException();
         }
 
-        public void Reply(MailContent content)
+        public MailContent Reply(MailContent content)
         {
             throw new NotImplementedException();
         }
 
-        public void ReplyAll(MailContent content)
+        public MailContent ReplyAll(MailContent content)
         {
             throw new NotImplementedException();
         }
@@ -90,13 +98,18 @@ namespace ExcellentEmailExperience.Model
         {
             throw new NotImplementedException();
         }
-
-        public void TrashMail(string MessageId)
+        
+        public void DeleteMail(string MessageId)
         {
             throw new NotImplementedException();
         }
 
         public IEnumerable<MailContent> Search(string query, int count)
+        {
+            throw new NotImplementedException();
+        }
+
+        public MailContent UpdateFlag(MailContent content, MailFlag flagtype)
         {
             throw new NotImplementedException();
         }

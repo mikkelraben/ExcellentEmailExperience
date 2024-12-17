@@ -19,6 +19,20 @@ namespace ExcellentEmailExperience
         /// </summary>
         public App()
         {
+            mailApp = new MailApp();
+            mailApp.Initialize();
+
+            switch (mailApp.settings.theme)
+            {
+                case Theme.Light:
+                    RequestedTheme = ApplicationTheme.Light;
+                    break;
+                case Theme.Dark:
+                    RequestedTheme = ApplicationTheme.Dark;
+                    break;
+            }
+
+
             this.InitializeComponent();
         }
 
@@ -29,8 +43,7 @@ namespace ExcellentEmailExperience
         protected async override void OnLaunched(Microsoft.UI.Xaml.LaunchActivatedEventArgs args)
         {
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
-            mailApp = new MailApp();
-            await mailApp.Initialize();
+
             if (!mailApp.HasAccount())
             {
                 intro = new Intro(mailApp);
@@ -44,6 +57,7 @@ namespace ExcellentEmailExperience
             {
                 CreateMainWindow(mailApp);
             }
+
         }
 
         public void CreateMainWindow(MailApp mailApp)
