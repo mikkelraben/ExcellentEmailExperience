@@ -40,11 +40,6 @@ namespace ExcellentEmailExperience.Model
         public ulong NewestId;
         public ulong LastId;
 
-        /// <summary>
-        /// Adds the option to disable cache if it is run on the TestServer. Cache disabled if TestServer == true.
-        /// </summary>
-        private bool TestServer;
-
         // modifies the body string so that google doesn't shit itself in fear and panic
         // and therefore modifies the message to fit its asinine standards
         public string MakeDaddyGHappy(string body)
@@ -55,24 +50,19 @@ namespace ExcellentEmailExperience.Model
 
             return body;
         }
-        private CacheHandler? cache;
+        private CacheHandler cache;
 
-        public GmailHandler(UserCredential credential, MailAddress mailAddress, bool testServer = false)
+        public GmailHandler(UserCredential credential, MailAddress mailAddress)
         {
             userCredential = credential;
             this.mailAddress = mailAddress;
+            cache = new CacheHandler(mailAddress.Address);
 
             service = new GmailService(new Google.Apis.Services.BaseClientService.Initializer()
             {
                 HttpClientInitializer = userCredential,
                 ApplicationName = "ExcellentEmailExperience",
             });
-
-            TestServer = testServer;
-            if (!testServer)
-            {
-                cache = new CacheHandler(mailAddress.Address);
-            }
         }
 
 
@@ -149,7 +139,7 @@ namespace ExcellentEmailExperience.Model
                         yield break;
                     }
 
-                    if (!TestServer && Label2Flag.ContainsKey(name))
+                    if (Label2Flag.ContainsKey(name))
                     {
                         var idList = history.MessagesAdded.Select(message => message.Message.Id).Distinct().ToList();
                         cache.UpdateFolder(idList, name, Label2Flag, "INBOX");
@@ -157,7 +147,7 @@ namespace ExcellentEmailExperience.Model
 
                     foreach (var addedMessage in history.MessagesAdded)
                     {
-                        if (!TestServer && cache.CheckCache(addedMessage.Message.Id))
+                        if (cache.CheckCache(addedMessage.Message.Id))
                         {
                             yield return cache.GetCache(addedMessage.Message.Id);
                         }
@@ -167,12 +157,7 @@ namespace ExcellentEmailExperience.Model
 
                             // im just going to assume that when you get a new mail that hasnt been seen before that its also unread. 
                             MailContent mailContent = BuildMailContent(msg, name);
-
-                            if (!TestServer)
-                            {
-                                cache.CacheMessage(mailContent, name);
-                            }
-
+                            cache.CacheMessage(mailContent, name);
                             yield return mailContent;
                         }
                     }
@@ -192,7 +177,7 @@ namespace ExcellentEmailExperience.Model
                     yield break;
                 }
 
-                if (!TestServer && Label2Flag.ContainsKey(name))
+                if (Label2Flag.ContainsKey(name))
                 {
                     var idList = messageListResponse.Messages.Select(message => message.Id).Distinct().ToList();
                     cache.UpdateFolder(idList, name, Label2Flag, "INBOX");
@@ -200,7 +185,7 @@ namespace ExcellentEmailExperience.Model
 
                 foreach (var message in messageListResponse.Messages)
                 {
-                    if (!TestServer && cache.CheckCache(message.Id))
+                    if (cache.CheckCache(message.Id))
                     {
                         yield return cache.GetCache(message.Id);
                     }
@@ -210,12 +195,7 @@ namespace ExcellentEmailExperience.Model
 
                         // this probably is not the correct label but i cant for the life of me figure out how to pass the labes in correctly here. 
                         MailContent mailContent = BuildMailContent(msg, name);
-
-                        if (!TestServer)
-                        {
-                            cache.CacheMessage(mailContent, name);
-                        }
-
+                        cache.CacheMessage(mailContent, name);
                         yield return mailContent;
                     }
                 }
@@ -238,7 +218,7 @@ namespace ExcellentEmailExperience.Model
                 yield break;
             }
 
-            if (!TestServer && Label2Flag.ContainsKey(name))
+            if (Label2Flag.ContainsKey(name))
             {
                 var idList = messages.Select(message => message.Id).Distinct().ToList();
                 cache.UpdateFolder(idList, name, Label2Flag, "INBOX");
@@ -246,7 +226,7 @@ namespace ExcellentEmailExperience.Model
 
             foreach (var message in messages)
             {
-                if (!TestServer && cache.CheckCache(message.Id))
+                if (cache.CheckCache(message.Id))
                 {
                     cache.AddFolder(message.Id, name, Label2Flag, "INBOX");
                     yield return cache.GetCache(message.Id);
@@ -255,12 +235,7 @@ namespace ExcellentEmailExperience.Model
                 {
                     var msg = service.Users.Messages.Get("me", message.Id).Execute();
                     MailContent mailContent = BuildMailContent(msg, name);
-
-                    if (!TestServer)
-                    {
-                        cache.CacheMessage(mailContent, name);
-                    }
-                    
+                    cache.CacheMessage(mailContent, name);
                     yield return mailContent;
                 }
             }
@@ -295,26 +270,37 @@ namespace ExcellentEmailExperience.Model
             }
             foreach (var header in msg.Payload.Headers)
             {
-                if (header.Name == "From")
+                switch (header.Name)
                 {
-                    mailContent.from = new MailAddress(header.Value);
-                }
-                else if (header.Name == "To")
-                {
-                    foreach (var address in header.Value.Split(','))
-                    {
-                        mailContent.to.Add(new MailAddress(address));
-                    }
-                }
-                else if (header.Name == "Subject")
-                {
-                    mailContent.subject = header.Value;
-                }
-                else if (header.Name == "Date")
-                {
-                    DateTimeOffset date;
-                    MimeKit.Utils.DateUtils.TryParse(header.Value, out date);
-                    mailContent.date = date.UtcDateTime;
+                    case "From":
+                        mailContent.from = new MailAddress(header.Value);
+                        break;
+                    case "To":
+                        foreach (var address in header.Value.Split(','))
+                        {
+                            mailContent.to.Add(new MailAddress(address));
+                        }
+                        break;
+                    case "Cc":
+                        foreach (var address in header.Value.Split(','))
+                        {
+                            mailContent.cc.Add(new MailAddress(address));
+                        }
+                        break;
+                    case "Bcc":
+                        foreach (var address in header.Value.Split(','))
+                        {
+                            mailContent.bcc.Add(new MailAddress(address));
+                        }
+                        break;
+                    case "Subject":
+                        mailContent.subject = header.Value;
+                        break;
+                    case "Date":
+                        DateTimeOffset date;
+                        MimeKit.Utils.DateUtils.TryParse(header.Value, out date);
+                        mailContent.date = date.UtcDateTime;
+                        break;
                 }
             }
 
@@ -496,11 +482,7 @@ namespace ExcellentEmailExperience.Model
             try
             {
                 service.Users.Messages.Delete("me", MessageId);
-                
-                if (!TestServer)
-                {
-                    cache.ClearRow(MessageId);
-                }
+                cache.ClearRow(MessageId);
             }
             catch (Exception ex)
             {
@@ -523,7 +505,7 @@ namespace ExcellentEmailExperience.Model
 
             foreach (var message in messages)
             {
-                if (!TestServer && cache.CheckCache(message.Id))
+                if (cache.CheckCache(message.Id))
                 {
                     yield return cache.GetCache(message.Id);
                 }
@@ -531,12 +513,7 @@ namespace ExcellentEmailExperience.Model
                 {
                     var msg = service.Users.Messages.Get("me", message.Id).Execute();
                     MailContent mailContent = BuildMailContent(msg, "Search");
-
-                    if (!TestServer)
-                    {
-                        cache.CacheMessage(mailContent, "Search");
-                    }
-
+                    cache.CacheMessage(mailContent, "Search");
                     yield return mailContent;
                 }
             }
@@ -603,10 +580,7 @@ namespace ExcellentEmailExperience.Model
 
                 content.flags &= ~flagtype;
 
-                if (!TestServer)
-                {
-                    cache.RemoveFolder(content.MessageId, folder, Label2Flag, "INBOX");
-                }
+                cache.RemoveFolder(content.MessageId, folder, Label2Flag, "INBOX");
             }
             else
             {
@@ -616,10 +590,7 @@ namespace ExcellentEmailExperience.Model
 
                 content.flags |= flagtype;
 
-                if (!TestServer)
-                {
-                    cache.AddFolder(content.MessageId, folder, Label2Flag, "INBOX");
-                }
+                cache.AddFolder(content.MessageId, folder, Label2Flag, "INBOX");
             }
 
             return content;
