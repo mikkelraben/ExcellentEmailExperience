@@ -444,6 +444,18 @@ namespace ExcellentEmailExperience.Views
             var reply = currentFolder.mailHandler.UpdateFlag(mailContent, MailFlag.trash);
 
         }
+
+        private void MassDelete_Click(object sender, RoutedEventArgs e)
+        {
+            if (MailList.SelectedItems.Count > 0)
+            {
+                MessageHandler.AddMessage("Select at least one mail", MessageSeverity.Error);
+                return;
+            }
+
+
+
+        }
     }
 
     public class SelectedToOpacity : IValueConverter

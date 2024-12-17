@@ -33,6 +33,8 @@ namespace ExcellentEmailExperience.Model
         /// <param name="account">The account to add to the mail app</param>
         public void NewAccount(IAccount account)
         {
+            if (accounts.Exists(a => a.GetEmail().Address == account.GetEmail().Address))
+                throw new ArgumentException("Cant add account twice.");
             accounts.Add(account);
             SaveAccounts();
         }
