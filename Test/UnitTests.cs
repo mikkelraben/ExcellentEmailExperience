@@ -56,6 +56,15 @@ namespace Test
         IMailHandler? mailHandler2;
         IMailHandler? mailHandler3;
 
+        public string MakeDaddyGHappy(string body)
+        {
+            body = body.Replace("\n", "\r\n");
+            body = body.Replace(" \r", "\r");
+            body += "\r\n";
+
+            return body;
+        }
+        
         private void UnitTest_init()
         {
             List<MailAddress> mailAddresses = new List<MailAddress> { Address1_, Address2_, Address3_ };
@@ -253,7 +262,7 @@ namespace Test
             UnvalidMail.subject = validSubject;
 
             UnvalidMail.from = Address1;
-           
+
             mut.WaitOne(); Debug.WriteLine("getting mutex access");
             try
             {
@@ -329,16 +338,17 @@ namespace Test
 
             //as messageIDs are different for all mail instances, we need to set them equal to compare the mail objects
 
-            if (Inboxlist3[0] != null && Sentlist1[0] != null)
+            if (Inboxlist3[0] != null && Sentlist1[0] != null && Inboxlist3[0].cc!=null)
             {
                 Inboxlist3[0].MessageId = Sentlist1[0].MessageId;
                 Inboxlist3[0].ThreadId = Sentlist1[0].ThreadId;
 
                 Assert.IsTrue(Inboxlist3[0] == Sentlist1[0]);
+                Assert.IsTrue(Inboxlist3[0].cc[0] == Address3);
             }
             else
             {
-                Assert.Fail("no messages were sent!");
+                Assert.Fail("no messages were sent! or cc is null!");
             }
 
 
@@ -371,7 +381,7 @@ namespace Test
             System.Threading.Thread.Sleep(4000);
 
             List<MailContent> Inboxlist3 = GetInbox(mailHandler3, "INBOX");
-
+            List<MailContent> Inboxlist2 = GetInbox(mailHandler2, "INBOX");
 
             List<MailContent> Sentlist1 = GetInbox(mailHandler1, "SENT");
 
@@ -379,12 +389,16 @@ namespace Test
 
             //as messageIDs are different for all mail instances, we need to set them equal to compare the mail objects
 
-            if (Inboxlist3[0] != null && Sentlist1[0] != null)
+            if (Inboxlist3[0] != null && Sentlist1[0] != null && Inboxlist3[0].bcc!=null)
             {
                 Inboxlist3[0].MessageId = Sentlist1[0].MessageId;
                 Inboxlist3[0].ThreadId = Sentlist1[0].ThreadId;
 
                 Assert.IsTrue(Inboxlist3[0] == Sentlist1[0]);
+                Assert.IsTrue(Inboxlist3[0].bcc[0] == Address3);
+                List<MailAddress> bccList = new();
+                Assert.IsTrue(Inboxlist2[0].bcc == bccList);
+
             }
             else
             {
@@ -425,7 +439,13 @@ namespace Test
 
             if (Inboxlist3[0] != null)
             {
-                mailHandler3.Reply(Inboxlist3[0]);
+                MailContent reply = mailHandler3.Reply(Inboxlist3[0]);
+
+                if (reply != null)
+                {
+                    reply.body = validBody_gen();
+                    mailHandler3.Send(reply);
+                }
             }
             else
             {
@@ -445,6 +465,7 @@ namespace Test
 
             if (Inboxlist1[0] != null && Sentlist3[0] != null)
             {
+                Assert.IsTrue(Sentlist3[0].ThreadId == Inboxlist3[0].ThreadId);
                 Sentlist3[0].MessageId = Inboxlist1[0].MessageId;
                 Sentlist3[0].ThreadId = Inboxlist1[0].ThreadId;
 
@@ -491,7 +512,13 @@ namespace Test
 
             if (Inboxlist3[0] != null)
             {
-                mailHandler3.ReplyAll(Inboxlist3[0]);
+                MailContent reply = mailHandler3.ReplyAll(Inboxlist3[0]);
+
+                if (reply != null)
+                {
+                    reply.body = validBody_gen();
+                    mailHandler3.Send(reply);
+                }
             }
             else
             {
@@ -518,9 +545,9 @@ namespace Test
 
             if (Inboxlist1[0] != null && Sentlist3[0] != null)
             {
+                Assert.IsTrue(Sentlist3[0].ThreadId == Inboxlist3[0].ThreadId);
                 Sentlist3[0].MessageId = Inboxlist1[0].MessageId;
                 Sentlist3[0].ThreadId = Inboxlist1[0].ThreadId;
-                Sentlist3[0].subject = "Re: " + validSubject;
 
                 Assert.IsTrue(Sentlist3[0] == Inboxlist1[0]);
             }

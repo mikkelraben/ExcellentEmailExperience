@@ -10,8 +10,10 @@ using System.IO;
 using System.Linq;
 using System.Net.Mail;
 using System.Text;
+using System.Threading;
 using System.Xml.Linq;
 using Windows.Storage;
+using Windows.System;
 using static Google.Apis.Requests.BatchRequest;
 
 namespace ExcellentEmailExperience.Model
@@ -483,6 +485,23 @@ namespace ExcellentEmailExperience.Model
                 if (content.ThreadId != null)
                 {
                     gmailMessage.ThreadId = content.ThreadId;
+                    //if (content.MessageId != null)
+                    //{
+                    //    mimemessage.InReplyTo = content.MessageId;
+                    //}
+                    //var threads = (service.Users.Threads.Get("me", content.ThreadId).Execute());
+                    //if (threads.Messages != null)
+                    //{
+                    //    List<string> messageIDS = new List<string>();
+                    //    foreach (var message in threads.Messages)
+                    //    {
+                    //        // Add each message ID to the list
+                    //        messageIDS.Add(message.Id);
+                    //    }
+                    //}
+                    //    .Users.Threads threadMessageID=service.Users.Threads.Get("me",content.ThreadId);
+
+                    
                 }
 
                 // send it.
@@ -581,9 +600,9 @@ namespace ExcellentEmailExperience.Model
             MailContent reply = new MailContent();
             reply.ThreadId = content.ThreadId;
             reply.to = new List<MailAddress> { content.from };
-            reply.to.AddRange(content.to);
+            reply.cc.AddRange(content.to);
             reply.from = mailAddress;
-            reply.to.Remove(reply.from);
+            reply.cc.Remove(reply.from);
             reply.body = content.body;
             reply.bodyType = content.bodyType;
             reply.subject = "Re: " + content.subject;
