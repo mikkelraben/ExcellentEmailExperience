@@ -15,12 +15,8 @@ namespace ExcellentEmailExperience.ViewModel
     public partial class MailHandlerViewModel
     {
         IAccount mailAccount;
-        DispatcherQueue dispatch;
-        CancellationToken cancel;
         public MailHandlerViewModel(IAccount account, DispatcherQueue dispatcherQueue, CancellationToken cancellationToken)
         {
-            dispatch = dispatcherQueue;
-            cancel = cancellationToken;
             mailAccount = account;
             var mailHandler = account.GetMailHandler();
 
@@ -49,7 +45,7 @@ namespace ExcellentEmailExperience.ViewModel
 
                 foreach (var folder in folders)
                 {
-                    folder.UpdateViewMails(mailAccount.GetMailHandler(), folder.FolderName, dispatch, cancel, old, LastId, NewestId);
+                    folder.UpdateViewMails(old, LastId, NewestId);
                 }
 
                 // TODO: kan den her linje slettes???

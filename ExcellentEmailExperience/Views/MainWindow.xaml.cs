@@ -171,6 +171,13 @@ namespace ExcellentEmailExperience.Views
 
                 (MainFrame.Content as Email).ChangeMail(mailContent, false);
                 MassEditMenu.Visibility = Visibility.Collapsed;
+                if (selectedMail.Unread)
+                {
+                    _ = currentFolder.mailHandler.UpdateFlag(mailContent, MailFlag.unread);
+
+                    currentFolder.mails[MailList.SelectedIndex].Unread = false;
+                }
+
             }
             else if (selectedCount > 1)
             {
@@ -367,6 +374,7 @@ namespace ExcellentEmailExperience.Views
             currentFolder = searchFolder;
             FolderName.Text = currentFolder.Name;
             MailList.ItemsSource = currentFolder.mails;
+            Siderbar.SelectedItem = null;
         }
 
         private void Reply_Click(object sender, RoutedEventArgs e)
@@ -400,13 +408,53 @@ namespace ExcellentEmailExperience.Views
         {
             if (MailList.SelectedItems.Count != 1)
             {
-                MessageHandler.AddMessage("Select one mail to reply", MessageSeverity.Error);
+                MessageHandler.AddMessage("Select one mail to forward", MessageSeverity.Error);
                 return;
             }
             MailContent mailContent = currentFolder.mailsContent[MailList.SelectedIndex];
 
             var reply = currentFolder.mailHandler.Forward(mailContent);
             (MainFrame.Content as Email).ChangeMail(reply, true);
+
+        }
+
+        private void ReadUnread_Click(object sender, RoutedEventArgs e)
+        {
+            if (MailList.SelectedItems.Count != 1)
+            {
+                MessageHandler.AddMessage("Select one mail to mark as unread/read", MessageSeverity.Error);
+                return;
+            }
+
+            MailContent mailContent = currentFolder.mailsContent[MailList.SelectedIndex];
+
+            var reply = currentFolder.mailHandler.UpdateFlag(mailContent, MailFlag.unread);
+
+            currentFolder.mails[MailList.SelectedIndex].Unread = !currentFolder.mails[MailList.SelectedIndex].Unread;
+        }
+
+        private void Delete_Click(object sender, RoutedEventArgs e)
+        {
+            if (MailList.SelectedItems.Count != 1)
+            {
+                MessageHandler.AddMessage("Select a mail to delete it", MessageSeverity.Error);
+                return;
+            }
+            MailContent mailContent = currentFolder.mailsContent[MailList.SelectedIndex];
+
+            var reply = currentFolder.mailHandler.UpdateFlag(mailContent, MailFlag.trash);
+
+        }
+
+        private void MassDelete_Click(object sender, RoutedEventArgs e)
+        {
+            if (MailList.SelectedItems.Count > 0)
+            {
+                MessageHandler.AddMessage("Select at least one mail", MessageSeverity.Error);
+                return;
+            }
+
+
 
         }
     }

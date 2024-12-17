@@ -77,8 +77,8 @@
             <AppBarButton Icon="MailReplyAll" Click="ReplyAll_Click" LabelPosition="Collapsed" Width="40" ToolTipService.ToolTip="Reply All"/>
             <AppBarButton Icon="MailForward" Click="Forward_Click" LabelPosition="Collapsed" Width="40" ToolTipService.ToolTip="Forward"/>
             <AppBarSeparator Margin="18,0,18,0"/>
-            <AppBarButton Icon="Read" LabelPosition="Collapsed" Width="40" ToolTipService.ToolTip="Mark Read/Unread"/>
-            <AppBarButton Icon="Delete" LabelPosition="Collapsed" Width="40" ToolTipService.ToolTip="Delete"/>
+            <AppBarButton Icon="Read" Click="ReadUnread_Click" LabelPosition="Collapsed" Width="40" ToolTipService.ToolTip="Mark Read/Unread"/>
+            <AppBarButton Icon="Delete" Click="Delete_Click" LabelPosition="Collapsed" Width="40" ToolTipService.ToolTip="Delete"/>
             <AppBarButton Icon="More" LabelPosition="Collapsed" Width="40" ToolTipService.ToolTip="More" ToolTipService.Placement="Top"/>
         </StackPanel>
 
@@ -136,7 +136,7 @@
                     </Grid>
                     <AutoSuggestBox PlaceholderText="Search" Grid.Row="1" Margin="8,0,8,16" QueryIcon="Find" QuerySubmitted="AutoSuggestBox_QuerySubmitted"/>
                     <StackPanel Orientation="Horizontal" Grid.Row="2" Name="MassEditMenu" Visibility="Collapsed">
-                        <Button Margin="8,0,0,0" Padding="8,4" Content="Delete??"/>
+                        <Button Margin="8,0,0,0" Click="MassDelete_Click" Padding="8,4" Content="Delete"/>
                     </StackPanel>
                     <ListView 
                         Grid.Row="3" 

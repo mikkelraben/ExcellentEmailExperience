@@ -2,12 +2,18 @@
 using ExcellentEmailExperience.Interfaces;
 using ExcellentEmailExperience.Model;
 using Microsoft.UI.Dispatching;
+using Microsoft.UI.Xaml.Data;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
+using System.Reflection.Metadata.Ecma335;
+using System.Runtime.InteropServices.WindowsRuntime;
 using System.Security.Principal;
 using System.Threading;
+using System.Threading.Tasks;
+using System.Xml.Linq;
+using Windows.Foundation;
 
 
 namespace ExcellentEmailExperience.ViewModel
@@ -38,6 +44,7 @@ namespace ExcellentEmailExperience.ViewModel
         /// <param name="cancellationToken"></param>
         public FolderViewModel(IMailHandler mailHandler, string name, DispatcherQueue dispatcherQueue, CancellationToken cancellationToken)
         {
+            mails = new(this);
             FolderName = name;
             DispatchQueue = dispatcherQueue;
             CancelToken = cancellationToken;
@@ -64,6 +71,7 @@ namespace ExcellentEmailExperience.ViewModel
         /// </summary>
         public FolderViewModel(IEnumerable<MailContent> mailContents, DispatcherQueue dispatcherQueue, CancellationToken cancellationToken)
         {
+            mails = new(this);
             this.Name = "Search";
 
             foreach (var mail in mailContents)
@@ -98,13 +106,13 @@ namespace ExcellentEmailExperience.ViewModel
             }
         }
 
-        public void UpdateViewMails(IMailHandler mailHandler, string name, DispatcherQueue dispatcherQueue, CancellationToken cancellationToken, bool old, ulong lastId, ulong newestId)
+        public void UpdateViewMails(bool old, ulong lastId, ulong newestId)
         {
             try
             {
-                foreach (var mail in mailHandler.Refresh(name, old, 20, lastId, newestId))
+                foreach (var mail in mailHandler.Refresh(FolderName, old, 20, lastId, newestId))
                 {
-                    HandleMessage(dispatcherQueue, mail, cancellationToken);
+                    HandleMessage(DispatchQueue, mail, CancelToken);
                 }
 
             }
@@ -173,7 +181,7 @@ namespace ExcellentEmailExperience.ViewModel
         /// <summary>
         /// Collection of mails in the folder used to display in the UI
         /// </summary>
-        public ObservableCollection<InboxMail> mails { get; } = new ObservableCollection<InboxMail>();
+        public FolderCollection mails { get; }
 
         /// <summary>
         /// List of mails in the folder currently used to store the mails for the backend
@@ -181,5 +189,43 @@ namespace ExcellentEmailExperience.ViewModel
         public List<MailContent> mailsContent = new();
 
         public IMailHandler mailHandler;
+    }
+
+    public class FolderCollection : ObservableCollection<InboxMail>, ISupportIncrementalLoading
+    {
+        FolderViewModel folderViewModel;
+        private bool _busy;
+
+        public FolderCollection(FolderViewModel viewModel)
+        {
+            folderViewModel = viewModel;
+        }
+        public bool HasMoreItems { get; private set; } = true;
+        public bool IsLoading { get; private set; } = false;
+
+        bool ISupportIncrementalLoading.HasMoreItems => HasMoreItems;
+
+        IAsyncOperation<LoadMoreItemsResult> ISupportIncrementalLoading.LoadMoreItemsAsync(uint count)
+        {
+            if (_busy)
+            {
+                throw new InvalidOperationException("Only one operation in flight at a time");
+            }
+
+            _busy = true;
+            return AsyncInfo.Run(async (cancellationToken) =>
+            {
+                await Task.Run(() =>
+                {
+                    var ids = folderViewModel.mailHandler.GetNewIds();
+
+
+                    folderViewModel.UpdateViewMails(true, ids[1], ids[0]);
+                    _busy = false;
+                });
+
+                return new LoadMoreItemsResult { Count = count };
+            });
+        }
     }
 }

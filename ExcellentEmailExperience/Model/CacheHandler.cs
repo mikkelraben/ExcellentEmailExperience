@@ -70,8 +70,17 @@ namespace ExcellentEmailExperience.Model
 
         public CacheHandler(string accountAddress)
         {
-            StorageFolder folder = ApplicationData.Current.LocalFolder;
-            string folderPath = $@"{folder.Path}\data";
+            string path;
+            try
+            {
+                StorageFolder folder = ApplicationData.Current.LocalFolder;
+                path = folder.Path;
+            }
+            catch (Exception)
+            {
+                path = Directory.GetCurrentDirectory();
+            }
+            string folderPath = $@"{path}\data";
 
             string DBName = Convert.ToBase64String(Encoding.UTF8.GetBytes(accountAddress)).Replace('/', '-');
 
@@ -452,7 +461,7 @@ namespace ExcellentEmailExperience.Model
             using (var connection = new SqliteConnection(connectionString))
             {
                 connection.Open();
-                
+
 
                 if (query == "") yield break;
 

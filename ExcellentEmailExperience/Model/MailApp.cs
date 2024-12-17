@@ -33,6 +33,8 @@ namespace ExcellentEmailExperience.Model
         /// <param name="account">The account to add to the mail app</param>
         public void NewAccount(IAccount account)
         {
+            if (accounts.Exists(a => a.GetEmail().Address == account.GetEmail().Address))
+                throw new ArgumentException("Cant add account twice.");
             accounts.Add(account);
             SaveAccounts();
         }
@@ -87,11 +89,18 @@ namespace ExcellentEmailExperience.Model
 
         public void SaveAccounts()
         {
-            string output = JsonSerializer.Serialize(accounts);
+            try
+            {
+                string output = JsonSerializer.Serialize(accounts);
 
-            StorageFolder folder = ApplicationData.Current.LocalFolder;
-            StorageFile file = folder.CreateFileAsync("accounts.json", CreationCollisionOption.ReplaceExisting).AsTask().Result;
-            FileIO.WriteTextAsync(file, output).AsTask().Wait();
+                StorageFolder folder = ApplicationData.Current.LocalFolder;
+                StorageFile file = folder.CreateFileAsync("accounts.json", CreationCollisionOption.ReplaceExisting).AsTask().Result;
+                FileIO.WriteTextAsync(file, output).AsTask().Wait();
+            }
+            catch (Exception)
+            {
+                MessageHandler.AddMessage("Could not save accounts", MessageSeverity.Error);
+            }
         }
 
         private async Task LoadAppSettings()

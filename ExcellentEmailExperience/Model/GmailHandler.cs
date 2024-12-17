@@ -326,8 +326,18 @@ namespace ExcellentEmailExperience.Model
             }
             else if (messagePart.MimeType.StartsWith("image/"))
             {
-                StorageFolder folder = ApplicationData.Current.LocalFolder;
+                string path;
+                try
+                {
 
+                    StorageFolder folder = ApplicationData.Current.LocalFolder;
+                    path = folder.Path;
+
+                }
+                catch (Exception)
+                {
+                    path = Directory.GetCurrentDirectory();
+                }
                 var extension = messagePart.MimeType.Split('/')[1];
 
                 switch (extension)
@@ -353,12 +363,12 @@ namespace ExcellentEmailExperience.Model
                             if (cid == "")
                                 break;
                             cid = Convert.ToHexString(Encoding.UTF8.GetBytes(cid));
-                            cid = folder.Path + $"\\attachments\\{mailContent.MessageId}\\{cid}";
+                            cid = path + $"\\attachments\\{mailContent.MessageId}\\{cid}";
                             break;
                     }
                 }
 
-                var filePath = folder.Path + $"\\attachments\\{mailContent.MessageId}\\{fileName}";
+                var filePath = path + $"\\attachments\\{mailContent.MessageId}\\{fileName}";
 
                 mailContent.attachments.Add(filePath);
 
@@ -369,7 +379,7 @@ namespace ExcellentEmailExperience.Model
                 var attachment = service.Users.Messages.Attachments.Get("me", mailContent.MessageId, messagePart.Body.AttachmentId).Execute();
                 var attachmentData = Convert.FromBase64String(attachment.Data.Replace('-', '+').Replace('_', '/'));
 
-                Directory.CreateDirectory(folder.Path + $"\\attachments\\{mailContent.MessageId}");
+                Directory.CreateDirectory(path + $"\\attachments\\{mailContent.MessageId}");
                 File.WriteAllBytes(filePath, attachmentData);
                 try
                 {
@@ -408,6 +418,10 @@ namespace ExcellentEmailExperience.Model
                     labelNames.Add(folderName);
                 }
             }
+
+            // Sort the inbox to the top
+            labelNames.Remove("INBOX");
+            labelNames.Insert(0, "INBOX");
 
             return labelNames.ToArray();
         }
@@ -451,6 +465,7 @@ namespace ExcellentEmailExperience.Model
                 sendRequest.Execute();
             }
         }
+
         public void DeleteMail(string MessageId)
         {
             try
