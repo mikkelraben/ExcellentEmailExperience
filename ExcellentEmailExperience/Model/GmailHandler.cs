@@ -335,82 +335,76 @@ namespace ExcellentEmailExperience.Model
                     }
                 }
             }
-            else if (messagePart.MimeType.StartsWith("image/"))
+            else if (messagePart.Body.AttachmentId != null)
             {
-                string path;
-                try
-                {
-
-                    StorageFolder folder = ApplicationData.Current.LocalFolder;
-                    path = folder.Path;
-
-                }
-                catch (Exception)
-                {
-                    path = Directory.GetCurrentDirectory();
-                }
-                var extension = messagePart.MimeType.Split('/')[1];
-
-                switch (extension)
-                {
-                    case "svg+xml":
-                        extension = "svg";
-                        break;
-                    case "vnd.microsoft.icon":
-                        extension = "ico";
-                        break;
-                }
-
-                var fileName = messagePart.Filename == "" ? $"Attachment{messagePart.PartId}.{extension}" : messagePart.Filename;
-
-                var cid = "";
-
-                foreach (var header in messagePart.Headers)
-                {
-                    switch (header.Name.ToLower())
-                    {
-                        case "content-id":
-                            cid = header.Value.Trim(['<', '>']);
-                            if (cid == "")
-                                break;
-                            cid = Convert.ToHexString(Encoding.UTF8.GetBytes(cid));
-                            cid = path + $"\\attachments\\{mailContent.MessageId}\\{cid}";
-                            break;
-                    }
-                }
-
-                var filePath = path + $"\\attachments\\{mailContent.MessageId}\\{fileName}";
-
-                mailContent.attachments.Add(filePath);
-
-                if (File.Exists(filePath))
-                {
-                    return;
-                }
-                var attachment = service.Users.Messages.Attachments.Get("me", mailContent.MessageId, messagePart.Body.AttachmentId).Execute();
-                var attachmentData = Convert.FromBase64String(attachment.Data.Replace('-', '+').Replace('_', '/'));
-
-                Directory.CreateDirectory(path + $"\\attachments\\{mailContent.MessageId}");
-                File.WriteAllBytes(filePath, attachmentData);
-                try
-                {
-                    if (!File.Exists(cid))
-                    {
-                        if (cid != "")
-                            File.CreateSymbolicLink(cid, $".\\{fileName}");
-                    }
-                }
-                catch (Exception)
-                {
-
-                }
+                HandleAttachment(messagePart, mailContent);
             }
-            else if (messagePart.MimeType.StartsWith("application/"))
-            {
-            }
+
             if (mailContent.body.EndsWith("\r\n"))
             {
                 mailContent.body = mailContent.body.Remove(mailContent.body.Length - 2);
+            }
+        }
+
+        private void HandleAttachment(MessagePart messagePart, MailContent mailContent)
+        {
+            string path;
+            try
+            {
+
+                StorageFolder folder = ApplicationData.Current.LocalFolder;
+                path = folder.Path;
+
+            }
+            catch (Exception)
+            {
+                path = Directory.GetCurrentDirectory();
+            }
+
+            var extension = MimeTypes.MimeTypeMap.GetExtension(messagePart.MimeType);
+
+            var fileName = messagePart.Filename == "" ? $"Attachment{messagePart.PartId}{extension}" : messagePart.Filename;
+
+            var cid = "";
+
+            foreach (var header in messagePart.Headers)
+            {
+                switch (header.Name.ToLower())
+                {
+                    case "content-id":
+                        cid = header.Value.Trim(['<', '>']);
+                        if (cid == "")
+                            break;
+                        cid = Convert.ToHexString(Encoding.UTF8.GetBytes(cid));
+                        cid = path + $"\\attachments\\{mailContent.MessageId}\\{cid}";
+                        break;
+                }
+            }
+
+            var filePath = path + $"\\attachments\\{mailContent.MessageId}\\{fileName}";
+
+            mailContent.attachments.Add(filePath);
+
+            if (File.Exists(filePath))
+            {
+                return;
+            }
+            var attachment = service.Users.Messages.Attachments.Get("me", mailContent.MessageId, messagePart.Body.AttachmentId).Execute();
+            var attachmentData = Convert.FromBase64String(attachment.Data.Replace('-', '+').Replace('_', '/'));
+
+            Directory.CreateDirectory(path + $"\\attachments\\{mailContent.MessageId}");
+            File.WriteAllBytes(filePath, attachmentData);
+            try
+            {
+                if (!File.Exists(cid))
+                {
+                    if (cid != "")
+                        File.CreateSymbolicLink(cid, $".\\{fileName}");
+                }
+            }
+            catch (Exception)
+            {
+
             }
         }
 

@@ -85,7 +85,7 @@
                         <FontIcon Glyph="&#xE710;"/>
                     </Button>
 
-                    <ItemsView ItemsSource="{x:Bind viewModel.To,Mode=OneWay}" SelectionMode="None" ItemInvoked="FromAddress_ItemInvoked"  Visibility="{x:Bind viewModel.IsEditable,Converter={StaticResource BoolToNotVisibility},Mode=OneWay}">
+                    <ItemsView ItemsSource="{x:Bind viewModel.To,Mode=OneWay}" SelectionMode="None" IsItemInvokedEnabled="True" ItemInvoked="FromAddress_ItemInvoked"  Visibility="{x:Bind viewModel.IsEditable,Converter={StaticResource BoolToNotVisibility},Mode=OneWay}">
                         <ItemsView.Layout>
                             <LinedFlowLayout ItemsStretch="Fill" LineHeight="27"/>
                         </ItemsView.Layout>
@@ -133,7 +133,7 @@
                         <FontIcon Glyph="&#xE710;"/>
                     </Button>
 
-                    <ItemsView ItemsSource="{x:Bind viewModel.Cc,Mode=OneWay}" SelectionMode="None" ItemInvoked="FromAddress_ItemInvoked"  Visibility="{x:Bind viewModel.IsEditable,Converter={StaticResource BoolToNotVisibility},Mode=OneWay}">
+                    <ItemsView ItemsSource="{x:Bind viewModel.Cc,Mode=OneWay}" SelectionMode="None" IsItemInvokedEnabled="True" ItemInvoked="FromAddress_ItemInvoked"  Visibility="{x:Bind viewModel.IsEditable,Converter={StaticResource BoolToNotVisibility},Mode=OneWay}">
                         <ItemsView.Layout>
                             <LinedFlowLayout ItemsStretch="Fill" LineHeight="27"/>
                         </ItemsView.Layout>
@@ -182,7 +182,7 @@
                         <FontIcon Glyph="&#xE710;"/>
                     </Button>
 
-                    <ItemsView ItemsSource="{x:Bind viewModel.Bcc,Mode=OneWay}" SelectionMode="None" ItemInvoked="FromAddress_ItemInvoked"  Visibility="{x:Bind viewModel.IsEditable,Converter={StaticResource BoolToNotVisibility},Mode=OneWay}">
+                    <ItemsView ItemsSource="{x:Bind viewModel.Bcc,Mode=OneWay}" SelectionMode="None" IsItemInvokedEnabled="True" ItemInvoked="FromAddress_ItemInvoked"  Visibility="{x:Bind viewModel.IsEditable,Converter={StaticResource BoolToNotVisibility},Mode=OneWay}">
                         <ItemsView.Layout>
                             <LinedFlowLayout ItemsStretch="Fill" LineHeight="27"/>
                         </ItemsView.Layout>

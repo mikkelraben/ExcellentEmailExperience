@@ -208,6 +208,8 @@ namespace ExcellentEmailExperience.Views
 
             MailContent mail = new();
             mail.from = account.account.GetEmail();
+            mail.cc = viewModel.Cc;
+            mail.bcc = viewModel.Bcc;
             try
             {
                 foreach (var recipient in viewModel.recipients)
@@ -220,6 +222,35 @@ namespace ExcellentEmailExperience.Views
                 MessageHandler.AddMessage("A recipient mail is not valid please check your To field", MessageSeverity.Error);
                 return;
             }
+            try
+            {
+                foreach (var recipient in viewModel.ccStrings)
+                {
+                    mail.cc.Add(new(recipient.Value));
+                }
+
+            }
+            catch (Exception)
+            {
+                MessageHandler.AddMessage("A recipient mail is not valid please check your Cc field", MessageSeverity.Error);
+                return;
+            }
+
+            try
+            {
+                foreach (var recipient in viewModel.bccStrings)
+                {
+                    mail.bcc.Add(new(recipient.Value));
+                }
+
+            }
+            catch (Exception)
+            {
+                MessageHandler.AddMessage("A recipient mail is not valid please check your Bcc field", MessageSeverity.Error);
+                return;
+            }
+
+
             if (mail.to.Count == 0)
             {
                 MessageHandler.AddMessage("You need to have at least one recipient", MessageSeverity.Error);
@@ -230,8 +261,7 @@ namespace ExcellentEmailExperience.Views
             mail.subject = viewModel.Subject;
             mail.bodyType = BodyType.Html;
             mail.attachments = viewModel.Attachments;
-            mail.cc = viewModel.Cc;
-            mail.bcc = viewModel.Bcc;
+
 
             Stream bla = new MemoryStream();
             MailEditor.Document.SaveToStream(TextGetOptions.None, bla.AsRandomAccessStream());
