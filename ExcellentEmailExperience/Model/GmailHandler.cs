@@ -78,10 +78,27 @@ namespace ExcellentEmailExperience.Model
 
         public ulong[] GetNewIds()
         {
-            var request = service.Users.Messages.List("me");
-
-            request.MaxResults = 20;
             ulong[] Ids = new ulong[2];
+            var request = service.Users.Messages.List("me");
+            request.MaxResults = 20;
+            
+            if (NewestId == 0 || LastId == 0)
+            {
+                IList<Google.Apis.Gmail.v1.Data.Message> messages = request.Execute().Messages;
+                var NewestMessage = service.Users.Messages.Get("me", messages[0].Id).Execute();
+                NewestId = NewestMessage.HistoryId.Value;
+
+                var LastMessage = service.Users.Messages.Get("me", messages[^1].Id).Execute();
+                LastId = LastMessage.HistoryId.Value;
+
+                Ids[0] = NewestId;
+                Ids[1] = LastId;
+
+                return Ids;
+            }
+
+            
+            
             Ids[0] = NewestId;
             Ids[1] = LastId;
             var refreq = service.Users.History.List("me");
