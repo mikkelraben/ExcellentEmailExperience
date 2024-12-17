@@ -11,6 +11,7 @@ using ExcellentEmailExperience.Interfaces;
 using System.Text.Json;
 using System.Data.Common;
 using System.Text.RegularExpressions;
+using System.Globalization;
 
 namespace ExcellentEmailExperience.Model
 {
@@ -159,7 +160,7 @@ namespace ExcellentEmailExperience.Model
                         }
                     }
                     command.Parameters.AddWithValue("$attach", attach);
-                    command.Parameters.AddWithValue("$date", mail.date.ToString());
+                    command.Parameters.AddWithValue("$date", mail.date.ToString("yyyy-MM-dd HH:mm:ss"));
                     command.Parameters.AddWithValue("$thread", mail.ThreadId);
 
                     List<string> folders = new List<string> { folderName };
@@ -174,17 +175,46 @@ namespace ExcellentEmailExperience.Model
         }
 
         /// <summary>
-        /// Function that returns a selected MailContent from the database based on a messageId. It should maybe be renamed to GetMessage og GetMail instead of GetCache.
+        /// Helper function that rebuilds a MailContent given a row in the database.
         /// </summary>
-        /// <param name="messageId"> The id of the requested message. </param>
-        /// <returns> MailContent corresponding to the inputted messageId </returns>
-        public MailContent GetCache(string messageId)
+        /// <param name="reader"> Sqlite reader which holds onto information from a row in the database </param>
+        /// <returns> Mailcontent corresponding to what the reader reads </returns>
+        private MailContent BuildMailContent(SqliteDataReader reader)
         {
             var options = new JsonSerializerOptions
             {
                 Converters = { new MailAddressConverter() }
             };
 
+            MailContent mail = new MailContent();
+
+            mail.MessageId = reader.GetString(0);
+            mail.from = JsonSerializer.Deserialize<MailAddress>(reader.GetString(1), options);
+            mail.to = JsonSerializer.Deserialize<List<MailAddress>>(reader.GetString(2), options);
+            mail.bcc = JsonSerializer.Deserialize<List<MailAddress>>(reader.GetString(3), options);
+            mail.cc = JsonSerializer.Deserialize<List<MailAddress>>(reader.GetString(4), options);
+            mail.bodyType = (BodyType)reader.GetInt32(5);
+            mail.subject = reader.GetString(6);
+            mail.body = reader.GetString(7);
+
+            var attachments = reader.GetString(8);
+            if (attachments != "")
+                mail.attachments = reader.GetString(8).Split(';').ToList();
+
+            mail.date = DateTime.ParseExact(reader.GetString(9), "yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture);
+            mail.ThreadId = reader.GetString(10);
+            mail.flags = (MailFlag)reader.GetInt32(12);
+
+            return mail;
+        }
+
+        /// <summary>
+        /// Function that returns a selected MailContent from the database based on a messageId.
+        /// </summary>
+        /// <param name="messageId"> The id of the requested message. </param>
+        /// <returns> MailContent corresponding to the inputted messageId </returns>
+        public MailContent GetMessage(string messageId)
+        {
             using (var connection = new SqliteConnection(connectionString))
             {
                 connection.Open();
@@ -200,26 +230,44 @@ namespace ExcellentEmailExperience.Model
                 var reader = command.ExecuteReader();
                 reader.Read();
 
-                MailContent mail = new MailContent();
-                mail.MessageId = reader.GetString(0);
-                mail.from = JsonSerializer.Deserialize<MailAddress>(reader.GetString(1), options);
-                mail.to = JsonSerializer.Deserialize<List<MailAddress>>(reader.GetString(2), options);
-                mail.bcc = JsonSerializer.Deserialize<List<MailAddress>>(reader.GetString(3), options);
-                mail.cc = JsonSerializer.Deserialize<List<MailAddress>>(reader.GetString(4), options);
-                mail.bodyType = (BodyType)reader.GetInt32(5);
-                mail.subject = reader.GetString(6);
-                mail.body = reader.GetString(7);
-
-                var attachments = reader.GetString(8);
-                if (attachments != "")
-                    mail.attachments = reader.GetString(8).Split(';').ToList();
-
-                mail.date = DateTime.Parse(reader.GetString(9));
-                mail.ThreadId = reader.GetString(10);
-                mail.flags = (MailFlag)reader.GetInt32(12);
-
-                return mail;
+                return BuildMailContent(reader);
             }
+        }
+
+        /// <summary>
+        /// Retrieves the newest mails stored in the database from a specific folder.
+        /// </summary>
+        /// <param name="folderName"> The folder, which mails are retrieved from </param>
+        /// <param name="count"> The amount of mails retrieved. Given no coun parameter, the function returns the 20 newest mails by default. </param>
+        /// <returns> List containing the newest mails stored as MailContent </returns>
+        public List<MailContent> GetFolder(string folderName, int count=20)
+        {
+            List<MailContent> mailList = new();
+
+            using (var connection = new SqliteConnection(connectionString))
+            {
+                connection.Open();
+
+                var command = connection.CreateCommand();
+                command.CommandText = @"
+                SELECT * 
+                FROM MailContent
+                WHERE FolderId LIKE $folder
+                ORDER BY date DESC
+                LIMIT $limit;
+                ";
+                command.Parameters.AddWithValue("$folder", "%" + folderName + "%");
+                command.Parameters.AddWithValue("$limit", count);
+
+                var reader = command.ExecuteReader();
+
+                while (reader.Read())
+                {
+                    mailList.Add(BuildMailContent(reader));
+                }
+            }
+
+            return mailList;
         }
 
         public bool CheckCache(string messageId)

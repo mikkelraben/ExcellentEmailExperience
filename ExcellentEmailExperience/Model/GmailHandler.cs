@@ -149,7 +149,7 @@ namespace ExcellentEmailExperience.Model
                     {
                         if (cache.CheckCache(addedMessage.Message.Id))
                         {
-                            yield return cache.GetCache(addedMessage.Message.Id);
+                            yield return cache.GetMessage(addedMessage.Message.Id);
                         }
                         else
                         {
@@ -187,7 +187,7 @@ namespace ExcellentEmailExperience.Model
                 {
                     if (cache.CheckCache(message.Id))
                     {
-                        yield return cache.GetCache(message.Id);
+                        yield return cache.GetMessage(message.Id);
                     }
                     else
                     {
@@ -229,7 +229,7 @@ namespace ExcellentEmailExperience.Model
                 if (cache.CheckCache(message.Id))
                 {
                     cache.AddFolder(message.Id, name, Label2Flag, "INBOX");
-                    yield return cache.GetCache(message.Id);
+                    yield return cache.GetMessage(message.Id);
                 }
                 else
                 {
@@ -501,7 +501,7 @@ namespace ExcellentEmailExperience.Model
             {
                 if (cache.CheckCache(message.Id))
                 {
-                    yield return cache.GetCache(message.Id);
+                    yield return cache.GetMessage(message.Id);
                 }
                 else
                 {
