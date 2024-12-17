@@ -409,6 +409,10 @@ namespace ExcellentEmailExperience.Model
                 }
             }
 
+            // Sort the inbox to the top
+            labelNames.Remove("INBOX");
+            labelNames.Insert(0, "INBOX");
+
             return labelNames.ToArray();
         }
 
@@ -451,6 +455,7 @@ namespace ExcellentEmailExperience.Model
                 sendRequest.Execute();
             }
         }
+
         public void DeleteMail(string MessageId)
         {
             try

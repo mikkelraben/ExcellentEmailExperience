@@ -87,11 +87,18 @@ namespace ExcellentEmailExperience.Model
 
         public void SaveAccounts()
         {
-            string output = JsonSerializer.Serialize(accounts);
+            try
+            {
+                string output = JsonSerializer.Serialize(accounts);
 
-            StorageFolder folder = ApplicationData.Current.LocalFolder;
-            StorageFile file = folder.CreateFileAsync("accounts.json", CreationCollisionOption.ReplaceExisting).AsTask().Result;
-            FileIO.WriteTextAsync(file, output).AsTask().Wait();
+                StorageFolder folder = ApplicationData.Current.LocalFolder;
+                StorageFile file = folder.CreateFileAsync("accounts.json", CreationCollisionOption.ReplaceExisting).AsTask().Result;
+                FileIO.WriteTextAsync(file, output).AsTask().Wait();
+            }
+            catch (Exception)
+            {
+                MessageHandler.AddMessage("Could not save accounts", MessageSeverity.Error);
+            }
         }
 
         private async Task LoadAppSettings()

@@ -36,7 +36,7 @@ namespace ExcellentEmailExperience.Interfaces
 
         ulong[] GetNewIds();
 
-        IEnumerable<MailContent> Refresh(string name,bool old, int count, ulong lastId, ulong newestId);
+        IEnumerable<MailContent> Refresh(string name, bool old, int count, ulong lastId, ulong newestId);
 
         /// <summary>
         /// Retrieves batch mails from a folder determined by <paramref name="name"/>. 
@@ -48,7 +48,7 @@ namespace ExcellentEmailExperience.Interfaces
         /// <param name="refresh"> True if the mail list should restart at the newest mail </param>
         /// <param name="count"> The number of mails to retrieve </param>
         /// <returns>IEnumerable containing MailContent, with an upper bound of 50? elements</returns>
-        IEnumerable<MailContent> GetFolder(string name,int count);
+        IEnumerable<MailContent> GetFolder(string name, int count);
 
 
         /// <summary>
@@ -60,6 +60,13 @@ namespace ExcellentEmailExperience.Interfaces
         /// <returns> IEnumerable of mail suiting query</returns>
         IEnumerable<MailContent> Search(string query, int count);
 
+
+        /// <summary>
+        /// Toggles the flag of a mail
+        /// </summary>
+        /// <param name="content"></param>
+        /// <param name="flagtype"></param>
+        /// <returns></returns>
         MailContent UpdateFlag(MailContent content, MailFlag flagtype);
     }
 }
