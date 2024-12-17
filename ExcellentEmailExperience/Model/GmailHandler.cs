@@ -270,26 +270,37 @@ namespace ExcellentEmailExperience.Model
             }
             foreach (var header in msg.Payload.Headers)
             {
-                if (header.Name == "From")
+                switch (header.Name)
                 {
-                    mailContent.from = new MailAddress(header.Value);
-                }
-                else if (header.Name == "To")
-                {
-                    foreach (var address in header.Value.Split(','))
-                    {
-                        mailContent.to.Add(new MailAddress(address));
-                    }
-                }
-                else if (header.Name == "Subject")
-                {
-                    mailContent.subject = header.Value;
-                }
-                else if (header.Name == "Date")
-                {
-                    DateTimeOffset date;
-                    MimeKit.Utils.DateUtils.TryParse(header.Value, out date);
-                    mailContent.date = date.UtcDateTime;
+                    case "From":
+                        mailContent.from = new MailAddress(header.Value);
+                        break;
+                    case "To":
+                        foreach (var address in header.Value.Split(','))
+                        {
+                            mailContent.to.Add(new MailAddress(address));
+                        }
+                        break;
+                    case "Cc":
+                        foreach (var address in header.Value.Split(','))
+                        {
+                            mailContent.cc.Add(new MailAddress(address));
+                        }
+                        break;
+                    case "Bcc":
+                        foreach (var address in header.Value.Split(','))
+                        {
+                            mailContent.bcc.Add(new MailAddress(address));
+                        }
+                        break;
+                    case "Subject":
+                        mailContent.subject = header.Value;
+                        break;
+                    case "Date":
+                        DateTimeOffset date;
+                        MimeKit.Utils.DateUtils.TryParse(header.Value, out date);
+                        mailContent.date = date.UtcDateTime;
+                        break;
                 }
             }
 
