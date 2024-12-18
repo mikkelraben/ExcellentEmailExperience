@@ -13,6 +13,7 @@ using System.Linq;
 using System.Net.Mail;
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Xml.Linq;
 using Windows.Storage;
@@ -55,7 +56,8 @@ namespace ExcellentEmailExperience.Model
         // and therefore modifies the message to fit its asinine standards
         public string MakeDaddyGHappy(string body)
         {
-            body = body.Replace("\n", "\r\n");
+            // regex magic to replace "\n" with "\r\n" if it does not already have a preceding "\r"
+            body = Regex.Replace(body, @"(?<!\r)\n", "\r\n");
             body = body.Replace(" \r", "\r");
 
             // checks if daddy g is already happy before doing anything
