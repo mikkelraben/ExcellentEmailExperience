@@ -29,29 +29,5 @@ namespace ExcellentEmailExperience.ViewModel
         }
 
         public ObservableCollection<FolderViewModel> folders = new();
-
-        public void Refresh(bool old)
-        {
-
-            Thread thread = new(() =>
-            {
-                ulong[] ids = mailAccount.GetMailHandler().GetNewIds();
-
-                // TODO: unimplement newest cus we have to refresh old mail too to check if unread
-                ulong NewestId = ids[0];
-
-                // TODO: cant lastid be passed from the view (mainwindow.xaml)? If so unimplement GetNewIds?
-                ulong LastId = ids[0];
-
-                foreach (var folder in folders)
-                {
-                    folder.UpdateViewMails(old, LastId, NewestId);
-                }
-
-                // TODO: kan den her linje slettes???
-                ids = mailAccount.GetMailHandler().GetNewIds();
-            });
-            thread.Start();
-        }
     }
 }
