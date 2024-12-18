@@ -28,7 +28,7 @@ namespace ExcellentEmailExperience.Model
             var result = new Dictionary<string, List<string>>(StringComparer.OrdinalIgnoreCase);
 
             // Regex to match fields like "from:", "cc:", "subject:", followed by their values
-            string pattern = @"(?<field>from|cc|bcc|subject|to|after|before|newer|older|older_than|newer_than|filename):(?<value>.*?)(?=(\s+\w+:|$))";
+            string pattern = @"(?<field>from|cc|bcc|subject|to|after|before|newer|older|older_than|newer_than|filename):(?<value>(?:[^:]+|""[^""]*"")(?:\s|$))";
             var matches = Regex.Matches(query, pattern, RegexOptions.IgnoreCase);
 
             // To track the end of the last match
@@ -516,12 +516,12 @@ namespace ExcellentEmailExperience.Model
                 connection.Open();
 
                 var command = connection.CreateCommand();
-                command.CommandText = "TRUNCATE TABLE MailContent";
+                command.CommandText = "DELETE FROM MailContent";
                 command.ExecuteNonQuery();
             }
         }
 
-        public IEnumerable<MailContent> SearchCache(string query) //todo create this
+        public IEnumerable<MailContent> SearchCache(string query) 
         {
             var options = new JsonSerializerOptions
             {
@@ -595,6 +595,10 @@ namespace ExcellentEmailExperience.Model
                 {
                     conditions.Add("attachments LIKE $filename");
                 }
+                if (parsedQuery.TryGetValue("search", out List<string> search))
+                {
+                    conditions.Add("(subject LIKE $search OR body LIKE $search)");
+                }
 
                 // Combine all conditions into a single WHERE clause
                 if (conditions.Count > 0)
@@ -612,7 +616,15 @@ namespace ExcellentEmailExperience.Model
                     {
                         if (param.Key == "after" || param.Key == "before" || param.Key == "newer" || param.Key == "older" || param.Key == "older_than" || param.Key == "newer_than")
                         {
-                            command.Parameters.AddWithValue($"${param.Key}", DateTime.ParseExact(value, "yyyy-MM-dd", CultureInfo.InvariantCulture));
+                            if (DateTime.TryParseExact(value, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var parsedDate))
+                            {
+                                command.Parameters.AddWithValue($"${param.Key}", parsedDate);
+                            }
+                            else
+                            {
+                                // Handle invalid date formats gracefully
+                                throw new FormatException($"Invalid date format for {param.Key}: {value}");
+                            }
                         }
                         else
                         {
