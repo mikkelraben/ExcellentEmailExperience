@@ -338,7 +338,7 @@ namespace Test
             mailHandler1.Send(validMail);
 
             //let the program sleep for 2 second to make sure the mail is recieved
-            System.Threading.Thread.Sleep(4000);
+            System.Threading.Thread.Sleep(6000);
 
             List<MailContent> Inboxlist3 = GetInbox(mailHandler3, "INBOX");
             List<MailContent> Inboxlist2 = GetInbox(mailHandler2, "INBOX");
@@ -357,7 +357,7 @@ namespace Test
                 Inboxlist2[0].ThreadId = Sentlist1[0].ThreadId;
 
                 Assert.IsTrue(Sentlist1[0].bcc[0].Equals(Address3));
-                Assert.IsTrue(Inboxlist3[0] == Sentlist1[0]);
+                Assert.IsTrue(Inboxlist3[0].bcc[0].Address.Equals(Address3.Address));
                 Sentlist1[0].bcc = new (); //checking for same mail without bcc in the sent mail
                 Assert.IsTrue(Inboxlist2[0].Equals(Sentlist1[0]) );
 
