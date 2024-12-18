@@ -3,6 +3,7 @@ using Google;
 using Google.Apis.Auth.OAuth2;
 using Google.Apis.Gmail.v1;
 using Google.Apis.Gmail.v1.Data;
+using Google.Apis.Requests;
 using MimeKit.Tnef;
 using Org.BouncyCastle.Asn1.Cmp;
 using System;
@@ -47,6 +48,7 @@ namespace ExcellentEmailExperience.Model
         private MailAddress mailAddress;
         private ulong NewestId;
         private ulong LatestId;
+        private Mutex mutex = new Mutex();
 
         // modifies the body string so that google doesn't shit itself in fear and panic
         // and therefore modifies the message to fit its asinine standards
@@ -94,30 +96,68 @@ namespace ExcellentEmailExperience.Model
             var messages = request.Execute().Messages;
 
             List<string> MessageIds = new List<string>();
+            List<string> NotCachedMessageIds = new List<string>();
 
+            if (messages == null)
+            {
+                yield break;
+            }
+
+            // Check if the message is in the cache
             foreach (var message in messages)
             {
                 MessageIds.Add(message.Id);
-                MailContent mail = BuildMailContent(message, name);
                 if (!cache.CheckCache(message.Id))
                 {
-                    cache.CacheMessage(mail, name);
+                    NotCachedMessageIds.Add(message.Id);
                 }
-                IMailHandler.Mail newMail = new IMailHandler.Mail();
-                newMail.email = mail;
-                newMail.Deletion = false;
-                yield return newMail;
             }
 
-            
-            
+            for (int i = 0; i < NotCachedMessageIds.Count; i += 100)
+            {
+                mutex.WaitOne();
+                var batchRequest = new BatchRequest(service);
+                foreach (var id in NotCachedMessageIds.GetRange(i, Math.Min(100, NotCachedMessageIds.Count - i)))
+                {
+                    var getRequest = service.Users.Messages.Get("me", id);
+                    batchRequest.Queue<Google.Apis.Gmail.v1.Data.Message>(getRequest, (content, error, i, message) =>
+                    {
+                        if (error != null)
+                        {
+                            Console.WriteLine("Error: " + error.Message);
+                            return;
+                        }
+                        MailContent mailContent = BuildMailContent(content, name);
+                        cache.CacheMessage(mailContent, name);
+                    });
+                }
+                batchRequest.ExecuteAsync().Wait();
+                System.Threading.Thread.Sleep(1000);
+                mutex.ReleaseMutex();
+            }
+
+            // Return the messages that are in the cache
+            foreach (var message in MessageIds)
+            {
+                if (cache.CheckCache(message))
+                {
+                    IMailHandler.Mail newMail = new IMailHandler.Mail();
+                    newMail.email = cache.GetMessage(message);
+                    newMail.Deletion = false;
+                    yield return newMail;
+                }
+                else
+                {
+                    MessageHandler.AddMessage("Error: Loading message", MessageSeverity.Error);
+                }
+            }
         }
 
         // just gets the changes from last sync
         public IEnumerable<IMailHandler.Mail> PartialSync(string folderName)
         {
             // avoid impending doom
-            if(NewestId == 0)
+            if (NewestId == 0)
             {
                 yield break;
             }
@@ -129,7 +169,7 @@ namespace ExcellentEmailExperience.Model
                 request.LabelId = folderName;
 
                 var historyResponse = request.Execute();
-                
+
                 LatestId = historyResponse.HistoryId.Value;
 
                 foreach (var history in historyResponse.History)
@@ -140,7 +180,7 @@ namespace ExcellentEmailExperience.Model
                         if (!cache.CheckCache(message.Message.Id))
                         {
                             MailContent mail = BuildMailContent(message.Message, folderName);
-                            cache.CacheMessage(mail,folderName);
+                            cache.CacheMessage(mail, folderName);
 
                             newMail.email = mail;
                             newMail.Deletion = false;
@@ -171,7 +211,7 @@ namespace ExcellentEmailExperience.Model
             finally { }
         }
 
-        public IEnumerable<IMailHandler.Mail> RefreshOld(string folderName,int count, DateTime time)
+        public IEnumerable<IMailHandler.Mail> RefreshOld(string folderName, int count, DateTime time)
         {
             foreach (var OldMail in cache.GetFolder(folderName, count, time))
             {
@@ -184,8 +224,8 @@ namespace ExcellentEmailExperience.Model
         // this should be called when we want to refresh to view either older or newer messages. 
         public IEnumerable<IMailHandler.Mail> Refresh(int count)
         {
-            
-            
+
+
 
             bool fullSync = true;
             try
@@ -223,8 +263,8 @@ namespace ExcellentEmailExperience.Model
         {
             bool fullSync = true;
             int counter = 0;
-            try 
-            {   
+            try
+            {
                 foreach (var mail in PartialSync(name))
                 {
                     counter++;
@@ -239,25 +279,28 @@ namespace ExcellentEmailExperience.Model
             }
             finally { }
 
+
+            if ((count - counter) > 0)
+            {
+                bool empty = true;
+                foreach (var mail in cache.GetFolder(name, (count - counter)))
+                {
+                    empty = false;
+                    MailContent newMail = new MailContent();
+                    newMail = mail;
+                    yield return newMail;
+                }
+                if (empty)
+                    fullSync = true;
+            }
+
             if (fullSync)
             {
-                foreach (var mail in FullSync(name,count))
+                foreach (var mail in FullSync(name, count))
                 {
                     MailContent NewMail = new MailContent();
                     NewMail = mail.email;
                     yield return NewMail;
-                }
-            }
-            else
-            {
-                if((count - counter) > 0)
-                {
-                    foreach (var mail in cache.GetFolder(name, (count - counter)))
-                    {
-                        MailContent newMail = new MailContent();
-                        newMail = mail;
-                        yield return newMail;
-                    }
                 }
             }
         }
@@ -493,7 +536,7 @@ namespace ExcellentEmailExperience.Model
                     //}
                     //    .Users.Threads threadMessageID=service.Users.Threads.Get("me",content.ThreadId);
 
-                    
+
                 }
 
                 // send it.
