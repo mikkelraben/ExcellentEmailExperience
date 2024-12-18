@@ -6,13 +6,9 @@ using Microsoft.UI.Xaml.Data;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Diagnostics;
-using System.Reflection.Metadata.Ecma335;
 using System.Runtime.InteropServices.WindowsRuntime;
-using System.Security.Principal;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Xml.Linq;
 using Windows.Foundation;
 
 
@@ -195,6 +191,10 @@ namespace ExcellentEmailExperience.ViewModel
             {
                 await Task.Run(() =>
                 {
+                    if (cancellationToken.IsCancellationRequested)
+                    {
+                        return;
+                    }
                     var ids = folderViewModel.mailHandler.GetNewIds();
 
 

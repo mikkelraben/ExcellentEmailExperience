@@ -1,8 +1,6 @@
 using ExcellentEmailExperience.Helpers;
-using ExcellentEmailExperience.Interfaces;
 using ExcellentEmailExperience.Model;
 using ExcellentEmailExperience.ViewModel;
-using Microsoft.UI;
 using Microsoft.UI.Input;
 using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
@@ -12,7 +10,6 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
-using System.Net.Mail;
 using System.Threading;
 using System.Threading.Tasks;
 using Windows.ApplicationModel.DataTransfer;
@@ -173,8 +170,11 @@ namespace ExcellentEmailExperience.Views
                 MassEditMenu.Visibility = Visibility.Collapsed;
                 if (selectedMail.Unread)
                 {
-                    _ = currentFolder.mailHandler.UpdateFlag(mailContent, MailFlag.unread);
-
+                    Thread thread = new(() =>
+                    {
+                        currentFolder.mailHandler.UpdateFlag(mailContent, MailFlag.unread);
+                    });
+                    thread.Start();
                     currentFolder.mails[MailList.SelectedIndex].Unread = false;
                 }
 

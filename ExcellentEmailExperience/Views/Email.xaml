@@ -39,6 +39,8 @@
                     <RowDefinition/>
                     <RowDefinition/>
                     <RowDefinition/>
+                    <RowDefinition/>
+                    <RowDefinition/>
                 </Grid.RowDefinitions>
                 <!--<TextBlock Text="{x:Bind viewModel.IsEditable,Mode=OneWay}"/>-->
                 <TextBlock Margin="12,4" Grid.Column="0" Grid.Row="0" VerticalAlignment="Center" HorizontalTextAlignment="Left" Visibility="{x:Bind viewModel.IsEditable,Converter={StaticResource BoolToVisibility},Mode=OneWay}">
@@ -75,11 +77,15 @@
                 </TextBlock>
                 <!--<TextBlock Text="{x:Bind viewModel.To.Count,Mode=OneWay}"/>-->
                 <StackPanel Orientation="Horizontal" Grid.Column="1" Grid.Row="2">
+                    <Button Margin="0,0,5,0" Width="32" Height="32" Padding="0,0" Background="Transparent" BorderBrush="Transparent" Click="CC_Expand">
+                        <FontIcon Glyph="&#xE712;"/>
+                    </Button>
+
                     <Button Margin="0,0,5,0" Width="32" Height="32" Padding="0,0" Background="Transparent" BorderBrush="Transparent" Click="AddMailAddress_Click" Visibility="{x:Bind viewModel.IsEditable,Converter={StaticResource BoolToVisibility},Mode=OneWay}">
                         <FontIcon Glyph="&#xE710;"/>
                     </Button>
 
-                    <ItemsView ItemsSource="{x:Bind viewModel.To,Mode=OneWay}" SelectionMode="None" ItemInvoked="FromAddress_ItemInvoked"  Visibility="{x:Bind viewModel.IsEditable,Converter={StaticResource BoolToNotVisibility},Mode=OneWay}">
+                    <ItemsView ItemsSource="{x:Bind viewModel.To,Mode=OneWay}" SelectionMode="None" IsItemInvokedEnabled="True" ItemInvoked="FromAddress_ItemInvoked"  Visibility="{x:Bind viewModel.IsEditable,Converter={StaticResource BoolToNotVisibility},Mode=OneWay}">
                         <ItemsView.Layout>
                             <LinedFlowLayout ItemsStretch="Fill" LineHeight="27"/>
                         </ItemsView.Layout>
@@ -111,6 +117,103 @@
 
                                         <TextBox Text="{Binding Value,Mode=TwoWay}" IsSpellCheckEnabled="False"/>
                                         <Button Margin="5,0,0,0" Width="32" Height="32" Padding="0,0" Background="Transparent" BorderBrush="Transparent" Click="RemoveMailAddress_Click">
+                                            <FontIcon Glyph="&#xE711;"/>
+                                        </Button>
+                                    </StackPanel>
+                                </ItemContainer>
+                            </DataTemplate>
+                        </ItemsView.ItemTemplate>
+                    </ItemsView>
+                </StackPanel>
+                <TextBlock Margin="12,4" Grid.Column="0" Grid.Row="3" VerticalAlignment="Center" HorizontalTextAlignment="Left" x:Name="CCText" Visibility="Collapsed">
+                    CC
+                </TextBlock>
+                <StackPanel Orientation="Horizontal" Grid.Column="1" Grid.Row="3" Visibility="{x:Bind displayCC, Mode=OneWay}" x:Name="CCField">
+                    <Button Margin="0,0,5,0" Width="32" Height="32" Padding="0,0" Background="Transparent" BorderBrush="Transparent" Click="AddCC_Click" Visibility="{x:Bind viewModel.IsEditable,Converter={StaticResource BoolToVisibility},Mode=OneWay}">
+                        <FontIcon Glyph="&#xE710;"/>
+                    </Button>
+
+                    <ItemsView ItemsSource="{x:Bind viewModel.Cc,Mode=OneWay}" SelectionMode="None" IsItemInvokedEnabled="True" ItemInvoked="FromAddress_ItemInvoked"  Visibility="{x:Bind viewModel.IsEditable,Converter={StaticResource BoolToNotVisibility},Mode=OneWay}">
+                        <ItemsView.Layout>
+                            <LinedFlowLayout ItemsStretch="Fill" LineHeight="27"/>
+                        </ItemsView.Layout>
+                        <ItemsView.ItemTemplate>
+                            <DataTemplate x:DataType="mail:MailAddress">
+                                <ItemContainer>
+                                    <TextBlock Margin="12,4" Grid.Column="1" Grid.Row="0" IsTextSelectionEnabled="True" ToolTipService.ToolTip="{x:Bind Address}" HorizontalAlignment="Left" HorizontalTextAlignment="Left">
+                                        <Run Text="{x:Bind DisplayName}" FontSize="14"/>
+                                        <Run Text="{x:Bind Address}" FontSize="12" Foreground="{ThemeResource TextFillColorDisabledBrush}"/>
+                                    </TextBlock>
+                                </ItemContainer>
+                            </DataTemplate>
+                        </ItemsView.ItemTemplate>
+                    </ItemsView>
+                    <ItemsView ItemsSource="{x:Bind viewModel.ccStrings,Mode=OneWay}" SelectionMode="None" IsItemInvokedEnabled="False" Visibility="{x:Bind viewModel.IsEditable,Converter={StaticResource BoolToVisibility},Mode=OneWay}">
+                        <ItemsView.Layout>
+                            <LinedFlowLayout ItemsStretch="Fill" LineHeight="32" MinItemSpacing="5"/>
+                        </ItemsView.Layout>
+                        <ItemsView.ItemTemplate>
+                            <DataTemplate x:DataType="view:StringWrapper">
+                                <ItemContainer>
+                                    <ItemContainer.Resources>
+                                        <ResourceDictionary>
+                                            <StaticResource x:Key="ItemContainerPointerOverBackground" ResourceKey="SubtleFillColorTransparentBrush"/>
+                                            <StaticResource x:Key="ItemContainerPressedBackground" ResourceKey="SubtleFillColorTransparentBrush"/>
+                                        </ResourceDictionary>
+                                    </ItemContainer.Resources>
+                                    <StackPanel Orientation="Horizontal">
+
+                                        <TextBox Text="{Binding Value,Mode=TwoWay}" IsSpellCheckEnabled="False"/>
+                                        <Button Margin="5,0,0,0" Width="32" Height="32" Padding="0,0" Background="Transparent" BorderBrush="Transparent" Click="RemoveCC_Click">
+                                            <FontIcon Glyph="&#xE711;"/>
+                                        </Button>
+                                    </StackPanel>
+                                </ItemContainer>
+                            </DataTemplate>
+                        </ItemsView.ItemTemplate>
+                    </ItemsView>
+                </StackPanel>
+
+                <TextBlock Margin="12,4" Grid.Column="0" Grid.Row="4" VerticalAlignment="Center" HorizontalTextAlignment="Left" x:Name="BCCText" Visibility="Collapsed">
+                    BCC
+                </TextBlock>
+                <StackPanel Orientation="Horizontal" Grid.Column="1" Grid.Row="4" Visibility="Collapsed" x:Name="BCCField">
+                    <Button Margin="0,0,5,0" Width="32" Height="32" Padding="0,0" Background="Transparent" BorderBrush="Transparent" Click="AddBCC_Click" Visibility="{x:Bind viewModel.IsEditable,Converter={StaticResource BoolToVisibility},Mode=OneWay}">
+                        <FontIcon Glyph="&#xE710;"/>
+                    </Button>
+
+                    <ItemsView ItemsSource="{x:Bind viewModel.Bcc,Mode=OneWay}" SelectionMode="None" IsItemInvokedEnabled="True" ItemInvoked="FromAddress_ItemInvoked"  Visibility="{x:Bind viewModel.IsEditable,Converter={StaticResource BoolToNotVisibility},Mode=OneWay}">
+                        <ItemsView.Layout>
+                            <LinedFlowLayout ItemsStretch="Fill" LineHeight="27"/>
+                        </ItemsView.Layout>
+                        <ItemsView.ItemTemplate>
+                            <DataTemplate x:DataType="mail:MailAddress">
+                                <ItemContainer>
+                                    <TextBlock Margin="12,4" Grid.Column="1" Grid.Row="0" IsTextSelectionEnabled="True" ToolTipService.ToolTip="{x:Bind Address}" HorizontalAlignment="Left" HorizontalTextAlignment="Left">
+                                        <Run Text="{x:Bind DisplayName}" FontSize="14"/>
+                                        <Run Text="{x:Bind Address}" FontSize="12" Foreground="{ThemeResource TextFillColorDisabledBrush}"/>
+                                    </TextBlock>
+                                </ItemContainer>
+                            </DataTemplate>
+                        </ItemsView.ItemTemplate>
+                    </ItemsView>
+                    <ItemsView ItemsSource="{x:Bind viewModel.bccStrings,Mode=OneWay}" SelectionMode="None" IsItemInvokedEnabled="False" Visibility="{x:Bind viewModel.IsEditable,Converter={StaticResource BoolToVisibility},Mode=OneWay}">
+                        <ItemsView.Layout>
+                            <LinedFlowLayout ItemsStretch="Fill" LineHeight="32" MinItemSpacing="5"/>
+                        </ItemsView.Layout>
+                        <ItemsView.ItemTemplate>
+                            <DataTemplate x:DataType="view:StringWrapper">
+                                <ItemContainer>
+                                    <ItemContainer.Resources>
+                                        <ResourceDictionary>
+                                            <StaticResource x:Key="ItemContainerPointerOverBackground" ResourceKey="SubtleFillColorTransparentBrush"/>
+                                            <StaticResource x:Key="ItemContainerPressedBackground" ResourceKey="SubtleFillColorTransparentBrush"/>
+                                        </ResourceDictionary>
+                                    </ItemContainer.Resources>
+                                    <StackPanel Orientation="Horizontal">
+
+                                        <TextBox Text="{Binding Value,Mode=TwoWay}" IsSpellCheckEnabled="False"/>
+                                        <Button Margin="5,0,0,0" Width="32" Height="32" Padding="0,0" Background="Transparent" BorderBrush="Transparent" Click="RemoveBCC_Click">
                                             <FontIcon Glyph="&#xE711;"/>
                                         </Button>
                                     </StackPanel>
