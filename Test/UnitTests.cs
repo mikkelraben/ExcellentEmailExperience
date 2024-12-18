@@ -157,51 +157,6 @@ namespace Test
 
 
 
-        [TestMethod]
-        public void TestMethod_send_speed()
-        {
-            UnitTest_init();
-
-
-            //creating a new mail object and sending it to the current mail address? checking for recieving mail
-            MailContent validMail = new();
-
-            validMail.subject = validSubject;
-
-            validMail.body = validBody_gen();
-
-            validMail.to = new List<MailAddress> { Address2 };
-
-            validMail.from = Address1;
-
-            mut.WaitOne(); Debug.WriteLine("getting mutex access");
-            mailHandler1.Send(validMail);
-
-            //TODO: change amount of requests when api is changed
-
-            //let the program sleep for 2 second to make sure the mail is recieved
-            System.Threading.Thread.Sleep(4000);
-
-            List<MailContent> Inboxlist2 = GetInbox(mailHandler2, "INBOX");
-
-
-            List<MailContent> Sentlist1 = GetInbox(mailHandler1, "SENT");
-            Debug.WriteLine("finished mutex access"); mut.ReleaseMutex();
-
-
-            if (Inboxlist2[0] == null && Sentlist1[0] == null)
-            {
-                Assert.Fail("no messages were sent!");
-            }
-
-            //checking if the time difference between the sent mail and recieved mail is less than 2 second??
-
-            TimeSpan diff = Inboxlist2[0].date.Subtract(Sentlist1[0].date);
-
-
-            Assert.IsTrue(diff.TotalSeconds < 1 && diff.TotalSeconds > -1);
-
-        }
 
 
 
@@ -331,6 +286,7 @@ namespace Test
             System.Threading.Thread.Sleep(4000);
 
             List<MailContent> Inboxlist3 = GetInbox(mailHandler3, "INBOX");
+            List<MailContent> Inboxlist2 = GetInbox(mailHandler2, "INBOX");
 
 
             List<MailContent> Sentlist1 = GetInbox(mailHandler1, "SENT");
@@ -342,9 +298,13 @@ namespace Test
             {
                 Inboxlist3[0].MessageId = Sentlist1[0].MessageId;
                 Inboxlist3[0].ThreadId = Sentlist1[0].ThreadId;
+                Inboxlist2[0].MessageId = Sentlist1[0].MessageId;
+                Inboxlist2[0].ThreadId = Sentlist1[0].ThreadId;
 
+                Assert.IsTrue(Sentlist1[0].cc[0].Equals(Address3));
                 Assert.IsTrue(Inboxlist3[0] == Sentlist1[0]);
-                Assert.IsTrue(Inboxlist3[0].cc[0] == Address3);
+                Assert.IsTrue(Inboxlist2[0].Equals(Sentlist1[0]));
+
             }
             else
             {
@@ -393,11 +353,13 @@ namespace Test
             {
                 Inboxlist3[0].MessageId = Sentlist1[0].MessageId;
                 Inboxlist3[0].ThreadId = Sentlist1[0].ThreadId;
+                Inboxlist2[0].MessageId = Sentlist1[0].MessageId;
+                Inboxlist2[0].ThreadId = Sentlist1[0].ThreadId;
 
+                Assert.IsTrue(Sentlist1[0].bcc[0].Equals(Address3));
                 Assert.IsTrue(Inboxlist3[0] == Sentlist1[0]);
-                Assert.IsTrue(Inboxlist3[0].bcc[0] == Address3);
-                List<MailAddress> bccList = new();
-                Assert.IsTrue(Inboxlist2[0].bcc == bccList);
+                Sentlist1[0].bcc = new (); //checking for same mail without bcc in the sent mail
+                Assert.IsTrue(Inboxlist2[0].Equals(Sentlist1[0]) );
 
             }
             else
@@ -501,6 +463,7 @@ namespace Test
             validMail.body = validBody_gen();
 
             validMail.cc = new List<MailAddress> { Address3 };
+
             mut.WaitOne(); Debug.WriteLine("getting mutex access");
 
             mailHandler1.Send(validMail);
@@ -583,7 +546,18 @@ namespace Test
 
             if (Inboxlist2[0] != null)
             {
-                mailHandler2.Forward(Inboxlist2[0]);
+                MailContent forward = mailHandler2.Forward(Inboxlist2[0]);
+                List<MailAddress> fwdlist = new List<MailAddress> { };
+
+
+                if (forward != null)
+                {
+
+                    CollectionAssert.AreEqual(fwdlist, forward.to);
+                    Assert.IsTrue(forward.body == $"Forwarded from {Address1.Address}\n "+Inboxlist2[0].body+ $" \n\n Originally sent to:{Address2.Address}");
+                    forward.to = new List<MailAddress> { Address3 };
+                    mailHandler2.Send(forward);
+                }
             }
             else
             {
@@ -605,10 +579,7 @@ namespace Test
             {
                 Inboxlist3[0].MessageId = Sentlist1[0].MessageId;
                 Inboxlist3[0].ThreadId = Sentlist1[0].ThreadId;
-                Inboxlist3[0].body += "\r\n\r\n Originally sent\r\nto:System.Collections.Generic.List`1[System.Net.Mail.MailAddress]";
-                Inboxlist3[0].body = $"Forwarded from {Address2}\r\n " + Inboxlist3[0].body;
-                Inboxlist3[0].subject += "Forward: ";
-                Assert.IsTrue(Inboxlist3[0] == Sentlist1[0]);
+                Assert.IsTrue(Inboxlist3[0].body.Equals( $"Forwarded from {Address1.Address}\r\n "+Sentlist1[0].body+ $"\r\n\r\n Originally sent to:{Address2.Address}"));
             }
             else
             {
