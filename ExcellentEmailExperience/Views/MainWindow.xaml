@@ -79,7 +79,7 @@
             <AppBarSeparator Margin="18,0,18,0"/>
             <AppBarButton Icon="Read" Click="ReadUnread_Click" LabelPosition="Collapsed" Width="40" ToolTipService.ToolTip="Mark Read/Unread"/>
             <AppBarButton Icon="Delete" Click="Delete_Click" LabelPosition="Collapsed" Width="40" ToolTipService.ToolTip="Delete"/>
-            <AppBarButton Icon="More" LabelPosition="Collapsed" Width="40" ToolTipService.ToolTip="More" ToolTipService.Placement="Top"/>
+            <!--<AppBarButton Icon="More" LabelPosition="Collapsed" Width="40" ToolTipService.ToolTip="More" ToolTipService.Placement="Top"/>-->
         </StackPanel>
 
         <Grid Grid.Row="1">
