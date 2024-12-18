@@ -34,9 +34,13 @@ namespace ExcellentEmailExperience.Interfaces
         /// </returns>
         string[] GetFolderNames();
 
-        ulong[] GetNewIds();
-
-        IEnumerable<MailContent> Refresh(string name, bool old, int count, ulong lastId, ulong newestId);
+        public struct Mail
+        {
+            public MailContent email;
+            public bool Deletion;
+        }
+        public IEnumerable<Mail> RefreshOld(string folderName, int count, DateTime time);
+        IEnumerable<Mail> Refresh( int count);
 
         /// <summary>
         /// Retrieves batch mails from a folder determined by <paramref name="name"/>. 

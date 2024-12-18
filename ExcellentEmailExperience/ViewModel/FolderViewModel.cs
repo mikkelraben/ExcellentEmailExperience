@@ -102,30 +102,14 @@ namespace ExcellentEmailExperience.ViewModel
             }
         }
 
-        public void UpdateViewMails(bool old, ulong lastId, ulong newestId)
-        {
-            try
-            {
-                foreach (var mail in mailHandler.Refresh(FolderName, old, 20, lastId, newestId))
-                {
-                    HandleMessage(DispatchQueue, mail, CancelToken);
-                }
-
-            }
-            catch (System.Runtime.InteropServices.COMException)
-            {
-                // Application probably exited
-                return;
-            }
-            catch (Exception)
-            {
-                MessageHandler.AddMessage("Failed to load mails", MessageSeverity.Error);
-                return;
-            }
-        }
-
         private void HandleMessage(DispatcherQueue dispatcherQueue, MailContent mail, CancellationToken cancellationToken)
         {
+            //prevents mail duplicate badness
+            if (mailsContent.Exists(x=>x.MessageId == mail.MessageId))
+            {
+                throw new ArgumentException("mail already exists in viewmodel");
+            }
+
             if (cancellationToken.IsCancellationRequested)
             {
                 return;
@@ -163,6 +147,8 @@ namespace ExcellentEmailExperience.ViewModel
                             break;
                         }
                     }
+
+
 
                     mails.Insert(insertIndex, inboxMail);
                 });
