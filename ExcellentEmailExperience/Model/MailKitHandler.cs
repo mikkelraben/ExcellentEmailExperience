@@ -43,7 +43,7 @@ namespace ExcellentEmailExperience.Model
         {
             throw new NotImplementedException();
         }
-        public IEnumerable<MailContent> Refresh(string name, bool old, int count, ulong lastId, ulong newestId)
+        public IEnumerable<IMailHandler.Mail> Refresh(bool old, int count)
         {
             throw new NotImplementedException();
         }
@@ -110,6 +110,16 @@ namespace ExcellentEmailExperience.Model
         }
 
         public MailContent UpdateFlag(MailContent content, MailFlag flagtype)
+        {
+            throw new NotImplementedException();
+        }
+
+        public IEnumerable<IMailHandler.Mail> RefreshOld(string folderName, int count, DateTime time)
+        {
+            throw new NotImplementedException();
+        }
+
+        public IEnumerable<IMailHandler.Mail> Refresh(int count)
         {
             throw new NotImplementedException();
         }
