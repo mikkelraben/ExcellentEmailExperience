@@ -99,7 +99,7 @@ namespace ExcellentEmailExperience.Model
                 yield break;
             }
 
-            if (!TestServer && Label2Flag.ContainsKey(name))
+            if (Label2Flag.ContainsKey(name))
             {
                 var idList = messages.Select(message => message.Id).Distinct().ToList();
                 cache.UpdateFolder(idList, name, Label2Flag, "INBOX");
@@ -107,7 +107,7 @@ namespace ExcellentEmailExperience.Model
 
             foreach (var message in messages)
             {
-                if (!TestServer && cache.CheckCache(message.Id))
+                if (cache.CheckCache(message.Id))
                 {
                     cache.AddFolder(message.Id, name, Label2Flag, "INBOX");
                 }
@@ -115,18 +115,12 @@ namespace ExcellentEmailExperience.Model
                 {
                     var msg = service.Users.Messages.Get("me", message.Id).Execute();
                     MailContent mailContent = BuildMailContent(msg, name);
-
-                    if (!TestServer)
-                    {
-                        cache.CacheMessage(mailContent, name);
-                    }
-
                 }
             }
 
             for (int i = 0; i < count; i++)
             {
-                yield return cache.GetCache(messages[i].Id);
+                yield return cache.GetMessage(messages[i].Id);
             }
             var NewestMessage = service.Users.Messages.Get("me", messages[0].Id).Execute();
             NewestId = NewestMessage.HistoryId.Value;
@@ -166,7 +160,7 @@ namespace ExcellentEmailExperience.Model
                         if (cache.CheckCache(addedMessage.Message.Id))
                         {
                             Mail mailStruct = new Mail();
-                            mailStruct.email = cache.GetCache(addedMessage.Message.Id);
+                            mailStruct.email = cache.GetMessage(addedMessage.Message.Id);
                             mailStruct.Deletion = false;
 
                             yield return mailStruct;
@@ -182,10 +176,7 @@ namespace ExcellentEmailExperience.Model
                             mailStruct.email = mailContent;
                             mailStruct.Deletion = false;
 
-                            if (!TestServer)
-                            {
-                                cache.CacheMessage(mailContent, label);
-                            }
+                           
 
                             yield return mailStruct;
                         }
