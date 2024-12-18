@@ -235,13 +235,16 @@ namespace ExcellentEmailExperience.Model
         }
 
         /// <summary>
-        /// Retrieves the newest mails stored in the database from a specific folder.
+        /// Retrieves the newest mails stored in the database from a specific folder before a given date (or newest if no date is given).
         /// </summary>
         /// <param name="folderName"> The folder, which mails are retrieved from </param>
         /// <param name="count"> The amount of mails retrieved. Given no coun parameter, the function returns the 20 newest mails by default. </param>
+        /// <param name="date"> The newest date that should be retrieved from. If no date parameter is given, it will look at the newest mails. </param>
         /// <returns> List containing the newest mails stored as MailContent </returns>
-        public List<MailContent> GetFolder(string folderName, int count = 20)
+        public List<MailContent> GetFolder(string folderName, int count = 20, DateTime? date = null)
         {
+            date = date.HasValue ? date : DateTime.Now;
+
             List<MailContent> mailList = new();
 
             using (var connection = new SqliteConnection(connectionString))
@@ -252,11 +255,13 @@ namespace ExcellentEmailExperience.Model
                 command.CommandText = @"
                 SELECT * 
                 FROM MailContent
-                WHERE FolderId LIKE $folder
+                WHERE FolderId LIKE $folder AND date < $date
                 ORDER BY date DESC
                 LIMIT $limit;
                 ";
+
                 command.Parameters.AddWithValue("$folder", "%" + folderName + "%");
+                command.Parameters.AddWithValue("$date", date.Value.ToString("yyyy-MM-dd HH:mm:ss"));
                 command.Parameters.AddWithValue("$limit", count);
 
                 var reader = command.ExecuteReader();
