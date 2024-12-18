@@ -203,7 +203,10 @@ namespace ExcellentEmailExperience.ViewModel
                     {
                         return;
                     }
-
+                    if(folderViewModel.mailsContent.Count == 0)
+                    {
+                        return;
+                    }
 
                     foreach (var mail in folderViewModel.mailHandler.RefreshOld(folderViewModel.FolderName, 20, folderViewModel.mailsContent[folderViewModel.mailsContent.Count - 1].date))
                     {
