@@ -113,5 +113,15 @@ namespace ExcellentEmailExperience.Model
         {
             throw new NotImplementedException();
         }
+
+        public IEnumerable<IMailHandler.Mail> RefreshOld(string folderName, int count, DateTime time)
+        {
+            throw new NotImplementedException();
+        }
+
+        public IEnumerable<IMailHandler.Mail> Refresh(int count)
+        {
+            throw new NotImplementedException();
+        }
     }
 }
