@@ -106,28 +106,6 @@ namespace ExcellentEmailExperience.ViewModel
             }
         }
 
-        public void UpdateViewMails(bool old, ulong lastId, ulong newestId)
-        {
-            try
-            {
-                foreach (var mail in mailHandler.Refresh(FolderName, old, 20, lastId, newestId))
-                {
-                    HandleMessage(DispatchQueue, mail, CancelToken);
-                }
-
-            }
-            catch (System.Runtime.InteropServices.COMException)
-            {
-                // Application probably exited
-                return;
-            }
-            catch (Exception)
-            {
-                MessageHandler.AddMessage("Failed to load mails", MessageSeverity.Error);
-                return;
-            }
-        }
-
         private void HandleMessage(DispatcherQueue dispatcherQueue, MailContent mail, CancellationToken cancellationToken)
         {
             if (cancellationToken.IsCancellationRequested)

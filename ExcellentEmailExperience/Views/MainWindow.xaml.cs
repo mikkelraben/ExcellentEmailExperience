@@ -211,7 +211,7 @@ namespace ExcellentEmailExperience.Views
         private void RefreshButton_Click(object sender, RoutedEventArgs e)
         {
             // TODO: Does this work with multiple accounts?
-            accounts[0].mailHandlerViewModel.Refresh(false);
+           // accounts[0].mailHandlerViewModel.Refresh(false);
         }
 
         bool sidebarLarge = false;
