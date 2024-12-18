@@ -149,7 +149,7 @@ namespace ExcellentEmailExperience.Model
                         yield break;
                     }
 
-                    if (Label2Flag.ContainsKey(name))
+                    if (Label2Flag.ContainsKey(label))
                     {
                         var idList = history.MessagesAdded.Select(message => message.Message.Id).Distinct().ToList();
                         cache.UpdateFolder(idList, label, Label2Flag, "INBOX");
