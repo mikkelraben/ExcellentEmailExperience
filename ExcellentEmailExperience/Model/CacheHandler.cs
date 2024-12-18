@@ -28,7 +28,7 @@ namespace ExcellentEmailExperience.Model
             var result = new Dictionary<string, List<string>>(StringComparer.OrdinalIgnoreCase);
 
             // Regex to match fields like "from:", "cc:", "subject:", followed by their values
-            string pattern = @"(?<field>from|cc|bcc|subject|to|after|before|newer|older|older_than|newer_than|flag|has|filename|is):(?<value>.*?)(?=(\s+\w+:|$))";
+            string pattern = @"(?<field>from|cc|bcc|subject|to|after|before|newer|older|older_than|newer_than|filename):(?<value>.*?)(?=(\s+\w+:|$))";
             var matches = Regex.Matches(query, pattern, RegexOptions.IgnoreCase);
 
             // To track the end of the last match
@@ -521,7 +521,7 @@ namespace ExcellentEmailExperience.Model
             }
         }
 
-        public IEnumerable<MailContent> SearchCache(string query)
+        public IEnumerable<MailContent> SearchCache(string query) //todo create this
         {
             var options = new JsonSerializerOptions
             {
@@ -539,6 +539,7 @@ namespace ExcellentEmailExperience.Model
                 command.CommandText = $@"
                 SELECT *
                 FROM MailContent
+                
                 ";
 
 
@@ -566,55 +567,73 @@ namespace ExcellentEmailExperience.Model
                 {
                     conditions.Add("subject LIKE $subject");
                 }
+                if (parsedQuery.TryGetValue("after", out List<string> after))
+                {
+                    conditions.Add("date >= $after");
+                }
+                if (parsedQuery.TryGetValue("before", out List<string> before))
+                {
+                    conditions.Add("date <= $before");
+                }
+                if (parsedQuery.TryGetValue("newer", out List<string> newer))
+                {
+                    conditions.Add("date >= $newer");
+                }
+                if (parsedQuery.TryGetValue("older", out List<string> older))
+                {
+                    conditions.Add("date <= $older");
+                }
+                if (parsedQuery.TryGetValue("older_than", out List<string> older_than))
+                {
+                    conditions.Add("date <= $older_than");
+                }
+                if (parsedQuery.TryGetValue("newer_than", out List<string> newer_than))
+                {
+                    conditions.Add("date >= $newer_than");
+                }
+                if (parsedQuery.TryGetValue("filename", out List<string> filename))
+                {
+                    conditions.Add("attachments LIKE $filename");
+                }
 
                 // Combine all conditions into a single WHERE clause
                 if (conditions.Count > 0)
                 {
                     command.CommandText += " WHERE " + string.Join(" AND ", conditions);
                 }
-
+                command.CommandText += @"
+                ORDER BY date DESC
+                LIMIT 50";
                 // Add parameters to the command
                 foreach (var param in parsedQuery)
                 {
                     // Assuming param.Value is a list of strings you want to bind
                     foreach (var value in param.Value)
                     {
-                        command.Parameters.AddWithValue($"${param.Key}", value);
+                        if (param.Key == "after" || param.Key == "before" || param.Key == "newer" || param.Key == "older" || param.Key == "older_than" || param.Key == "newer_than")
+                        {
+                            command.Parameters.AddWithValue($"${param.Key}", DateTime.ParseExact(value, "yyyy-MM-dd", CultureInfo.InvariantCulture));
+                        }
+                        else
+                        {
+                            command.Parameters.AddWithValue($"%${param.Key}%", value);
+                        }
                     }
                 }
 
 
 
-                //command.Parameters.AddWithValue("$folder", folderName);
 
                 var reader = command.ExecuteReader();
 
-                IEnumerable<MailContent> mails = new List<MailContent>();
+                
                 while (reader.Read())
                 {
-                    MailContent mail = new MailContent();
-                    mail.MessageId = reader.GetString(0);
-                    mail.from = JsonSerializer.Deserialize<MailAddress>(reader.GetString(1), options);
-                    mail.to = JsonSerializer.Deserialize<List<MailAddress>>(reader.GetString(2), options);
-                    mail.bcc = JsonSerializer.Deserialize<List<MailAddress>>(reader.GetString(3), options);
-                    mail.cc = JsonSerializer.Deserialize<List<MailAddress>>(reader.GetString(4), options);
-                    mail.bodyType = (BodyType)reader.GetInt32(5);
-                    mail.subject = reader.GetString(6);
-                    mail.body = reader.GetString(7);
-
-                    var attachments = reader.GetString(8);
-                    if (attachments != "")
-                        mail.attachments = reader.GetString(8).Split(';').ToList();
-
-                    mail.date = DateTime.Parse(reader.GetString(9));
-                    mail.ThreadId = reader.GetString(10);
-                    mail.flags = (MailFlag)reader.GetInt32(12);
-
-                    mails.Append(mail);
-                    yield return mail;
+                    yield return BuildMailContent(reader);
                 }
 
             }
+            
         }
     }
 }
