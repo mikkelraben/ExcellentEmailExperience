@@ -36,6 +36,8 @@ namespace ExcellentEmailExperience.ViewModel
 
         // This variable is used to store the strings of the emails so they can be edited
         public ObservableCollection<StringWrapper> recipients = new();
+        public ObservableCollection<StringWrapper> ccStrings = new();
+        public ObservableCollection<StringWrapper> bccStrings = new();
 
         [ObservableProperty]
         public List<MailAddress> bcc;
