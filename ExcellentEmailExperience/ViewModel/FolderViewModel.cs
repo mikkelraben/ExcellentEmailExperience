@@ -76,7 +76,7 @@ namespace ExcellentEmailExperience.ViewModel
                 {
                     return;
                 }
-                HandleMessage(dispatcherQueue, mail, CancellationToken.None);
+                HandleMessage(mail);
             }
         }
 
@@ -86,7 +86,7 @@ namespace ExcellentEmailExperience.ViewModel
             {
                 foreach (var mail in mailHandler.GetFolder(name, 20))
                 {
-                    HandleMessage(dispatcherQueue, mail, cancellationToken);
+                    HandleMessage(mail);
                 }
 
             }
@@ -102,15 +102,15 @@ namespace ExcellentEmailExperience.ViewModel
             }
         }
 
-        private void HandleMessage(DispatcherQueue dispatcherQueue, MailContent mail, CancellationToken cancellationToken)
+        public void HandleMessage(MailContent mail)
         {
             //prevents mail duplicate badness
-            if (mailsContent.Exists(x=>x.MessageId == mail.MessageId))
+            if (mailsContent.Exists(x => x.MessageId == mail.MessageId))
             {
                 throw new ArgumentException("mail already exists in viewmodel");
             }
 
-            if (cancellationToken.IsCancellationRequested)
+            if (CancelToken.IsCancellationRequested)
             {
                 return;
             }
@@ -133,9 +133,9 @@ namespace ExcellentEmailExperience.ViewModel
             inboxMail.subject = mail.subject.Replace("\n", "").Replace("\r", "");
             inboxMail.date = mail.date.ToLocalTime();
             inboxMail.Unread = mail.flags.HasFlag(MailFlag.unread);
-            if (dispatcherQueue != null)
+            if (DispatchQueue != null)
             {
-                dispatcherQueue.TryEnqueue(() =>
+                DispatchQueue.TryEnqueue(() =>
                 {
                     int insertIndex = mails.Count;
 
@@ -203,10 +203,15 @@ namespace ExcellentEmailExperience.ViewModel
                     {
                         return;
                     }
-                    var ids = folderViewModel.mailHandler.GetNewIds();
 
 
-                    folderViewModel.UpdateViewMails(true, ids[1], ids[0]);
+                    foreach (var mail in folderViewModel.mailHandler.RefreshOld(folderViewModel.FolderName, 20, folderViewModel.mailsContent[folderViewModel.mailsContent.Count - 1].date))
+                    {
+                        if (!mail.Deletion)
+                        {
+                            folderViewModel.HandleMessage(mail.email);
+                        }
+                    }
                     _busy = false;
                 });
 
