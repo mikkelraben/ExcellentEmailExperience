@@ -34,13 +34,13 @@ namespace ExcellentEmailExperience.Interfaces
         /// </returns>
         string[] GetFolderNames();
 
-        struct Mail
+        public struct Mail
         {
-            MailContent email;
-            bool Deleteion;
+            public MailContent email;
+            public bool Deletion;
         }
-
-        IEnumerable<Mail> Refresh(bool old, int count);
+        public IEnumerable<Mail> RefreshOld(string folderName, int count, DateTime time);
+        IEnumerable<Mail> Refresh( int count);
 
         /// <summary>
         /// Retrieves batch mails from a folder determined by <paramref name="name"/>. 

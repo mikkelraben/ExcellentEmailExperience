@@ -18,6 +18,7 @@ using System.Threading;
 using System.Xml.Linq;
 using Windows.Storage;
 using Windows.Web.Http;
+using static ExcellentEmailExperience.Interfaces.IMailHandler;
 using static ExcellentEmailExperience.Model.GmailHandler;
 using static Google.Apis.Requests.BatchRequest;
 
@@ -39,18 +40,13 @@ namespace ExcellentEmailExperience.Model
             { "TRASH", MailFlag.trash }
         };
 
-        public struct Mail{
-            public MailContent email;
-            public bool Deletion;
-        };
-
         public List<MailAddress> flaggedMails { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
 
         private UserCredential userCredential;
         private GmailService service;
         private MailAddress mailAddress;
-        public ulong NewestId;
-        public ulong LastId;
+        private ulong NewestId;
+        private ulong LatestId;
 
         // modifies the body string so that google doesn't shit itself in fear and panic
         // and therefore modifies the message to fit its asinine standards
@@ -87,123 +83,142 @@ namespace ExcellentEmailExperience.Model
         {
             throw new NotImplementedException();
         }
-        public IEnumerable<MailContent> FullSync(string name, int count)
-        {
 
+        // this should get all mails 
+        public IEnumerable<IMailHandler.Mail> FullSync(string name, int count)
+        {
+            cache.ClearFolder(name);
             var request = service.Users.Messages.List("me");
             request.LabelIds = name;
+            request.MaxResults = 500;
+            var messages = request.Execute().Messages;
 
-            IList<Google.Apis.Gmail.v1.Data.Message> messages = request.Execute().Messages;
-            if (messages == null)
-            {
-                yield break;
-            }
-
-            if (Label2Flag.ContainsKey(name))
-            {
-                var idList = messages.Select(message => message.Id).Distinct().ToList();
-                cache.UpdateFolder(idList, name, Label2Flag, "INBOX");
-            }
+            List<string> MessageIds = new List<string>();
 
             foreach (var message in messages)
             {
-                if (cache.CheckCache(message.Id))
+                MessageIds.Add(message.Id);
+                MailContent mail = BuildMailContent(message, name);
+                if (!cache.CheckCache(message.Id))
                 {
-                    cache.AddFolder(message.Id, name, Label2Flag, "INBOX");
+                    cache.CacheMessage(mail, name);
                 }
-                else
-                {
-                    var msg = service.Users.Messages.Get("me", message.Id).Execute();
-                    MailContent mailContent = BuildMailContent(msg, name);
-                }
+                IMailHandler.Mail newMail = new IMailHandler.Mail();
+                newMail.email = mail;
+                newMail.Deletion = false;
+                yield return newMail;
             }
 
-            for (int i = 0; i < count; i++)
-            {
-                yield return cache.GetMessage(messages[i].Id);
-            }
-            var NewestMessage = service.Users.Messages.Get("me", messages[0].Id).Execute();
-            NewestId = NewestMessage.HistoryId.Value;
-
-            yield break;
-        }
-
-        public IEnumerable<Mail> PartialSync(string folderName)
-        {
-            foreach (var label in GetFolderNames())
-            {
-
-                var refreq = service.Users.History.List("me");
-                refreq.StartHistoryId = NewestId;
-                var historyResponse = refreq.Execute();
-
-                if (historyResponse.History == null)
-                {
-                    yield break;
-                }
-
-                foreach (var history in historyResponse.History)
-                {
-                    if (history.MessagesAdded == null)
-                    {
-                        yield break;
-                    }
-
-                    if (Label2Flag.ContainsKey(label))
-                    {
-                        var idList = history.MessagesAdded.Select(message => message.Message.Id).Distinct().ToList();
-                        cache.UpdateFolder(idList, label, Label2Flag, "INBOX");
-                    }
-
-                    foreach (var addedMessage in history.MessagesAdded)
-                    {
-                        if (cache.CheckCache(addedMessage.Message.Id))
-                        {
-                            Mail mailStruct = new Mail();
-                            mailStruct.email = cache.GetMessage(addedMessage.Message.Id);
-                            mailStruct.Deletion = false;
-
-                            yield return mailStruct;
-                        }
-                        else
-                        {
-                            var msg = service.Users.Messages.Get("me", addedMessage.Message.Id).Execute();
-
-                            // im just going to assume that when you get a new mail that hasnt been seen before that its also unread. 
-                            MailContent mailContent = BuildMailContent(msg, label);
-
-                            Mail mailStruct = new Mail();
-                            mailStruct.email = mailContent;
-                            mailStruct.Deletion = false;
-
-                           
-
-                            yield return mailStruct;
-                        }
-                    }
-                    foreach (var deletedMessage in history.MessagesDeleted)
-                    {
-                        if (cache.CheckCache(deletedMessage.Message.Id))
-                        {
-                            cache.ClearRow(deletedMessage.Message.Id);
-                        }
-                        MailContent mailContent = new MailContent();
-                        mailContent.MessageId = deletedMessage.Message.Id;
-                        Mail mailStruct = new Mail();
-                        mailStruct.email = mailContent;
-                        mailStruct.Deletion = true;
-                        yield return mailStruct;
-                    }
-                }
-                yield break;
-            }
-        }
-
-        public IEnumerable<Mail> Refresh(bool old, int count)
-        {
+            
             
         }
 
+        // just gets the changes from last sync
+        public IEnumerable<IMailHandler.Mail> PartialSync(string folderName)
+        {
+            // avoid impending doom
+            if(NewestId == 0)
+            {
+                yield break;
+            }
+
+            try
+            {
+                var request = service.Users.History.List("me");
+                request.StartHistoryId = NewestId;
+                request.LabelId = folderName;
+
+                var historyResponse = request.Execute();
+                
+                LatestId = historyResponse.HistoryId.Value;
+
+                foreach (var history in historyResponse.History)
+                {
+                    foreach (var message in history.MessagesAdded)
+                    {
+                        IMailHandler.Mail newMail = new IMailHandler.Mail();
+                        if (!cache.CheckCache(message.Message.Id))
+                        {
+                            MailContent mail = BuildMailContent(message.Message, folderName);
+                            cache.CacheMessage(mail,folderName);
+
+                            newMail.email = mail;
+                            newMail.Deletion = false;
+                            yield return newMail;
+                        }
+
+                        newMail.email = cache.GetMessage(message.Message.Id);
+                        newMail.Deletion = false;
+                        yield return newMail;
+                    }
+
+                    foreach (var message in history.MessagesDeleted)
+                    {
+                        if (cache.CheckCache(message.Message.Id))
+                        {
+                            MailContent mail = new MailContent();
+                            mail.MessageId = message.Message.Id;
+                            cache.ClearRow(message.Message.Id);
+
+                            IMailHandler.Mail newMail = new IMailHandler.Mail();
+                            newMail.email = mail;
+                            newMail.Deletion = true;
+                            yield return newMail;
+                        }
+                    }
+                }
+            }
+            finally { }
+        }
+
+        public IEnumerable<IMailHandler.Mail> RefreshOld(string folderName,int count, DateTime time)
+        {
+            foreach (var OldMail in cache.GetFolder(folderName, count, time))
+            {
+                IMailHandler.Mail mail = new IMailHandler.Mail();
+                mail.email = OldMail;
+                yield return mail;
+            }
+        }
+
+        // this should be called when we want to refresh to view either older or newer messages. 
+        public IEnumerable<IMailHandler.Mail> Refresh(int count)
+        {
+            
+            
+
+            bool fullSync = true;
+            try
+            {
+                foreach (var folder in GetFolderNames())
+                {
+
+                    foreach (var mail in PartialSync(folder))
+                    {
+                        yield return mail;
+                    }
+                    fullSync = false;
+                }
+
+                NewestId = LatestId;
+
+            }
+            finally { }
+
+            if (fullSync)
+            {
+                foreach (var folder in GetFolderNames())
+                {
+                    foreach (var mail in FullSync(folder, count))
+                    {
+                        yield return mail;
+                    }
+                }
+            }
+        }
+
+
+        // this runs initially. this gets all current mails. caches them, but only displays a certain amount. 
         public IEnumerable<MailContent> GetFolder(string name, int count)
         {
             bool fullSync = true;
@@ -228,15 +243,21 @@ namespace ExcellentEmailExperience.Model
             {
                 foreach (var mail in FullSync(name,count))
                 {
-                    yield return mail;
+                    MailContent NewMail = new MailContent();
+                    NewMail = mail.email;
+                    yield return NewMail;
                 }
             }
             else
             {
-                for (int i = counter; i < count; i++)
+                if((count - counter) > 0)
                 {
-                    
-                    
+                    foreach (var mail in cache.GetFolder(name, (count - counter)))
+                    {
+                        MailContent newMail = new MailContent();
+                        newMail = mail;
+                        yield return newMail;
+                    }
                 }
             }
         }

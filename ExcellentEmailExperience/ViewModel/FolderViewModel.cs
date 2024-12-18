@@ -104,6 +104,12 @@ namespace ExcellentEmailExperience.ViewModel
 
         private void HandleMessage(DispatcherQueue dispatcherQueue, MailContent mail, CancellationToken cancellationToken)
         {
+            //prevents mail duplicate badness
+            if (mailsContent.Exists(x=>x.MessageId == mail.MessageId))
+            {
+                throw new ArgumentException("mail already exists in viewmodel");
+            }
+
             if (cancellationToken.IsCancellationRequested)
             {
                 return;
@@ -141,6 +147,8 @@ namespace ExcellentEmailExperience.ViewModel
                             break;
                         }
                     }
+
+
 
                     mails.Insert(insertIndex, inboxMail);
                 });
