@@ -48,7 +48,12 @@ namespace ExcellentEmailExperience.Model
         {
             body = body.Replace("\n", "\r\n");
             body = body.Replace(" \r", "\r");
-            body += "\r\n";
+
+            // checks if daddy g is already happy before doing anything
+            if (!body.EndsWith("\r\n"))
+            {
+                body += "\r\n";
+            }
 
             return body;
         }
