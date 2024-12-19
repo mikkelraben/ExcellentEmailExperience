@@ -236,12 +236,12 @@
             <WebView2 Grid.Row="1" x:Name="HTMLViewer" Visibility="Collapsed" CanGoBack="False" CanGoForward="False" CanDrag="False" DefaultBackgroundColor="Transparent" Source="about:blank"/>
             <StackPanel 
                 Grid.Row="2" 
-                Visibility="{x:Bind viewModel.Attachments.Count,Converter={StaticResource CountToVisibility},Mode=OneWay,FallbackValue=collapsed}" 
+                Visibility="{x:Bind viewModel.attachments.Count,Converter={StaticResource CountToVisibility},Mode=OneWay,FallbackValue=collapsed}" 
                 BorderThickness="0,1,0,0"
                 BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}">
             
                 <TextBlock Text="Attachments" Margin="4,4" Style="{ThemeResource BodyStrongTextBlockStyle}"/>
-                <GridView Name="Attachments" MaxHeight="266" ItemsSource="{x:Bind viewModel.Attachments,Mode=OneWay}" SelectionMode="None" Padding="0,0">
+                <GridView Name="Attachments" MaxHeight="266" ItemsSource="{x:Bind viewModel.attachments,Mode=OneWay}" SelectionMode="None" Padding="0,0">
                     <GridView.ItemContainerStyle>
                         <Style TargetType="GridViewItem" BasedOn="{StaticResource DefaultGridViewItemStyle}">
                             <Setter Property="Margin" Value="5, 5, 5, 5"/>
@@ -250,14 +250,14 @@
 
 
                     <GridView.ItemTemplate>
-                        <DataTemplate x:DataType="x:String">
+                        <DataTemplate x:DataType="view:AttachmentViewModel">
                             <Border CornerRadius="4">
                                 <Border.ContextFlyout>
                                     <MenuFlyout>
                                         <MenuFlyoutItem Text="Save" Click="SaveAttachment"/>
                                     </MenuFlyout>
                                 </Border.ContextFlyout>
-                                <Image Source="{x:Bind}" MaxHeight="256" MaxWidth="256"/>
+                                <Image Source="{x:Bind Preview}" MaxHeight="256" MaxWidth="256" PointerReleased="ClickAttachment"/>
                             </Border>
                         </DataTemplate>
                     </GridView.ItemTemplate>

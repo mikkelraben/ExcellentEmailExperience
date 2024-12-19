@@ -10,6 +10,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Windows.Storage;
@@ -102,6 +103,11 @@ namespace ExcellentEmailExperience.Views
                     args.Cancel = true;
                     _ = Windows.System.Launcher.LaunchUriAsync(uri);
                 }
+                if (args.Uri.EndsWith(".pdf"))
+                {
+                    args.Cancel = true;
+                    _ = Windows.System.Launcher.LaunchUriAsync(new Uri(args.Uri));
+                }
             }
             catch (UriFormatException)
             {
@@ -158,13 +164,16 @@ namespace ExcellentEmailExperience.Views
 
         private async void SaveAttachment(object sender, RoutedEventArgs e)
         {
-            string path = ((e.OriginalSource as MenuFlyoutItem).DataContext as string);
+            var attachment = ((e.OriginalSource as MenuFlyoutItem).DataContext as AttachmentViewModel);
 
 
             FileSavePicker savePicker = new FileSavePicker();
             savePicker.SuggestedStartLocation = PickerLocationId.DocumentsLibrary;
-            savePicker.SuggestedFileName = Path.GetFileName(path);
-            savePicker.FileTypeChoices.Add("Attachment", new List<string>() { Path.GetExtension(path) });
+            savePicker.SuggestedFileName = Path.GetFileName(attachment.Path);
+
+            var filetype = Path.GetExtension(attachment.Path) ?? savePicker.SuggestedFileName;
+
+            savePicker.FileTypeChoices.Add("Attachment", new List<string>() { filetype });
 
             var window = App.mainWindow;
             var hWnd = WinRT.Interop.WindowNative.GetWindowHandle(window);
@@ -173,7 +182,7 @@ namespace ExcellentEmailExperience.Views
             var file = await savePicker.PickSaveFileAsync();
             if (file != null)
             {
-                StorageFile storageFile = await StorageFile.GetFileFromPathAsync(path);
+                StorageFile storageFile = await StorageFile.GetFileFromPathAsync(attachment.Path);
                 await storageFile.CopyAndReplaceAsync(file);
             }
         }
@@ -260,7 +269,10 @@ namespace ExcellentEmailExperience.Views
 
             mail.subject = viewModel.Subject;
             mail.bodyType = BodyType.Html;
-            mail.attachments = viewModel.Attachments;
+            foreach (var attachment in viewModel.attachments)
+            {
+                mail.attachments.Add(attachment.Path);
+            }
 
 
             Stream bla = new MemoryStream();
@@ -321,6 +333,15 @@ namespace ExcellentEmailExperience.Views
 
             viewModel.bccStrings.Add(new(""));
 
+        }
+
+        private void ClickAttachment(object sender, PointerRoutedEventArgs e)
+        {
+            var path = ((sender as Image).DataContext as AttachmentViewModel).Path;
+            if (Path.GetExtension(path) == ".pdf")
+            {
+                //HTMLViewer.navi
+            }
         }
     }
 

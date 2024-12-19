@@ -52,6 +52,10 @@ namespace ExcellentEmailExperience.Model
 
         [JsonInclude]
         private ulong NewestId;
+
+        [JsonInclude]
+        private List<string> fullSyncedFolders = new();
+
         private ulong LatestId;
         private Mutex mutex = new Mutex();
 
@@ -186,6 +190,8 @@ namespace ExcellentEmailExperience.Model
                 }
             }
             UpdateCache();
+            if (!fullSyncedFolders.Exists(x => x == name))
+                fullSyncedFolders.Add(name);
         }
 
         // just gets the changes from last sync
@@ -385,6 +391,10 @@ namespace ExcellentEmailExperience.Model
                 yield return mail;
             }
 
+            if (!fullSyncedFolders.Exists(x => x == name))
+                fullSync = true;
+
+
 
             if ((count - counter) > 0)
             {
@@ -541,9 +551,9 @@ namespace ExcellentEmailExperience.Model
             }
 
             string extension;
-            if (messagePart.Filename != "")
+            if (messagePart.Filename == "")
             {
-                extension = Path.GetExtension(messagePart.Filename);
+                extension = MimeTypes.MimeTypeMap.GetExtension(messagePart.MimeType);
             }
             else
             {
