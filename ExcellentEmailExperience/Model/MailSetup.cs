@@ -90,6 +90,7 @@ namespace ExcellentEmailExperience.Model
                 {
                     if (!File.Exists(attachment)) // does the file exist
                     {
+                        Console.WriteLine("Directory is: " + Directory.GetCurrentDirectory());
                         throw new FileNotFoundException("attachment not found", attachment);
                     }
                     Debug.WriteLine("File Exists");
@@ -104,8 +105,8 @@ namespace ExcellentEmailExperience.Model
             {
                 Debug.WriteLine("error in attachments" + ex);
             }
-            
-            
+
+
             //after creating the maintext we need to add it to the mailmessage object
             message.AlternateViews.Add(MessageContent);
             // convert to mimemessage, this is necessary for sending

@@ -58,8 +58,7 @@ namespace ExcellentEmailExperience.Model
                 attachments.Count == other.attachments.Count && attachments.TrueForAll(other.attachments.Contains) &&
                 date == other.date &&
                 ThreadId == other.ThreadId &&
-                MessageId == other.MessageId &&
-                flags == other.flags;
+                MessageId == other.MessageId;
         }
 
         public static bool operator ==(MailContent? left, MailContent? right)

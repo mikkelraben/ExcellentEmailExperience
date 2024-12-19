@@ -12,6 +12,7 @@ using System.Linq;
 using Org.BouncyCastle.Crypto.Macs;
 using System.Threading;
 using System.Diagnostics;
+using System.Text;
 
 namespace Test
 {
@@ -64,9 +65,10 @@ namespace Test
 
             return body;
         }
-        
+
         private void UnitTest_init()
         {
+            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
             List<MailAddress> mailAddresses = new List<MailAddress> { Address1_, Address2_, Address3_ };
             List<string> Refreshtokens = new List<string> { REFRESHTOKEN1, REFRESHTOKEN2, REFRESHTOKEN3 };
             List<string> usernames = new List<string> { username1, username2, username3 };
@@ -290,7 +292,7 @@ namespace Test
 
             //as messageIDs are different for all mail instances, we need to set them equal to compare the mail objects
 
-            if (Inboxlist3[0] != null && Sentlist1[0] != null && Inboxlist3[0].cc!=null)
+            if (Inboxlist3[0] != null && Sentlist1[0] != null && Inboxlist3[0].cc != null)
             {
                 Inboxlist3[0].MessageId = Sentlist1[0].MessageId;
                 Inboxlist3[0].ThreadId = Sentlist1[0].ThreadId;
@@ -345,7 +347,7 @@ namespace Test
 
             //as messageIDs are different for all mail instances, we need to set them equal to compare the mail objects
 
-            if (Inboxlist3[0] != null && Sentlist1[0] != null && Inboxlist3[0].bcc!=null)
+            if (Inboxlist3[0] != null && Sentlist1[0] != null && Inboxlist3[0].bcc != null)
             {
                 Inboxlist3[0].MessageId = Sentlist1[0].MessageId;
                 Inboxlist3[0].ThreadId = Sentlist1[0].ThreadId;
@@ -354,8 +356,8 @@ namespace Test
 
                 Assert.IsTrue(Sentlist1[0].bcc[0].Equals(Address3));
                 Assert.IsTrue(Inboxlist3[0].bcc[0].Address.Equals(Address3.Address));
-                Sentlist1[0].bcc = new (); //checking for same mail without bcc in the sent mail
-                Assert.IsTrue(Inboxlist2[0].Equals(Sentlist1[0]) );
+                Sentlist1[0].bcc = new(); //checking for same mail without bcc in the sent mail
+                Assert.IsTrue(Inboxlist2[0].Equals(Sentlist1[0]));
 
             }
             else
@@ -550,7 +552,7 @@ namespace Test
                 {
 
                     CollectionAssert.AreEqual(fwdlist, forward.to);
-                    Assert.IsTrue(forward.body == $"Forwarded from {Address1.Address}\n "+Inboxlist2[0].body+ $" \n\n Originally sent to:{Address2.Address}");
+                    Assert.IsTrue(forward.body == $"Forwarded from {Address1.Address}\n " + Inboxlist2[0].body + $" \n\n Originally sent to:{Address2.Address}");
                     forward.to = new List<MailAddress> { Address3 };
                     mailHandler2.Send(forward);
                 }
@@ -575,7 +577,7 @@ namespace Test
             {
                 Inboxlist3[0].MessageId = Sentlist1[0].MessageId;
                 Inboxlist3[0].ThreadId = Sentlist1[0].ThreadId;
-                Assert.IsTrue(Inboxlist3[0].body.Equals( $"Forwarded from {Address1.Address}\r\n "+Sentlist1[0].body+ $"\r\n\r\n Originally sent to:{Address2.Address}"));
+                Assert.IsTrue(Inboxlist3[0].body.Equals($"Forwarded from {Address1.Address}\r\n " + Sentlist1[0].body + $"\r\n\r\n Originally sent to:{Address2.Address}"));
             }
             else
             {
