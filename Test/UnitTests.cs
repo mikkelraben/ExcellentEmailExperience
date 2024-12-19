@@ -336,7 +336,7 @@ namespace Test
             mailHandler1.Send(validMail);
 
             //let the program sleep for 2 second to make sure the mail is recieved
-            System.Threading.Thread.Sleep(10000);
+            System.Threading.Thread.Sleep(15000);
 
             List<MailContent> Inboxlist3 = GetInbox(mailHandler3, "INBOX");
             List<MailContent> Inboxlist2 = GetInbox(mailHandler2, "INBOX");
