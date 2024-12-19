@@ -114,7 +114,7 @@ namespace ExcellentEmailExperience.Model
                 StorageFile file = ApplicationData.Current.LocalFolder.GetFileAsync("settings.json").AsTask().Result;
                 settings = JsonSerializer.Deserialize<AppSettings>(FileIO.ReadTextAsync(file).AsTask().Result);
             }
-            catch (FileNotFoundException e)
+            catch (Exception e)
             {
                 MessageHandler.AddMessage("No settings file found, creating new settings file", MessageSeverity.Warning);
                 settings = new AppSettings();

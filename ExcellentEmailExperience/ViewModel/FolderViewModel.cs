@@ -58,7 +58,6 @@ namespace ExcellentEmailExperience.ViewModel
                     dispatcherQueue,
                     cancellationToken
                     );
-                initialized = true;
             });
             thread.Start();
         }
@@ -88,8 +87,8 @@ namespace ExcellentEmailExperience.ViewModel
                 foreach (var mail in mailHandler.GetFolder(name, 20))
                 {
                     HandleMessage(mail);
+                    initialized = true;
                 }
-
             }
             catch (System.Runtime.InteropServices.COMException)
             {
@@ -198,34 +197,41 @@ namespace ExcellentEmailExperience.ViewModel
 
         IAsyncOperation<LoadMoreItemsResult> ISupportIncrementalLoading.LoadMoreItemsAsync(uint count)
         {
-            return AsyncInfo.Run(async (cancellationToken) =>
+            return AsyncInfo.Run((cancellationToken) => LoadMoreItemsResult(count));
+        }
+
+        async Task<LoadMoreItemsResult> LoadMoreItemsResult(uint count)
+        {
+            _busy = true;
+            if (!folderViewModel.initialized)
             {
-                await Task.Run(() =>
+                return new LoadMoreItemsResult();
+            }
+            if (folderViewModel.mailsContent.Count == 0)
+            {
+                HasMoreItems = false;
+                return new LoadMoreItemsResult();
+            }
+
+            bool hasMoreItems = false;
+            IsLoading = true;
+            await Task.Run(() =>
+            {
+                foreach (var mail in folderViewModel.mailHandler.RefreshOld(folderViewModel.FolderName, 20, folderViewModel.mailsContent[folderViewModel.mailsContent.Count - 1].date))
                 {
-                    if (cancellationToken.IsCancellationRequested || !folderViewModel.initialized)
+                    hasMoreItems = true;
+                    if (!mail.Deletion)
                     {
-                        return;
+                        folderViewModel.HandleMessage(mail.email);
                     }
-                    if (folderViewModel.mailsContent.Count == 0)
-                    {
-                        HasMoreItems = false;
-                        return;
-                    }
-
-                    bool hasMoreItems = false;
-                    foreach (var mail in folderViewModel.mailHandler.RefreshOld(folderViewModel.FolderName, 20, folderViewModel.mailsContent[folderViewModel.mailsContent.Count - 1].date))
-                    {
-                        hasMoreItems = true;
-                        if (!mail.Deletion)
-                        {
-                            folderViewModel.HandleMessage(mail.email);
-                        }
-                    }
-                    HasMoreItems = hasMoreItems;
-                });
-
+                }
+                _busy = false;
+                IsLoading = false;
+                HasMoreItems = hasMoreItems;
                 return new LoadMoreItemsResult { Count = count };
             });
+
+            return new LoadMoreItemsResult();
         }
     }
 }
