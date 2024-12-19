@@ -47,6 +47,9 @@ namespace ExcellentEmailExperience.Views
             HTMLViewer.CanGoBack = false;
             HTMLViewer.CanGoForward = false;
             await HTMLViewer.EnsureCoreWebView2Async(environment);
+            StorageFolder folder = ApplicationData.Current.LocalFolder;
+            var path = @$"{folder.Path}\attachments\";
+            HTMLViewer.CoreWebView2.SetVirtualHostNameToFolderMapping("Attachments", path, CoreWebView2HostResourceAccessKind.Allow);
 
 
             HTMLViewer.CoreWebView2.Profile.PreferredTrackingPreventionLevel = CoreWebView2TrackingPreventionLevel.Strict;
@@ -89,8 +92,11 @@ namespace ExcellentEmailExperience.Views
         private void CoreWebView2_NewWindowRequested(CoreWebView2 sender, CoreWebView2NewWindowRequestedEventArgs args)
         {
             Uri uri = new Uri(args.Uri);
-            args.Handled = true;
-            _ = Windows.System.Launcher.LaunchUriAsync(uri);
+            if (uri.Host != "attachments")
+            {
+                args.Handled = true;
+                _ = Windows.System.Launcher.LaunchUriAsync(uri);
+            }
         }
 
         private void CoreWebView2_NavigationStarting(CoreWebView2 sender, CoreWebView2NavigationStartingEventArgs args)
@@ -105,8 +111,6 @@ namespace ExcellentEmailExperience.Views
                 }
                 if (args.Uri.EndsWith(".pdf"))
                 {
-                    args.Cancel = true;
-                    _ = Windows.System.Launcher.LaunchUriAsync(new Uri(args.Uri));
                 }
             }
             catch (UriFormatException)
@@ -340,7 +344,12 @@ namespace ExcellentEmailExperience.Views
             var path = ((sender as Image).DataContext as AttachmentViewModel).Path;
             if (Path.GetExtension(path) == ".pdf")
             {
-                //HTMLViewer.navi
+                StorageFolder folder = ApplicationData.Current.LocalFolder;
+                var relative = @$"{folder.Path}\attachments\";
+
+                path = Path.GetRelativePath(relative, path);
+                path = path.Replace("\\", "/");
+                HTMLViewer.CoreWebView2.ExecuteScriptAsync($"window.open('https://Attachments/{path}')");
             }
         }
     }

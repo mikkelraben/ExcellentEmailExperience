@@ -334,9 +334,9 @@ namespace ExcellentEmailExperience.Model
 
                     foreach (var mail in PartialSync(folder))
                     {
+                        fullSync = false;
                         yield return (folder, mail);
                     }
-                    fullSync = false;
                 }
 
                 UpdateCache();
@@ -378,8 +378,8 @@ namespace ExcellentEmailExperience.Model
                     {
                         mailContents.Add(mail.email);
                     }
+                    fullSync = false;
                 }
-                fullSync = false;
             }
             catch (Exception)
             {
