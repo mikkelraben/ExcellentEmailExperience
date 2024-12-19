@@ -201,7 +201,7 @@ namespace ExcellentEmailExperience.Model
             if (attachments != "")
                 mail.attachments = reader.GetString(8).Split(';').ToList();
 
-            mail.date = DateTime.ParseExact(reader.GetString(9), "yyyy-MM-dd HH:mm:ss", null);
+            mail.date = DateTime.Parse(reader.GetString(9));
             mail.ThreadId = reader.GetString(10);
             mail.flags = (MailFlag)reader.GetInt32(12);
 
