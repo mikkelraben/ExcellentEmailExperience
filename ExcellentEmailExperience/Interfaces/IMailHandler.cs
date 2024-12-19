@@ -10,7 +10,6 @@ namespace ExcellentEmailExperience.Interfaces
 {
     public interface IMailHandler
     {
-        List<MailAddress> flaggedMails { get; set; }
         bool CheckSpam(MailContent content);
 
         /// <summary>
@@ -38,9 +37,10 @@ namespace ExcellentEmailExperience.Interfaces
         {
             public MailContent email;
             public bool Deletion;
+            public MailFlag flags;
         }
         public IEnumerable<Mail> RefreshOld(string folderName, int count, DateTime time);
-        IEnumerable<Mail> Refresh( int count);
+        IEnumerable<(string, IMailHandler.Mail)> Refresh(int count);
 
         /// <summary>
         /// Retrieves batch mails from a folder determined by <paramref name="name"/>. 

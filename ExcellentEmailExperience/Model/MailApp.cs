@@ -83,6 +83,10 @@ namespace ExcellentEmailExperience.Model
             {
                 // No accounts.json file found so we don't need to do anything
             }
+            catch (Exception e)
+            {
+                // Unknown error i guess?
+            }
 
             return;
         }

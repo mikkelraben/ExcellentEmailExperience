@@ -22,5 +22,7 @@ namespace ExcellentEmailExperience.ViewModel
         [ObservableProperty]
         public bool unread = true;
 
+        public string id;
+
     }
 }

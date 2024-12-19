@@ -58,6 +58,7 @@ namespace ExcellentEmailExperience.ViewModel
                     dispatcherQueue,
                     cancellationToken
                     );
+                initialized = true;
             });
             thread.Start();
         }
@@ -107,6 +108,7 @@ namespace ExcellentEmailExperience.ViewModel
             //prevents mail duplicate badness
             if (mailsContent.Exists(x => x.MessageId == mail.MessageId))
             {
+                return;
                 throw new ArgumentException("mail already exists in viewmodel");
             }
 
@@ -114,25 +116,10 @@ namespace ExcellentEmailExperience.ViewModel
             {
                 return;
             }
-            var inboxMail = new InboxMail();
             mailsContent.Add(mail);
             mailsContent.Sort((x, y) => -x.date.CompareTo(y.date));
 
-            if (mail.from != null)
-            {
-                if (mail.from.DisplayName == "")
-                {
-                    inboxMail.from = new System.Net.Mail.MailAddress(mail.from.Address, mail.from.Address);
-                }
-                else
-                {
-                    inboxMail.from = mail.from;
-                }
-            }
-            inboxMail.to = mail.to;
-            inboxMail.subject = mail.subject.Replace("\n", "").Replace("\r", "");
-            inboxMail.date = mail.date.ToLocalTime();
-            inboxMail.Unread = mail.flags.HasFlag(MailFlag.unread);
+            InboxMail inboxMail = CreateInboxMail(mail);
             if (DispatchQueue != null)
             {
                 DispatchQueue.TryEnqueue(() =>
@@ -155,7 +142,28 @@ namespace ExcellentEmailExperience.ViewModel
             }
         }
 
+        private static InboxMail CreateInboxMail(MailContent mail)
+        {
+            var inboxMail = new InboxMail();
 
+            if (mail.from != null)
+            {
+                if (mail.from.DisplayName == "")
+                {
+                    inboxMail.from = new System.Net.Mail.MailAddress(mail.from.Address, mail.from.Address);
+                }
+                else
+                {
+                    inboxMail.from = mail.from;
+                }
+            }
+            inboxMail.to = mail.to;
+            inboxMail.subject = mail.subject.Replace("\n", "").Replace("\r", "");
+            inboxMail.date = mail.date.ToLocalTime();
+            inboxMail.Unread = mail.flags.HasFlag(MailFlag.unread);
+            inboxMail.id = mail.MessageId;
+            return inboxMail;
+        }
 
         [ObservableProperty]
         public string name;
@@ -171,6 +179,7 @@ namespace ExcellentEmailExperience.ViewModel
         public List<MailContent> mailsContent = new();
 
         public IMailHandler mailHandler;
+        public bool initialized = false;
     }
 
     public class FolderCollection : ObservableCollection<InboxMail>, ISupportIncrementalLoading
@@ -189,33 +198,30 @@ namespace ExcellentEmailExperience.ViewModel
 
         IAsyncOperation<LoadMoreItemsResult> ISupportIncrementalLoading.LoadMoreItemsAsync(uint count)
         {
-            if (_busy)
-            {
-                throw new InvalidOperationException("Only one operation in flight at a time");
-            }
-
-            _busy = true;
             return AsyncInfo.Run(async (cancellationToken) =>
             {
                 await Task.Run(() =>
                 {
-                    if (cancellationToken.IsCancellationRequested)
+                    if (cancellationToken.IsCancellationRequested || !folderViewModel.initialized)
                     {
                         return;
                     }
-                    if(folderViewModel.mailsContent.Count == 0)
+                    if (folderViewModel.mailsContent.Count == 0)
                     {
+                        HasMoreItems = false;
                         return;
                     }
 
+                    bool hasMoreItems = false;
                     foreach (var mail in folderViewModel.mailHandler.RefreshOld(folderViewModel.FolderName, 20, folderViewModel.mailsContent[folderViewModel.mailsContent.Count - 1].date))
                     {
+                        hasMoreItems = true;
                         if (!mail.Deletion)
                         {
                             folderViewModel.HandleMessage(mail.email);
                         }
                     }
-                    _busy = false;
+                    HasMoreItems = hasMoreItems;
                 });
 
                 return new LoadMoreItemsResult { Count = count };

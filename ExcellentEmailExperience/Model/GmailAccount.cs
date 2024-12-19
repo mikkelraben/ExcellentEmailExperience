@@ -25,7 +25,7 @@ namespace ExcellentEmailExperience.Model
         readonly string clientID = "707664940798-98kh872lnb9t4pjd4srieahk6duq4sh0.apps.googleusercontent.com";
         readonly string clientSecret = "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";
 
-
+        [JsonInclude]
         GmailHandler handler;
 
         public IMailHandler GetMailHandler()
@@ -89,7 +89,11 @@ namespace ExcellentEmailExperience.Model
                 MessageHandler.AddMessage("Login failed", MessageSeverity.Error);
                 throw new Exception("Login failed");
             }
-            handler = new GmailHandler(userCredential, mailAddress);
+            if (handler == null)
+            {
+                handler = new GmailHandler();
+            }
+            handler.init(userCredential, mailAddress);
         }
 
         public void Logout()
@@ -115,7 +119,11 @@ namespace ExcellentEmailExperience.Model
 
             if (userCredential != null)
             {
-                handler = new GmailHandler(userCredential, mailAddress);
+                if (handler == null)
+                {
+                    handler = new GmailHandler();
+                }
+                handler.init(userCredential, mailAddress);
             }
 
             return userCredential != null;

@@ -29,29 +29,6 @@ namespace ExcellentEmailExperience.Model
             smtpClient.ConnectAsync("smtp.friends.com", 587, true);
             smtpClient.AuthenticateAsync(mailAddress, password);
         }
-        public ulong[] GetNewIds()
-        {
-            throw new NotImplementedException();
-        }
-
-        public bool CheckSpam(MailContent content)
-        {
-            throw new NotImplementedException();
-        }
-
-        public MailContent Forward(MailContent content)
-        {
-            throw new NotImplementedException();
-        }
-        public IEnumerable<IMailHandler.Mail> Refresh(bool old, int count)
-        {
-            throw new NotImplementedException();
-        }
-
-        public IEnumerable<MailContent> GetFolder(string name, int count)
-        {
-            throw new NotImplementedException();
-        }
 
         public string[] GetFolderNames()
         {
@@ -69,7 +46,12 @@ namespace ExcellentEmailExperience.Model
             return folderNames.ToArray();
         }
 
-        public List<MailContent> Refresh(string name)
+        public bool CheckSpam(MailContent content)
+        {
+            throw new NotImplementedException();
+        }
+
+        public MailContent Forward(MailContent content)
         {
             throw new NotImplementedException();
         }
@@ -89,17 +71,22 @@ namespace ExcellentEmailExperience.Model
             throw new NotImplementedException();
         }
 
-        public void Reply(MailContent content, string Response)
+        public void DeleteMail(string MessageId)
         {
             throw new NotImplementedException();
         }
 
-        public void ReplyAll(MailContent content, string Response)
+        public IEnumerable<IMailHandler.Mail> RefreshOld(string folderName, int count, DateTime time)
         {
             throw new NotImplementedException();
         }
-        
-        public void DeleteMail(string MessageId)
+
+        public IEnumerable<(string, IMailHandler.Mail)> Refresh(int count)
+        {
+            throw new NotImplementedException();
+        }
+
+        public IEnumerable<MailContent> GetFolder(string name, int count)
         {
             throw new NotImplementedException();
         }
@@ -110,16 +97,6 @@ namespace ExcellentEmailExperience.Model
         }
 
         public MailContent UpdateFlag(MailContent content, MailFlag flagtype)
-        {
-            throw new NotImplementedException();
-        }
-
-        public IEnumerable<IMailHandler.Mail> RefreshOld(string folderName, int count, DateTime time)
-        {
-            throw new NotImplementedException();
-        }
-
-        public IEnumerable<IMailHandler.Mail> Refresh(int count)
         {
             throw new NotImplementedException();
         }

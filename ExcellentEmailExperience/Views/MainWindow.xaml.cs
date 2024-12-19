@@ -10,6 +10,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Windows.ApplicationModel.DataTransfer;
@@ -65,7 +66,12 @@ namespace ExcellentEmailExperience.Views
                 }
             });
 
-            Closed += (s, e) => cancellationToken.Cancel();
+            Closed += (s, e) =>
+            {
+                cancellationToken.Cancel();
+                mailApp.SaveAccounts();
+                mailApp.SaveAppSettings();
+            };
 
             mailApp.SaveAccounts();
             mailApp.SaveAppSettings();
@@ -210,8 +216,14 @@ namespace ExcellentEmailExperience.Views
 
         private void RefreshButton_Click(object sender, RoutedEventArgs e)
         {
-            // TODO: Does this work with multiple accounts?
-           // accounts[0].mailHandlerViewModel.Refresh(false);
+            Thread thread = new(() =>
+            {
+                foreach (var account in accounts)
+                {
+                    account.mailHandlerViewModel.Refresh(DispatcherQueue);
+                }
+            });
+            thread.Start();
         }
 
         bool sidebarLarge = false;
@@ -270,7 +282,9 @@ namespace ExcellentEmailExperience.Views
         {
             MailContent mailContent = new MailContent();
 
-            mailContent.from = mailApp.Accounts[0].GetEmail();
+            mailContent.from = accounts.First(
+                accounts => accounts.account.GetMailHandler() == currentFolder.mailHandler
+                ).account.GetEmail();
 
             (MainFrame.Content as Email).ChangeMail(mailContent, true);
 
@@ -427,9 +441,11 @@ namespace ExcellentEmailExperience.Views
             }
 
             MailContent mailContent = currentFolder.mailsContent[MailList.SelectedIndex];
-
-            var reply = currentFolder.mailHandler.UpdateFlag(mailContent, MailFlag.unread);
-
+            Thread thread = new(() =>
+            {
+                currentFolder.mailHandler.UpdateFlag(mailContent, MailFlag.unread);
+            });
+            thread.Start();
             currentFolder.mails[MailList.SelectedIndex].Unread = !currentFolder.mails[MailList.SelectedIndex].Unread;
         }
 
@@ -442,8 +458,26 @@ namespace ExcellentEmailExperience.Views
             }
             MailContent mailContent = currentFolder.mailsContent[MailList.SelectedIndex];
 
-            var reply = currentFolder.mailHandler.UpdateFlag(mailContent, MailFlag.trash);
+            currentFolder.mailsContent.RemoveAt(MailList.SelectedIndex);
+            currentFolder.mails.RemoveAt(MailList.SelectedIndex);
+            foreach (var account in accounts)
+            {
+                if (account.account.GetMailHandler() is not GmailHandler)
+                {
+                    continue;
+                }
+                if (account.account.GetMailHandler() == currentFolder.mailHandler)
+                {
+                    account.mailHandlerViewModel.folders.First(f => f.FolderName == "TRASH").HandleMessage(mailContent);
+                    break;
+                }
+            }
 
+            Thread thread = new(() =>
+            {
+                currentFolder.mailHandler.UpdateFlag(mailContent, MailFlag.trash);
+            });
+            thread.Start();
         }
 
         private void MassDelete_Click(object sender, RoutedEventArgs e)

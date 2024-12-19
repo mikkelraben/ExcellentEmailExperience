@@ -11,14 +11,18 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Linq.Expressions;
+using System.Net;
 using System.Net.Mail;
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Xml.Linq;
 using Windows.Storage;
 using Windows.Web.Http;
+using WinUIEx.Messaging;
 using static ExcellentEmailExperience.Interfaces.IMailHandler;
 using static ExcellentEmailExperience.Model.GmailHandler;
 using static Google.Apis.Requests.BatchRequest;
@@ -41,11 +45,12 @@ namespace ExcellentEmailExperience.Model
             { "TRASH", MailFlag.trash }
         };
 
-        public List<MailAddress> flaggedMails { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
-
         private UserCredential userCredential;
         private GmailService service;
         private MailAddress mailAddress;
+        CancellationToken appClose;
+
+        [JsonInclude]
         private ulong NewestId;
         private ulong LatestId;
         private Mutex mutex = new Mutex();
@@ -68,7 +73,7 @@ namespace ExcellentEmailExperience.Model
         }
         private CacheHandler cache;
 
-        public GmailHandler(UserCredential credential, MailAddress mailAddress)
+        public void init(UserCredential credential, MailAddress mailAddress)
         {
             userCredential = credential;
             this.mailAddress = mailAddress;
@@ -81,6 +86,11 @@ namespace ExcellentEmailExperience.Model
             });
         }
 
+        public void setAppClose(CancellationToken appClose)
+        {
+            this.appClose = appClose;
+        }
+
         public bool CheckSpam(MailContent content)
         {
             throw new NotImplementedException();
@@ -89,6 +99,7 @@ namespace ExcellentEmailExperience.Model
         // this should get all mails 
         public IEnumerable<IMailHandler.Mail> FullSync(string name, int count)
         {
+            int returned = 0;
             cache.ClearFolder(name);
             var request = service.Users.Messages.List("me");
             request.LabelIds = name;
@@ -104,12 +115,12 @@ namespace ExcellentEmailExperience.Model
             }
 
             // Check if the message is in the cache
-            foreach (var message in messages)
+            foreach (var id in messages.Select(msg => msg.Id))
             {
-                MessageIds.Add(message.Id);
-                if (!cache.CheckCache(message.Id))
+                MessageIds.Add(id);
+                if (!cache.CheckCache(id))
                 {
-                    NotCachedMessageIds.Add(message.Id);
+                    NotCachedMessageIds.Add(id);
                 }
             }
 
@@ -117,6 +128,7 @@ namespace ExcellentEmailExperience.Model
             {
                 mutex.WaitOne();
                 var batchRequest = new BatchRequest(service);
+                List<MailContent> mailContents = new List<MailContent>();
                 foreach (var id in NotCachedMessageIds.GetRange(i, Math.Min(100, NotCachedMessageIds.Count - i)))
                 {
                     var getRequest = service.Users.Messages.Get("me", id);
@@ -127,12 +139,33 @@ namespace ExcellentEmailExperience.Model
                             Console.WriteLine("Error: " + error.Message);
                             return;
                         }
+                        if (content.HistoryId.HasValue)
+                        {
+                            if (content.HistoryId.Value > LatestId)
+                                LatestId = content.HistoryId.Value;
+                        }
                         MailContent mailContent = BuildMailContent(content, name);
-                        cache.CacheMessage(mailContent, name);
+                        if (!cache.CheckCache(mailContent.MessageId))
+                        {
+                            cache.CacheMessage(mailContent, name);
+                            mailContents.Add(mailContent);
+                        }
                     });
                 }
-                batchRequest.ExecuteAsync().Wait();
-                System.Threading.Thread.Sleep(1000);
+                batchRequest.ExecuteAsync(appClose).Wait();
+                foreach (var mailContent in mailContents)
+                {
+                    IMailHandler.Mail newMail = new IMailHandler.Mail();
+                    newMail.email = mailContent;
+                    newMail.Deletion = false;
+
+                    returned++;
+                    if (returned < count)
+                    {
+                        yield return newMail;
+                    }
+                }
+                //System.Threading.Thread.Sleep(100);
                 mutex.ReleaseMutex();
             }
 
@@ -144,13 +177,15 @@ namespace ExcellentEmailExperience.Model
                     IMailHandler.Mail newMail = new IMailHandler.Mail();
                     newMail.email = cache.GetMessage(message);
                     newMail.Deletion = false;
-                    yield return newMail;
-                }
-                else
-                {
-                    MessageHandler.AddMessage("Error: Loading message", MessageSeverity.Error);
+
+                    returned++;
+                    if (returned < count)
+                    {
+                        yield return newMail;
+                    }
                 }
             }
+            UpdateCache();
         }
 
         // just gets the changes from last sync
@@ -159,7 +194,7 @@ namespace ExcellentEmailExperience.Model
             // avoid impending doom
             if (NewestId == 0)
             {
-                yield break;
+                throw new Exception("NewestId not set");
             }
 
             try
@@ -172,38 +207,99 @@ namespace ExcellentEmailExperience.Model
 
                 LatestId = historyResponse.HistoryId.Value;
 
+                if (historyResponse.History == null)
+                {
+                    yield break;
+                }
+
                 foreach (var history in historyResponse.History)
                 {
-                    foreach (var message in history.MessagesAdded)
+                    if (history.MessagesAdded != null)
                     {
-                        IMailHandler.Mail newMail = new IMailHandler.Mail();
-                        if (!cache.CheckCache(message.Message.Id))
+                        foreach (var message in history.MessagesAdded)
                         {
-                            MailContent mail = BuildMailContent(message.Message, folderName);
-                            cache.CacheMessage(mail, folderName);
+                            IMailHandler.Mail newMail = new IMailHandler.Mail();
+                            if (!cache.CheckCache(message.Message.Id))
+                            {
+                                message.Message = service.Users.Messages.Get("me", message.Message.Id).Execute();
+                                MailContent mail = BuildMailContent(message.Message, folderName);
+                                cache.CacheMessage(mail, folderName);
 
-                            newMail.email = mail;
+                                newMail.email = mail;
+                                newMail.Deletion = false;
+                                yield return newMail;
+                            }
+
+                            newMail.email = cache.GetMessage(message.Message.Id);
                             newMail.Deletion = false;
                             yield return newMail;
                         }
-
-                        newMail.email = cache.GetMessage(message.Message.Id);
-                        newMail.Deletion = false;
-                        yield return newMail;
                     }
 
-                    foreach (var message in history.MessagesDeleted)
-                    {
-                        if (cache.CheckCache(message.Message.Id))
-                        {
-                            MailContent mail = new MailContent();
-                            mail.MessageId = message.Message.Id;
-                            cache.ClearRow(message.Message.Id);
 
-                            IMailHandler.Mail newMail = new IMailHandler.Mail();
-                            newMail.email = mail;
-                            newMail.Deletion = true;
-                            yield return newMail;
+                    if (history.MessagesDeleted != null)
+                    {
+                        foreach (var message in history.MessagesDeleted)
+                        {
+                            if (cache.CheckCache(message.Message.Id))
+                            {
+                                MailContent mail = new MailContent();
+                                mail.MessageId = message.Message.Id;
+                                cache.ClearRow(message.Message.Id);
+
+                                IMailHandler.Mail newMail = new IMailHandler.Mail();
+                                newMail.email = mail;
+                                newMail.Deletion = true;
+                                yield return newMail;
+                            }
+                        }
+                    }
+
+                    if (history.LabelsAdded != null)
+                    {
+                        foreach (var label in history.LabelsAdded)
+                        {
+                            if (cache.CheckCache(label.Message.Id))
+                            {
+                                foreach (var labelId in label.LabelIds)
+                                {
+                                    if (Label2Flag.ContainsKey(labelId))
+                                    {
+                                        cache.AddFolder(label.Message.Id, labelId, Label2Flag, "INBOX");
+                                        yield return new IMailHandler.Mail
+                                        {
+                                            email = cache.GetMessage(label.Message.Id),
+                                            Deletion = false,
+                                            flags = Label2Flag[labelId]
+                                        };
+
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    if (history.LabelsRemoved != null)
+                    {
+                        foreach (var label in history.LabelsRemoved)
+                        {
+                            if (cache.CheckCache(label.Message.Id))
+                            {
+                                foreach (var labelId in label.LabelIds)
+                                {
+                                    if (Label2Flag.ContainsKey(labelId))
+                                    {
+                                        cache.RemoveFolder(label.Message.Id, labelId, Label2Flag, "INBOX");
+
+                                        yield return new IMailHandler.Mail
+                                        {
+                                            email = cache.GetMessage(label.Message.Id),
+                                            Deletion = false,
+                                            flags = Label2Flag[labelId]
+                                        };
+                                    }
+                                }
+                            }
                         }
                     }
                 }
@@ -222,11 +318,8 @@ namespace ExcellentEmailExperience.Model
         }
 
         // this should be called when we want to refresh to view either older or newer messages. 
-        public IEnumerable<IMailHandler.Mail> Refresh(int count)
+        public IEnumerable<(string, IMailHandler.Mail)> Refresh(int count)
         {
-
-
-
             bool fullSync = true;
             try
             {
@@ -235,12 +328,12 @@ namespace ExcellentEmailExperience.Model
 
                     foreach (var mail in PartialSync(folder))
                     {
-                        yield return mail;
+                        yield return (folder, mail);
                     }
                     fullSync = false;
                 }
 
-                NewestId = LatestId;
+                UpdateCache();
 
             }
             finally { }
@@ -251,18 +344,25 @@ namespace ExcellentEmailExperience.Model
                 {
                     foreach (var mail in FullSync(folder, count))
                     {
-                        yield return mail;
+                        yield return (folder, mail);
                     }
                 }
+                UpdateCache();
             }
         }
 
+        public void UpdateCache()
+        {
+            if (LatestId > NewestId)
+                NewestId = LatestId;
+        }
 
         // this runs initially. this gets all current mails. caches them, but only displays a certain amount. 
         public IEnumerable<MailContent> GetFolder(string name, int count)
         {
             bool fullSync = true;
             int counter = 0;
+            List<MailContent> mailContents = new List<MailContent>();
             try
             {
                 foreach (var mail in PartialSync(name))
@@ -270,14 +370,20 @@ namespace ExcellentEmailExperience.Model
                     counter++;
                     if (!mail.Deletion)
                     {
-                        MailContent newMail = new MailContent();
-                        newMail = mail.email;
-                        yield return newMail;
+                        mailContents.Add(mail.email);
                     }
                 }
                 fullSync = false;
             }
-            finally { }
+            catch (Exception)
+            {
+                Console.WriteLine("Could not partial sync");
+            }
+
+            foreach (var mail in cache.GetFolder(name, count))
+            {
+                yield return mail;
+            }
 
 
             if ((count - counter) > 0)
@@ -311,9 +417,17 @@ namespace ExcellentEmailExperience.Model
             mailContent.MessageId = msg.Id;
             mailContent.ThreadId = msg.ThreadId;
 
+            foreach (var label in msg.LabelIds)
+            {
+                if (Label2Flag.ContainsKey(label))
+                {
+                    mailContent.flags |= Label2Flag[label];
+                }
+            }
+
             if (Label2Flag.ContainsKey(folderName))
             {
-                mailContent.flags = Label2Flag[folderName];
+                mailContent.flags |= Label2Flag[folderName];
             }
 
             try
@@ -327,37 +441,45 @@ namespace ExcellentEmailExperience.Model
             }
             foreach (var header in msg.Payload.Headers)
             {
-                switch (header.Name)
+                try
                 {
-                    case "From":
-                        mailContent.from = new MailAddress(header.Value);
-                        break;
-                    case "To":
-                        foreach (var address in header.Value.Split(','))
-                        {
-                            mailContent.to.Add(new MailAddress(address));
-                        }
-                        break;
-                    case "Cc":
-                        foreach (var address in header.Value.Split(','))
-                        {
-                            mailContent.cc.Add(new MailAddress(address));
-                        }
-                        break;
-                    case "Bcc":
-                        foreach (var address in header.Value.Split(','))
-                        {
-                            mailContent.bcc.Add(new MailAddress(address));
-                        }
-                        break;
-                    case "Subject":
-                        mailContent.subject = header.Value;
-                        break;
-                    case "Date":
-                        DateTimeOffset date;
-                        MimeKit.Utils.DateUtils.TryParse(header.Value, out date);
-                        mailContent.date = date.UtcDateTime;
-                        break;
+
+                    switch (header.Name)
+                    {
+                        case "From":
+                            mailContent.from = new MailAddress(header.Value);
+                            break;
+                        case "To":
+                            foreach (var address in header.Value.Split(','))
+                            {
+                                mailContent.to.Add(new MailAddress(address));
+                            }
+                            break;
+                        case "Cc":
+                            foreach (var address in header.Value.Split(','))
+                            {
+                                mailContent.cc.Add(new MailAddress(address));
+                            }
+                            break;
+                        case "Bcc":
+                            foreach (var address in header.Value.Split(','))
+                            {
+                                mailContent.bcc.Add(new MailAddress(address));
+                            }
+                            break;
+                        case "Subject":
+                            mailContent.subject = header.Value;
+                            break;
+                        case "Date":
+                            DateTimeOffset date;
+                            MimeKit.Utils.DateUtils.TryParse(header.Value, out date);
+                            mailContent.date = date.UtcDateTime;
+                            break;
+                    }
+                }
+                catch (FormatException e)
+                {
+
                 }
             }
 
@@ -483,6 +605,8 @@ namespace ExcellentEmailExperience.Model
 
             // Sort the inbox to the top
             labelNames.Remove("INBOX");
+            labelNames.Remove("UNREAD");
+            labelNames.Remove("DRAFT");
             labelNames.Insert(0, "INBOX");
 
             return labelNames.ToArray();
