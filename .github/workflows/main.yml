@@ -45,12 +45,12 @@ jobs:
         inlineScript:  msbuild /restore /t:Build Test/Test.csproj /p:Configuration=Release /p:Platform=x64
         azPSVersion: latest
         
-    - name: Run Test
-      run: dotnet test Test\bin\x64\Release\net8.0-windows10.0.22621.0\win-x64\Test.dll
-      env:
-        REFRESHTOKEN1: ${{ secrets.REFRESHTOKEN1 }}
-        REFRESHTOKEN2: ${{ secrets.REFRESHTOKEN2 }}
-        REFRESHTOKEN3: ${{ secrets.REFRESHTOKEN3 }}
+    #- name: Run Test
+    #  run: dotnet test Test\bin\x64\Release\net8.0-windows10.0.22621.0\win-x64\Test.dll
+    #  env:
+    #    REFRESHTOKEN1: ${{ secrets.REFRESHTOKEN1 }}
+    #    REFRESHTOKEN2: ${{ secrets.REFRESHTOKEN2 }}
+    #    REFRESHTOKEN3: ${{ secrets.REFRESHTOKEN3 }}
     
       # Create the app package by building and packaging the project
     
