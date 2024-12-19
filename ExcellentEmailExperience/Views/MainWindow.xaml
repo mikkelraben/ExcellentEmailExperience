@@ -125,9 +125,11 @@
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="auto"/>
+                            <ColumnDefinition Width="auto"/>
                         </Grid.ColumnDefinitions>
                         <TextBlock Name="FolderName" Text="No Folder" FontSize="24" Grid.Column="0" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap" Grid.Row="0" Style="{ThemeResource SubtitleTextBlockStyle}" />
-                        <Button x:Name="RefreshButton" Opacity="1" Grid.Column="1" Background="Transparent" BorderBrush="Transparent" Padding="4,4" Click="RefreshButton_Click">
+                        <ProgressRing x:Name="RefreshSpinner" IsActive="False" Grid.Column="1" Margin="4,4" />
+                        <Button x:Name="RefreshButton" Opacity="1" Grid.Column="2" Background="Transparent" BorderBrush="Transparent" Padding="4,4" Click="RefreshButton_Click">
                             <Button.OpacityTransition>
                                 <ScalarTransition />
                             </Button.OpacityTransition>
