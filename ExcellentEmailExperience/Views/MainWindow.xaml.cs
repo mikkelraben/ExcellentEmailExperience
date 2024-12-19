@@ -216,12 +216,17 @@ namespace ExcellentEmailExperience.Views
 
         private void RefreshButton_Click(object sender, RoutedEventArgs e)
         {
+            RefreshSpinner.IsActive = true;
             Thread thread = new(() =>
             {
                 foreach (var account in accounts)
                 {
                     account.mailHandlerViewModel.Refresh(DispatcherQueue);
                 }
+                DispatcherQueue.TryEnqueue(() =>
+                {
+                    RefreshSpinner.IsActive = false;
+                });
             });
             thread.Start();
         }

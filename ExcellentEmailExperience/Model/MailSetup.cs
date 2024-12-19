@@ -90,7 +90,7 @@ namespace ExcellentEmailExperience.Model
                 {
                     if (!File.Exists(attachment)) // does the file exist
                     {
-                        Console.WriteLine("Directory is: " + Directory.GetCurrentDirectory());
+                        Debug.WriteLine("Directory is: " + Directory.GetCurrentDirectory());
                         throw new FileNotFoundException("attachment not found", attachment);
                     }
                     Debug.WriteLine("File Exists");
