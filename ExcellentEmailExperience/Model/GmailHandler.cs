@@ -380,7 +380,7 @@ namespace ExcellentEmailExperience.Model
                 Console.WriteLine("Could not partial sync");
             }
 
-            foreach (var mail in cache.GetFolder(name, count))
+            foreach (var mail in mailContents)
             {
                 yield return mail;
             }
