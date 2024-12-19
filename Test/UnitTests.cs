@@ -176,7 +176,7 @@ namespace Test
             mut.WaitOne(); Debug.WriteLine("getting mutex access");
             mailHandler1.Send(validMail);
             //let the program sleep for 2 second to make sure the mail is recieved
-            System.Threading.Thread.Sleep(4000);
+            System.Threading.Thread.Sleep(10000);
 
             List<MailContent> Inboxlist2 = GetInbox(mailHandler2, "INBOX");
             List<MailContent> Sentlist1 = GetInbox(mailHandler1, "SENT");
@@ -281,7 +281,7 @@ namespace Test
             mailHandler1.Send(validMail);
 
             //let the program sleep for 2 second to make sure the mail is recieved
-            System.Threading.Thread.Sleep(4000);
+            System.Threading.Thread.Sleep(10000);
 
             List<MailContent> Inboxlist3 = GetInbox(mailHandler3, "INBOX");
             List<MailContent> Inboxlist2 = GetInbox(mailHandler2, "INBOX");
@@ -336,7 +336,7 @@ namespace Test
             mailHandler1.Send(validMail);
 
             //let the program sleep for 2 second to make sure the mail is recieved
-            System.Threading.Thread.Sleep(6000);
+            System.Threading.Thread.Sleep(10000);
 
             List<MailContent> Inboxlist3 = GetInbox(mailHandler3, "INBOX");
             List<MailContent> Inboxlist2 = GetInbox(mailHandler2, "INBOX");
@@ -393,7 +393,7 @@ namespace Test
             mailHandler1.Send(validMail);
 
             //let the program sleep for 2 second to make sure the mail is recieved
-            System.Threading.Thread.Sleep(4000);
+            System.Threading.Thread.Sleep(10000);
 
             List<MailContent> Inboxlist3 = GetInbox(mailHandler3, "INBOX");
 
@@ -414,7 +414,7 @@ namespace Test
 
 
             //let the program sleep for 2 second to make sure the mail is recieved
-            System.Threading.Thread.Sleep(4000);
+            System.Threading.Thread.Sleep(10000);
 
             List<MailContent> Inboxlist1 = GetInbox(mailHandler1, "INBOX");
 
@@ -467,7 +467,7 @@ namespace Test
             mailHandler1.Send(validMail);
 
             //let the program sleep for 2 second to make sure the mail is recieved
-            System.Threading.Thread.Sleep(4000);
+            System.Threading.Thread.Sleep(10000);
 
             List<MailContent> Inboxlist3 = GetInbox(mailHandler3, "INBOX");
 
@@ -487,7 +487,7 @@ namespace Test
             }
 
             //let the program sleep for 2 second to make sure the mail is recieved
-            System.Threading.Thread.Sleep(4000);
+            System.Threading.Thread.Sleep(10000);
 
             // this doesnt make sense. were comparing the original mail sent with the 
             // response sent from the receiver. 
@@ -538,7 +538,7 @@ namespace Test
             mailHandler1.Send(validMail);
 
             //let the program sleep for 2 second to make sure the mail is recieved
-            System.Threading.Thread.Sleep(4000);
+            System.Threading.Thread.Sleep(10000);
 
             List<MailContent> Inboxlist2 = GetInbox(mailHandler2, "INBOX");
 
@@ -563,7 +563,7 @@ namespace Test
             }
 
             //let the program sleep for 2 second to make sure the mail is recieved
-            System.Threading.Thread.Sleep(4000);
+            System.Threading.Thread.Sleep(10000);
 
             List<MailContent> Inboxlist3 = GetInbox(mailHandler3, "INBOX");
 
@@ -609,7 +609,7 @@ namespace Test
             mailHandler1.Send(validMail);
 
             //let the program sleep for 2 second to make sure the mail is recieved
-            System.Threading.Thread.Sleep(4000);
+            System.Threading.Thread.Sleep(10000);
 
             List<MailContent> Inboxlist2 = GetInbox(mailHandler2, "INBOX");
 
@@ -654,7 +654,7 @@ namespace Test
             mailHandler1.Send(validMail);
 
             //let the program sleep for 2 second to make sure the mail is recieved
-            System.Threading.Thread.Sleep(4000);
+            System.Threading.Thread.Sleep(10000);
 
             List<MailContent> Inboxlist2 = GetInbox(mailHandler2, "INBOX");
 
@@ -699,7 +699,7 @@ namespace Test
             mailHandler1.Send(validMail);
 
             //let the program sleep for 2 second to make sure the mail is recieved
-            System.Threading.Thread.Sleep(4000);
+            System.Threading.Thread.Sleep(10000);
 
             List<MailContent> Inboxlist2 = GetInbox(mailHandler2, "INBOX");
 
