@@ -540,7 +540,15 @@ namespace ExcellentEmailExperience.Model
                 path = Directory.GetCurrentDirectory();
             }
 
-            var extension = MimeTypes.MimeTypeMap.GetExtension(messagePart.MimeType);
+            string extension;
+            if (messagePart.Filename != "")
+            {
+                extension = Path.GetExtension(messagePart.Filename);
+            }
+            else
+            {
+                extension = "";
+            }
 
             var fileName = messagePart.Filename == "" ? $"Attachment{messagePart.PartId}{extension}" : messagePart.Filename;
 
