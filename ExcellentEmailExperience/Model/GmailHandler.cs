@@ -52,6 +52,10 @@ namespace ExcellentEmailExperience.Model
 
         [JsonInclude]
         private ulong NewestId;
+
+        [JsonInclude]
+        private List<string> fullSyncedFolders = new();
+
         private ulong LatestId;
         private Mutex mutex = new Mutex();
 
@@ -101,91 +105,96 @@ namespace ExcellentEmailExperience.Model
         {
             int returned = 0;
             cache.ClearFolder(name);
-            var request = service.Users.Messages.List("me");
-            request.LabelIds = name;
-            request.MaxResults = 500;
-            var messages = request.Execute().Messages;
 
-            List<string> MessageIds = new List<string>();
-            List<string> NotCachedMessageIds = new List<string>();
 
-            if (messages == null)
+            ListMessagesResponse response;
+            do
             {
-                yield break;
-            }
+                var request = service.Users.Messages.List("me");
+                request.LabelIds = name;
+                request.MaxResults = 100;
+                response = request.Execute();
+                var messages = response.Messages;
 
-            // Check if the message is in the cache
-            foreach (var id in messages.Select(msg => msg.Id))
-            {
-                MessageIds.Add(id);
-                if (!cache.CheckCache(id))
+                List<string> MessageIds = new List<string>();
+                List<string> NotCachedMessageIds = new List<string>();
+
+                if (messages == null)
                 {
-                    NotCachedMessageIds.Add(id);
+                    yield break;
                 }
-            }
 
-            for (int i = 0; i < NotCachedMessageIds.Count; i += 100)
-            {
-                mutex.WaitOne();
-                var batchRequest = new BatchRequest(service);
-                List<MailContent> mailContents = new List<MailContent>();
-                foreach (var id in NotCachedMessageIds.GetRange(i, Math.Min(100, NotCachedMessageIds.Count - i)))
+                // Check if the message is in the cache
+                foreach (var id in messages.Select(msg => msg.Id))
                 {
-                    var getRequest = service.Users.Messages.Get("me", id);
-                    batchRequest.Queue<Google.Apis.Gmail.v1.Data.Message>(getRequest, (content, error, i, message) =>
+                    MessageIds.Add(id);
+                    if (!cache.CheckCache(id))
                     {
-                        if (error != null)
-                        {
-                            Console.WriteLine("Error: " + error.Message);
-                            return;
-                        }
-                        if (content.HistoryId.HasValue)
-                        {
-                            if (content.HistoryId.Value > LatestId)
-                                LatestId = content.HistoryId.Value;
-                        }
-                        MailContent mailContent = BuildMailContent(content, name);
-                        if (!cache.CheckCache(mailContent.MessageId))
-                        {
-                            cache.CacheMessage(mailContent, name);
-                            mailContents.Add(mailContent);
-                        }
-                    });
+                        NotCachedMessageIds.Add(id);
+                    }
                 }
-                batchRequest.ExecuteAsync(appClose).Wait();
-                foreach (var mailContent in mailContents)
-                {
-                    IMailHandler.Mail newMail = new IMailHandler.Mail();
-                    newMail.email = mailContent;
-                    newMail.Deletion = false;
 
-                    returned++;
-                    if (returned < count)
+                for (int i = 0; i < NotCachedMessageIds.Count; i += 100)
+                {
+                    mutex.WaitOne();
+                    var batchRequest = new BatchRequest(service);
+                    List<MailContent> mailContents = new List<MailContent>();
+                    foreach (var id in NotCachedMessageIds.GetRange(i, Math.Min(100, NotCachedMessageIds.Count - i)))
                     {
+                        var getRequest = service.Users.Messages.Get("me", id);
+                        batchRequest.Queue<Google.Apis.Gmail.v1.Data.Message>(getRequest, (content, error, i, message) =>
+                        {
+                            if (error != null)
+                            {
+                                Console.WriteLine("Error: " + error.Message);
+                                return;
+                            }
+                            if (content.HistoryId.HasValue)
+                            {
+                                if (content.HistoryId.Value > LatestId)
+                                    LatestId = content.HistoryId.Value;
+                            }
+                            MailContent mailContent = BuildMailContent(content, name);
+                            if (!cache.CheckCache(mailContent.MessageId))
+                            {
+                                cache.CacheMessage(mailContent, name);
+                                mailContents.Add(mailContent);
+                            }
+                        });
+                    }
+                    batchRequest.ExecuteAsync(appClose).Wait();
+                    foreach (var mailContent in mailContents)
+                    {
+                        IMailHandler.Mail newMail = new IMailHandler.Mail();
+                        newMail.email = mailContent;
+                        newMail.Deletion = false;
+
+                        returned++;
+
+                        yield return newMail;
+
+                    }
+                    //System.Threading.Thread.Sleep(100);
+                    mutex.ReleaseMutex();
+                }
+
+                // Return the messages that are in the cache
+                foreach (var message in MessageIds)
+                {
+                    if (cache.CheckCache(message))
+                    {
+                        IMailHandler.Mail newMail = new IMailHandler.Mail();
+                        newMail.email = cache.GetMessage(message);
+                        newMail.Deletion = false;
+
+                        returned++;
                         yield return newMail;
                     }
                 }
-                //System.Threading.Thread.Sleep(100);
-                mutex.ReleaseMutex();
-            }
-
-            // Return the messages that are in the cache
-            foreach (var message in MessageIds)
-            {
-                if (cache.CheckCache(message))
-                {
-                    IMailHandler.Mail newMail = new IMailHandler.Mail();
-                    newMail.email = cache.GetMessage(message);
-                    newMail.Deletion = false;
-
-                    returned++;
-                    if (returned < count)
-                    {
-                        yield return newMail;
-                    }
-                }
-            }
+            } while (response.NextPageToken != "" && returned < 500 && response.NextPageToken != null);
             UpdateCache();
+            if (!fullSyncedFolders.Exists(x => x == name))
+                fullSyncedFolders.Add(name);
         }
 
         // just gets the changes from last sync
@@ -328,9 +337,9 @@ namespace ExcellentEmailExperience.Model
 
                     foreach (var mail in PartialSync(folder))
                     {
+                        fullSync = false;
                         yield return (folder, mail);
                     }
-                    fullSync = false;
                 }
 
                 UpdateCache();
@@ -372,8 +381,8 @@ namespace ExcellentEmailExperience.Model
                     {
                         mailContents.Add(mail.email);
                     }
+                    fullSync = false;
                 }
-                fullSync = false;
             }
             catch (Exception)
             {
@@ -384,6 +393,10 @@ namespace ExcellentEmailExperience.Model
             {
                 yield return mail;
             }
+
+            if (!fullSyncedFolders.Exists(x => x == name))
+                fullSync = true;
+
 
 
             if ((count - counter) > 0)
@@ -541,9 +554,9 @@ namespace ExcellentEmailExperience.Model
             }
 
             string extension;
-            if (messagePart.Filename != "")
+            if (messagePart.Filename == "")
             {
-                extension = Path.GetExtension(messagePart.Filename);
+                extension = MimeTypes.MimeTypeMap.GetExtension(messagePart.MimeType);
             }
             else
             {

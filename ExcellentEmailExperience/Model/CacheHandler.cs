@@ -12,6 +12,7 @@ using System.Text.Json;
 using System.Data.Common;
 using System.Text.RegularExpressions;
 using System.Globalization;
+using System.Threading;
 
 namespace ExcellentEmailExperience.Model
 {
@@ -21,6 +22,7 @@ namespace ExcellentEmailExperience.Model
         // this is a means of counteracting that to give the cache more time by having its own cache, cache jr. (legal name: shortTermCache)
         private List<string> shortTermCache = new();
         private string connectionString;
+        private Mutex mutex = new();
 
         public static Dictionary<string, List<string>> ParseMailQuery(string query)
         {
@@ -127,6 +129,7 @@ namespace ExcellentEmailExperience.Model
         public void CacheMessage(MailContent mail, string folderName)
         {
             if (shortTermCache.Contains(mail.MessageId)) return;
+            mutex.WaitOne();
             shortTermCache.Add(mail.MessageId);
 
             using (var connection = new SqliteConnection(connectionString))
@@ -172,6 +175,7 @@ namespace ExcellentEmailExperience.Model
 
                 connection.Close();
             }
+            mutex.ReleaseMutex();
         }
 
         /// <summary>
@@ -215,6 +219,7 @@ namespace ExcellentEmailExperience.Model
         /// <returns> MailContent corresponding to the inputted messageId </returns>
         public MailContent GetMessage(string messageId)
         {
+            mutex.WaitOne();
             using (var connection = new SqliteConnection(connectionString))
             {
                 connection.Open();
@@ -230,8 +235,10 @@ namespace ExcellentEmailExperience.Model
                 var reader = command.ExecuteReader();
                 reader.Read();
 
+                mutex.ReleaseMutex();
                 return BuildMailContent(reader);
             }
+            mutex.ReleaseMutex();
         }
 
         /// <summary>
@@ -243,6 +250,7 @@ namespace ExcellentEmailExperience.Model
         /// <returns> List containing the newest mails stored as MailContent </returns>
         public List<MailContent> GetFolder(string folderName, int count = 20, DateTime? date = null)
         {
+            mutex.WaitOne();
             date = date.HasValue ? date : DateTime.Now;
 
             List<MailContent> mailList = new();
@@ -272,11 +280,13 @@ namespace ExcellentEmailExperience.Model
                 }
             }
 
+            mutex.ReleaseMutex();
             return mailList;
         }
 
         public bool CheckCache(string messageId)
         {
+            mutex.WaitOne();
             using (var connection = new SqliteConnection(connectionString))
             {
                 connection.Open();
@@ -295,6 +305,7 @@ namespace ExcellentEmailExperience.Model
                 {
                     var result = command.ExecuteScalar();
                     bool exists = Convert.ToBoolean(result);
+                    mutex.ReleaseMutex();
                     return exists;
                 }
                 catch (Exception ex)
@@ -314,6 +325,7 @@ namespace ExcellentEmailExperience.Model
         /// <param name="inbox"> Inbox folder id, which is used to remove mail from inbox when it is added to trash or spam </param>
         public void AddFolder(string messageId, string folderName, Dictionary<string, MailFlag> flagDict, string inbox)
         {
+            mutex.WaitOne();
             using (var connection = new SqliteConnection(connectionString))
             {
                 connection.Open();
@@ -380,6 +392,7 @@ namespace ExcellentEmailExperience.Model
                     }
                 }
             }
+            mutex.ReleaseMutex();
         }
 
         /// <summary>
@@ -407,6 +420,7 @@ namespace ExcellentEmailExperience.Model
                     WHERE MessageId = $id
                     ";
                     command.Parameters.AddWithValue("$id", messageId);
+                    command.CommandTimeout = 10;
 
                     var reader = command.ExecuteReader();
                     reader.Read();
@@ -440,6 +454,7 @@ namespace ExcellentEmailExperience.Model
                     command.Parameters.AddWithValue("$folders", JsonSerializer.Serialize(folderList));
                     command.Parameters.AddWithValue("$flags", flagList);
                     command.Parameters.AddWithValue("$id", messageId);
+                    command.CommandTimeout = 10;
                     command.ExecuteNonQuery();
                 }
             }
@@ -447,6 +462,7 @@ namespace ExcellentEmailExperience.Model
 
         public void UpdateFolder(List<string> newIdList, string folderName, Dictionary<string, MailFlag> flagDict, string inbox)
         {
+            mutex.WaitOne();
             List<string> oldIdList = new();
             using (var connection = new SqliteConnection(connectionString))
             {
@@ -474,11 +490,13 @@ namespace ExcellentEmailExperience.Model
             {
                 RemoveFolder(id, folderName, flagDict, inbox);
             }
+            mutex.ReleaseMutex();
         }
 
         // should probably be name ClearMessage for readability purposes, but will do that later
         public void ClearRow(string messageId)
         {
+            mutex.WaitOne();
             using (var connection = new SqliteConnection(connectionString))
             {
                 connection.Open();
@@ -491,10 +509,12 @@ namespace ExcellentEmailExperience.Model
                 command.Parameters.AddWithValue("$id", messageId);
                 command.ExecuteNonQuery();
             }
+            mutex.ReleaseMutex();
         }
 
         public void ClearFolder(string folderName)
         {
+            mutex.WaitOne();
             using (var connection = new SqliteConnection(connectionString))
             {
                 connection.Open();
@@ -507,10 +527,12 @@ namespace ExcellentEmailExperience.Model
                 command.Parameters.AddWithValue("$folder", "%" + folderName + "%");
                 command.ExecuteNonQuery();
             }
+            mutex.ReleaseMutex();
         }
 
         public void ClearCache()
         {
+            mutex.WaitOne();
             using (var connection = new SqliteConnection(connectionString))
             {
                 connection.Open();
@@ -519,10 +541,12 @@ namespace ExcellentEmailExperience.Model
                 command.CommandText = "DELETE FROM MailContent";
                 command.ExecuteNonQuery();
             }
+            mutex.ReleaseMutex();
         }
 
-        public IEnumerable<MailContent> SearchCache(string query) 
+        public IEnumerable<MailContent> SearchCache(string query)
         {
+            mutex.WaitOne();
             var options = new JsonSerializerOptions
             {
                 Converters = { new MailAddressConverter() }
@@ -638,14 +662,14 @@ namespace ExcellentEmailExperience.Model
 
                 var reader = command.ExecuteReader();
 
-                
+
                 while (reader.Read())
                 {
                     yield return BuildMailContent(reader);
                 }
 
             }
-            
+            mutex.ReleaseMutex();
         }
     }
 }

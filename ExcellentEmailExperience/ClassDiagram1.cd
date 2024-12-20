@@ -10,14 +10,14 @@
   <Class Name="ExcellentEmailExperience.Model.AppSettings" Collapsed="true">
     <Position X="15.75" Y="0.5" Width="1.5" />
     <TypeIdentifier>
-      <HashCode>AAACAAAAABAAAQgAAAAAAAAAAAAAEAACAAAAgAAAAAA=</HashCode>
+      <HashCode>AAACAAAAABAAAAgAAAAAAAAAAAAAEAACAAAAgAAAAAA=</HashCode>
       <FileName>Model\AppSettings.cs</FileName>
     </TypeIdentifier>
   </Class>
   <Class Name="ExcellentEmailExperience.Model.CacheHandler" Collapsed="true">
     <Position X="21" Y="0.5" Width="1.5" />
     <TypeIdentifier>
-      <HashCode>QAAEAAAAAAAACBgAAAgAAAQgACAAAAAAAAAACQAAAAA=</HashCode>
+      <HashCode>UCAEAAAAAAAAAAgEEAgAAAAgAAAAAAAAAAAEDQAEICA=</HashCode>
       <FileName>Model\CacheHandler.cs</FileName>
     </TypeIdentifier>
   </Class>
@@ -47,7 +47,7 @@
   <Class Name="ExcellentEmailExperience.Model.GmailHandler" Collapsed="true" BaseTypeListCollapsed="true">
     <Position X="21" Y="1.5" Width="1.5" />
     <TypeIdentifier>
-      <HashCode>ACBCAEAAAABAAUAAUEAAAYAAAMAACBAAAEAEIAEgAAM=</HashCode>
+      <HashCode>ECBCAEAAAABAAQAAcEABAZBQAIAACAIAAEAEIAMgKAM=</HashCode>
       <FileName>Model\GmailHandler.cs</FileName>
     </TypeIdentifier>
     <Lollipop Position="0.2" Collapsed="true" />
@@ -77,7 +77,7 @@
   <Class Name="ExcellentEmailExperience.Model.MailKitHandler" Collapsed="true" BaseTypeListCollapsed="true">
     <Position X="14" Y="3.5" Width="1.5" />
     <TypeIdentifier>
-      <HashCode>AAACgAAAAABAAUAAAEAAAIAAAAAAABAAAAAEIgEgAAM=</HashCode>
+      <HashCode>AAACgAAAAABAAQAAIEAAAIAAAAAAABAAAAAEIgEgAAM=</HashCode>
       <FileName>Model\MailKitHandler.cs</FileName>
     </TypeIdentifier>
     <Lollipop Position="0.2" Collapsed="true" />
@@ -107,7 +107,7 @@
     <Position X="15.75" Y="2.5" Width="1.5" />
     <TypeIdentifier>
       <HashCode>AAAAAAAAAAAAAAAAAAAAAAAgAAAAAAAAAAAAAAEAAAA=</HashCode>
-      <FileName>Model\MailAddressConverter.cs</FileName>
+      <FileName>Helpers\MailAddressConverter.cs</FileName>
     </TypeIdentifier>
   </Class>
   <Class Name="ExcellentEmailExperience.ViewModel.AccountViewModel">
@@ -136,7 +136,7 @@
   <Class Name="ExcellentEmailExperience.ViewModel.FolderViewModel" BaseTypeListCollapsed="true">
     <Position X="8.5" Y="5.5" Width="1.5" />
     <TypeIdentifier>
-      <HashCode>AAAAQEBABAAAEAAAAAAAAAAABgAEAgKAAAAAAAAAAAA=</HashCode>
+      <HashCode>AAAAQABAFBAAEAAAAAAAAAAABgAEAgKAAAAAAAABAAA=</HashCode>
       <FileName>ViewModel\FolderViewModel.cs</FileName>
     </TypeIdentifier>
     <ShowAsCollectionAssociation>
@@ -147,7 +147,7 @@
   <Class Name="ExcellentEmailExperience.ViewModel.InboxMail" Collapsed="true" BaseTypeListCollapsed="true">
     <Position X="22.75" Y="1.5" Width="1.5" />
     <TypeIdentifier>
-      <HashCode>AAAAAAIAAAAAAAAAAAAAAAiAAAAAAAAAAAAAAwAAAAA=</HashCode>
+      <HashCode>AAAAAgIAAAAAAAAAAAAAAAiAAAAAAAAAAAAAAwAAAgA=</HashCode>
       <FileName>ViewModel\InboxMail.cs</FileName>
     </TypeIdentifier>
     <Lollipop Position="0.2" Collapsed="true" />
@@ -155,7 +155,7 @@
   <Class Name="ExcellentEmailExperience.ViewModel.MailContentViewModel" Collapsed="true" BaseTypeListCollapsed="true">
     <Position X="19.25" Y="2.5" Width="1.5" />
     <TypeIdentifier>
-      <HashCode>AAQAGAIAAQAAAAAAAAAgAAiAASAAAABAAAAABQAAAAA=</HashCode>
+      <HashCode>AAQAGgIAAQAAAAAAAAAgAAiAASAAAABAAAAADUAAAAA=</HashCode>
       <FileName>ViewModel\MailContentViewModel.cs</FileName>
     </TypeIdentifier>
     <Lollipop Position="0.2" Collapsed="true" />
@@ -171,7 +171,7 @@
   <Class Name="ExcellentEmailExperience.ViewModel.MailHandlerViewModel" Collapsed="true" BaseTypeListCollapsed="true">
     <Position X="21" Y="2.5" Width="1.5" />
     <TypeIdentifier>
-      <HashCode>AABAgAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAIAIA=</HashCode>
+      <HashCode>AAAAgAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIA=</HashCode>
       <FileName>ViewModel\MailHandlerViewModel.cs</FileName>
     </TypeIdentifier>
     <Lollipop Position="0.2" Collapsed="true" />
@@ -187,7 +187,7 @@
   <Class Name="ExcellentEmailExperience.Views.Email" BaseTypeListCollapsed="true">
     <Position X="0.75" Y="0.75" Width="1.5" />
     <TypeIdentifier>
-      <HashCode>AAAAAAAgCAAAAQIBEAAwAAAAAMgAQAAAAQAAAIAAAAA=</HashCode>
+      <HashCode>AQAAAABiCAAAASIBEAA4AAAAAM4AQCAAAQAAAIAAAAA=</HashCode>
       <FileName>Views\Email.xaml.cs</FileName>
     </TypeIdentifier>
     <ShowAsCollectionAssociation>
@@ -203,7 +203,7 @@
     </TypeIdentifier>
     <Lollipop Position="0.2" Collapsed="true" />
   </Class>
-  <Class Name="ExcellentEmailExperience.Views.BoolToVisibility" Collapsed="true" BaseTypeListCollapsed="true">
+  <Class Name="ExcellentEmailExperience.Views.BoolToSize" Collapsed="true" BaseTypeListCollapsed="true">
     <Position X="19.25" Y="0.5" Width="1.5" />
     <TypeIdentifier>
       <HashCode>AAAAAAAAAAAAAAAAAIAAAAAAAAgAAAAAAAAAAAAAAAA=</HashCode>
@@ -230,7 +230,7 @@
   <Class Name="ExcellentEmailExperience.Views.MainWindow" Collapsed="true" BaseTypeListCollapsed="true">
     <Position X="17.5" Y="3.5" Width="1.5" />
     <TypeIdentifier>
-      <HashCode>AAIQAIFAQZAAoBAAAACRAQAIgICEAQLCAAEAACAAACA=</HashCode>
+      <HashCode>AAYQAIFAQZABoBAAAACRAAAYgICEAQLCAAEAACAAACA=</HashCode>
       <FileName>Views\MainWindow.xaml.cs</FileName>
     </TypeIdentifier>
     <Lollipop Position="0.2" Collapsed="true" />
@@ -276,7 +276,7 @@
   <Class Name="ExcellentEmailExperience.Views.SettingsWindow" BaseTypeListCollapsed="true">
     <Position X="3.75" Y="0.5" Width="1.5" />
     <TypeIdentifier>
-      <HashCode>AAAAAAAAAAAAIAAAAAAAAAAgAIAAAAAAAABAAAEAAAA=</HashCode>
+      <HashCode>AAAAAAAAAgAAIAAAAAAAAAAgAIAAAAAAAABAAAEAAAA=</HashCode>
       <FileName>Views\Settings.xaml.cs</FileName>
     </TypeIdentifier>
     <ShowAsCollectionAssociation>
@@ -294,7 +294,7 @@
   <Interface Name="ExcellentEmailExperience.Interfaces.IMailHandler" Collapsed="true">
     <Position X="15.75" Y="5.75" Width="1.5" />
     <TypeIdentifier>
-      <HashCode>AAACAAAAAABAAUAAAEAAAAAAAAAAABAAAAAEIAEgAAM=</HashCode>
+      <HashCode>AAACAAAAAABAAQAAIEAAAAAAAAAAAAAAAAAEIAEgAAM=</HashCode>
       <FileName>Interfaces\IMailHandler.cs</FileName>
     </TypeIdentifier>
   </Interface>

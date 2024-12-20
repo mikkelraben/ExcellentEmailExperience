@@ -1,3 +1,4 @@
+using ExcellentEmailExperience.Helpers;
 using ExcellentEmailExperience.Model;
 using ExcellentEmailExperience.ViewModel;
 using Microsoft.UI.Text;
@@ -10,6 +11,8 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
+using System.Linq;
+using System.Net.Mail;
 using System.Text;
 using System.Threading.Tasks;
 using Windows.Storage;
@@ -46,6 +49,11 @@ namespace ExcellentEmailExperience.Views
             HTMLViewer.CanGoBack = false;
             HTMLViewer.CanGoForward = false;
             await HTMLViewer.EnsureCoreWebView2Async(environment);
+            StorageFolder folder = ApplicationData.Current.LocalFolder;
+            var path = @$"{folder.Path}\attachments\";
+            if (!Path.Exists(path))
+                Directory.CreateDirectory(path);
+            HTMLViewer.CoreWebView2.SetVirtualHostNameToFolderMapping("Attachments", path, CoreWebView2HostResourceAccessKind.Allow);
 
 
             HTMLViewer.CoreWebView2.Profile.PreferredTrackingPreventionLevel = CoreWebView2TrackingPreventionLevel.Strict;
@@ -88,8 +96,11 @@ namespace ExcellentEmailExperience.Views
         private void CoreWebView2_NewWindowRequested(CoreWebView2 sender, CoreWebView2NewWindowRequestedEventArgs args)
         {
             Uri uri = new Uri(args.Uri);
-            args.Handled = true;
-            _ = Windows.System.Launcher.LaunchUriAsync(uri);
+            if (uri.Host != "attachments")
+            {
+                args.Handled = true;
+                _ = Windows.System.Launcher.LaunchUriAsync(uri);
+            }
         }
 
         private void CoreWebView2_NavigationStarting(CoreWebView2 sender, CoreWebView2NavigationStartingEventArgs args)
@@ -102,6 +113,9 @@ namespace ExcellentEmailExperience.Views
                     args.Cancel = true;
                     _ = Windows.System.Launcher.LaunchUriAsync(uri);
                 }
+                if (args.Uri.EndsWith(".pdf"))
+                {
+                }
             }
             catch (UriFormatException)
             {
@@ -113,6 +127,7 @@ namespace ExcellentEmailExperience.Views
         {
             viewModel.Update(mail);
             viewModel.IsEditable = editable;
+            MailEditor.Document.SetText(TextSetOptions.None, "");
 
             Editor.Visibility = editable ? Visibility.Visible : Visibility.Collapsed;
 
@@ -158,13 +173,16 @@ namespace ExcellentEmailExperience.Views
 
         private async void SaveAttachment(object sender, RoutedEventArgs e)
         {
-            string path = ((e.OriginalSource as MenuFlyoutItem).DataContext as string);
+            var attachment = ((e.OriginalSource as MenuFlyoutItem).DataContext as AttachmentViewModel);
 
 
             FileSavePicker savePicker = new FileSavePicker();
             savePicker.SuggestedStartLocation = PickerLocationId.DocumentsLibrary;
-            savePicker.SuggestedFileName = Path.GetFileName(path);
-            savePicker.FileTypeChoices.Add("Attachment", new List<string>() { Path.GetExtension(path) });
+            savePicker.SuggestedFileName = Path.GetFileName(attachment.Path);
+
+            var filetype = Path.GetExtension(attachment.Path) ?? savePicker.SuggestedFileName;
+
+            savePicker.FileTypeChoices.Add("Attachment", new List<string>() { filetype });
 
             var window = App.mainWindow;
             var hWnd = WinRT.Interop.WindowNative.GetWindowHandle(window);
@@ -173,7 +191,7 @@ namespace ExcellentEmailExperience.Views
             var file = await savePicker.PickSaveFileAsync();
             if (file != null)
             {
-                StorageFile storageFile = await StorageFile.GetFileFromPathAsync(path);
+                StorageFile storageFile = await StorageFile.GetFileFromPathAsync(attachment.Path);
                 await storageFile.CopyAndReplaceAsync(file);
             }
         }
@@ -260,7 +278,10 @@ namespace ExcellentEmailExperience.Views
 
             mail.subject = viewModel.Subject;
             mail.bodyType = BodyType.Html;
-            mail.attachments = viewModel.Attachments;
+            foreach (var attachment in viewModel.attachments)
+            {
+                mail.attachments.Add(attachment.Path);
+            }
 
 
             Stream bla = new MemoryStream();
@@ -322,6 +343,54 @@ namespace ExcellentEmailExperience.Views
             viewModel.bccStrings.Add(new(""));
 
         }
+
+        private void ClickAttachment(object sender, PointerRoutedEventArgs e)
+        {
+            var path = ((sender as Image).DataContext as AttachmentViewModel).Path;
+            if (Path.GetExtension(path) == ".pdf")
+            {
+                StorageFolder folder = ApplicationData.Current.LocalFolder;
+                var relative = @$"{folder.Path}\attachments\";
+
+                path = Path.GetRelativePath(relative, path);
+                path = path.Replace("\\", "/");
+                HTMLViewer.CoreWebView2.ExecuteScriptAsync($"window.open('https://Attachments/{path}')");
+            }
+        }
+
+        private async void AddAttachment_Click(object sender, RoutedEventArgs e)
+        {
+            AddAttachment.IsEnabled = false;
+            var openPicker = new Windows.Storage.Pickers.FileOpenPicker();
+
+            var window = App.mainWindow;
+
+            var hWnd = WinRT.Interop.WindowNative.GetWindowHandle(window);
+            WinRT.Interop.InitializeWithWindow.Initialize(openPicker, hWnd);
+
+            openPicker.ViewMode = PickerViewMode.List;
+            openPicker.SuggestedStartLocation = PickerLocationId.DocumentsLibrary;
+            openPicker.FileTypeFilter.Add("*");
+
+            IReadOnlyList<StorageFile> files = await openPicker.PickMultipleFilesAsync();
+            if (files.Count > 0)
+            {
+                foreach (StorageFile file in files)
+                {
+                    viewModel.attachments.Add(new() { Path = file.Path, Editable = true, Preview = ThumbnailFromPath.GetThumbnailFromPath(file.Path), name = Path.GetFileName(file.Path) });
+                }
+            }
+            AddAttachment.IsEnabled = true;
+        }
+
+
+
+        private void RemoveAttachment_Click(object sender, RoutedEventArgs e)
+        {
+            var attachment = (sender as Button).DataContext as AttachmentViewModel;
+            viewModel.attachments.Remove(attachment);
+
+        }
     }
 
     public class CountToVisibility : IValueConverter
@@ -359,5 +428,18 @@ namespace ExcellentEmailExperience.Views
             throw new NotImplementedException();
         }
     }
+
+    public class BoolToSize : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, string language)
+        {
+            return (bool)value ? 64.0 : 256.0;
+        }
+        public object ConvertBack(object value, Type targetType, object parameter, string language)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
 }
 

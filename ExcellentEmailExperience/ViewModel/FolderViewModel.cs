@@ -1,11 +1,13 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using ExcellentEmailExperience.Interfaces;
 using ExcellentEmailExperience.Model;
+using Google;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml.Data;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
 using System.Threading;
 using System.Threading.Tasks;
@@ -78,7 +80,7 @@ namespace ExcellentEmailExperience.ViewModel
                 {
                     return;
                 }
-                HandleMessage(mail);
+                HandleMessage(mail, 2000);
             }
         }
 
@@ -88,59 +90,69 @@ namespace ExcellentEmailExperience.ViewModel
             {
                 foreach (var mail in mailHandler.GetFolder(name, 20))
                 {
-                    HandleMessage(mail);
-                    initialized = true;
+                    HandleMessage(mail, 20);
                 }
             }
             catch (System.Runtime.InteropServices.COMException)
             {
                 // Application probably exited
-                return;
             }
-            catch (Exception)
+            catch (GoogleApiException e)
             {
-                MessageHandler.AddMessage("Failed to load mails", MessageSeverity.Error);
-                return;
+                MessageHandler.AddMessage($"Failed to connect to google: {e}", MessageSeverity.Error);
             }
+            catch (Exception e)
+            {
+                MessageHandler.AddMessage($"Failed to load mails: {e}", MessageSeverity.Error);
+            }
+            initialized = true;
         }
 
-        public void HandleMessage(MailContent mail)
+        Mutex mailsMutex = new();
+        public void HandleMessage(MailContent mail, int count)
         {
-            //prevents mail duplicate badness
-            if (mailsContent.Exists(x => x.MessageId == mail.MessageId))
-            {
-                return;
-                throw new ArgumentException("mail already exists in viewmodel");
-            }
 
+            //prevents mail duplicate badness
             if (CancelToken.IsCancellationRequested)
             {
                 return;
             }
-            mailsContent.Add(mail);
-            mailsContent.Sort((x, y) => -x.date.CompareTo(y.date));
+            if (!mailsContent.Exists(x => x.MessageId == mail.MessageId))
+            {
+                mailsContent.Add(mail);
+                mailsContent.Sort((x, y) => -x.date.CompareTo(y.date));
+            }
 
             InboxMail inboxMail = CreateInboxMail(mail);
-            if (DispatchQueue != null)
+
+            DispatchQueue.TryEnqueue(() =>
             {
-                DispatchQueue.TryEnqueue(() =>
+                int insertIndex = mails.Count;
+
+                for (int i = 0; i < mails.Count; i++)
                 {
-                    int insertIndex = mails.Count;
-
-                    for (int i = 0; i < mails.Count; i++)
+                    if (mails[i].date < inboxMail.date)
                     {
-                        if (mails[i].date < inboxMail.date)
-                        {
-                            insertIndex = i;
-                            break;
-                        }
+                        insertIndex = i;
+                        break;
                     }
+                }
 
 
+                mailsMutex.WaitOne();
+                if (mails.Any(m => m.id == inboxMail.id))
+                {
+                    mailsMutex.ReleaseMutex();
+                    return;
+                }
 
-                    mails.Insert(insertIndex, inboxMail);
-                });
-            }
+                mails.Insert(insertIndex, inboxMail);
+                if (mails.Count > count)
+                {
+                    mails.RemoveAt(mails.Count - 1);
+                }
+                mailsMutex.ReleaseMutex();
+            });
         }
 
         private static InboxMail CreateInboxMail(MailContent mail)
@@ -205,11 +217,12 @@ namespace ExcellentEmailExperience.ViewModel
         async Task<LoadMoreItemsResult> LoadMoreItemsResult(uint count)
         {
             _busy = true;
-            if (!folderViewModel.initialized)
+            while (!folderViewModel.initialized)
             {
-                return new LoadMoreItemsResult();
+                await Task.Delay(100);
             }
-            if (folderViewModel.mailsContent.Count == 0)
+            await Task.Delay(100);
+            if (folderViewModel.mails.Count == 0)
             {
                 HasMoreItems = false;
                 return new LoadMoreItemsResult();
@@ -217,23 +230,25 @@ namespace ExcellentEmailExperience.ViewModel
 
             bool hasMoreItems = false;
             IsLoading = true;
-            await Task.Run(() =>
+            int loadCount = await Task.Run(() =>
             {
-                foreach (var mail in folderViewModel.mailHandler.RefreshOld(folderViewModel.FolderName, 20, folderViewModel.mailsContent[folderViewModel.mailsContent.Count - 1].date))
+                int loadCount = 0;
+                foreach (var mail in folderViewModel.mailHandler.RefreshOld(folderViewModel.FolderName, 20, folderViewModel.mails[folderViewModel.mails.Count - 1].date))
                 {
                     hasMoreItems = true;
                     if (!mail.Deletion)
                     {
-                        folderViewModel.HandleMessage(mail.email);
+                        loadCount++;
+                        folderViewModel.HandleMessage(mail.email, 2000);
                     }
                 }
                 _busy = false;
                 IsLoading = false;
                 HasMoreItems = hasMoreItems;
-                return new LoadMoreItemsResult { Count = count };
+                return loadCount;
             });
 
-            return new LoadMoreItemsResult();
+            return new LoadMoreItemsResult((uint)loadCount);
         }
     }
 }

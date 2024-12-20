@@ -173,7 +173,7 @@ namespace ExcellentEmailExperience.Views
                 MailContent mailContent = currentFolder.mailsContent[MailList.SelectedIndex];
 
                 (MainFrame.Content as Email).ChangeMail(mailContent, false);
-                MassEditMenu.Visibility = Visibility.Collapsed;
+                //MassEditMenu.Visibility = Visibility.Collapsed;
                 if (selectedMail.Unread)
                 {
                     Thread thread = new(() =>
@@ -183,11 +183,10 @@ namespace ExcellentEmailExperience.Views
                     thread.Start();
                     currentFolder.mails[MailList.SelectedIndex].Unread = false;
                 }
-
             }
             else if (selectedCount > 1)
             {
-                MassEditMenu.Visibility = Visibility.Visible;
+                //MassEditMenu.Visibility = Visibility.Visible;
             }
 
             foreach (var mail in e.RemovedItems)
@@ -293,6 +292,8 @@ namespace ExcellentEmailExperience.Views
 
             (MainFrame.Content as Email).ChangeMail(mailContent, true);
 
+            MailList.SelectedIndex = -1;
+
         }
 
         private void Siderbar_SelectionChanged(TreeView sender, TreeViewSelectionChangedEventArgs args)
@@ -385,15 +386,28 @@ namespace ExcellentEmailExperience.Views
                 return;
             }
 
-            var mails = currentFolder.mailHandler.Search(search, 20);
+            Thread thread = new(() =>
+            {
+                var mails = currentFolder.mailHandler.Search(search, 50);
 
-            FolderViewModel searchFolder = new(mails, DispatcherQueue, cancellationToken.Token);
+                if (mails.Count() == 0)
+                {
+                    MessageHandler.AddMessage("No results found", MessageSeverity.Info);
+                    return;
+                }
 
-            searchFolder.mailHandler = currentFolder.mailHandler;
-            currentFolder = searchFolder;
-            FolderName.Text = currentFolder.Name;
-            MailList.ItemsSource = currentFolder.mails;
-            Siderbar.SelectedItem = null;
+                FolderViewModel searchFolder = new(mails, DispatcherQueue, cancellationToken.Token);
+
+                searchFolder.mailHandler = currentFolder.mailHandler;
+                DispatcherQueue.TryEnqueue(() =>
+                {
+                    currentFolder = searchFolder;
+                    FolderName.Text = currentFolder.Name;
+                    MailList.ItemsSource = currentFolder.mails;
+                    Siderbar.SelectedItem = null;
+                });
+            });
+            thread.Start();
         }
 
         private void Reply_Click(object sender, RoutedEventArgs e)
@@ -407,6 +421,7 @@ namespace ExcellentEmailExperience.Views
 
             var reply = currentFolder.mailHandler.Reply(mailContent);
             (MainFrame.Content as Email).ChangeMail(reply, true);
+            MailList.SelectedIndex = -1;
         }
 
         private void ReplyAll_Click(object sender, RoutedEventArgs e)
@@ -420,6 +435,7 @@ namespace ExcellentEmailExperience.Views
 
             var reply = currentFolder.mailHandler.ReplyAll(mailContent);
             (MainFrame.Content as Email).ChangeMail(reply, true);
+            MailList.SelectedIndex = -1;
 
         }
 
@@ -434,6 +450,7 @@ namespace ExcellentEmailExperience.Views
 
             var reply = currentFolder.mailHandler.Forward(mailContent);
             (MainFrame.Content as Email).ChangeMail(reply, true);
+            MailList.SelectedIndex = -1;
 
         }
 
@@ -473,7 +490,8 @@ namespace ExcellentEmailExperience.Views
                 }
                 if (account.account.GetMailHandler() == currentFolder.mailHandler)
                 {
-                    account.mailHandlerViewModel.folders.First(f => f.FolderName == "TRASH").HandleMessage(mailContent);
+                    var trashFolder = account.mailHandlerViewModel.folders.First(f => f.FolderName == "TRASH");
+                    trashFolder.HandleMessage(mailContent, trashFolder.mails.Count + 1);
                     break;
                 }
             }

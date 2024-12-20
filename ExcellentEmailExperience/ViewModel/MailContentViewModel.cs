@@ -1,9 +1,12 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
+using ExcellentEmailExperience.Helpers;
 using ExcellentEmailExperience.Model;
+using Microsoft.UI.Xaml.Media.Imaging;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Net.Mail;
+using Windows.Storage;
 
 namespace ExcellentEmailExperience.ViewModel
 {
@@ -18,15 +21,28 @@ namespace ExcellentEmailExperience.ViewModel
             Cc = mailContent.cc;
             Subject = mailContent.subject;
             Body = mailContent.body;
-            Attachments = mailContent.attachments;
+
             Date = mailContent.date;
             bodyType = mailContent.bodyType;
             messageId = mailContent.MessageId;
             Unread = mailContent.flags.HasFlag(MailFlag.unread);
 
             recipients.Clear();
+
+            attachments.Clear();
+            mailContent.attachments.ForEach(x =>
+            {
+
+                BitmapImage bitmapImage = ThumbnailFromPath.GetThumbnailFromPath(x);
+
+                attachments.Add(new AttachmentViewModel { Path = x, Preview = bitmapImage });
+            });
+
+
             mailContent.to.ForEach(x => recipients.Add(new(x.Address)));
         }
+
+
 
         [ObservableProperty]
         public MailAddress from;
@@ -52,8 +68,7 @@ namespace ExcellentEmailExperience.ViewModel
         public string body;
         public BodyType bodyType;
 
-        [ObservableProperty]
-        public List<string> attachments;
+        public ObservableCollection<AttachmentViewModel> attachments = new();
 
         [ObservableProperty]
         public DateTime date;
@@ -80,5 +95,13 @@ namespace ExcellentEmailExperience.ViewModel
         }
         [ObservableProperty]
         public string value;
+    }
+
+    public class AttachmentViewModel
+    {
+        public string Path { get; set; }
+        public BitmapImage Preview { get; set; }
+        public bool Editable = false;
+        public string name;
     }
 }
