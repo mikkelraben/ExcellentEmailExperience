@@ -93,7 +93,7 @@ namespace ExcellentEmailExperience.ViewModel
         {
             try
             {
-                foreach (var mail in mailHandler.GetFolder(name, 20))
+                foreach (var mail in mailHandler.GetFolder(FolderName, 20))
                 {
                     HandleMessage(mail, 20);
                 }
