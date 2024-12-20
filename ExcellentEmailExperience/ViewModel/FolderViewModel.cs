@@ -69,6 +69,8 @@ namespace ExcellentEmailExperience.ViewModel
         {
             mails = new(this);
             this.Name = "Search";
+            DispatchQueue = dispatcherQueue;
+            CancelToken = cancellationToken;
 
             foreach (var mail in mailContents)
             {
