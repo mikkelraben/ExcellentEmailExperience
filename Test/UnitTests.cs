@@ -552,7 +552,7 @@ namespace Test
                 {
 
                     CollectionAssert.AreEqual(fwdlist, forward.to);
-                    Assert.IsTrue(forward.body == $"Forwarded from {Address1.Address}\n " + Inboxlist2[0].body + $" \n\n Originally sent to:{Address2.Address}");
+                    Assert.IsTrue(forward.body == $"Forwarded from {Address1}\n " + Inboxlist2[0].body + $" \n\n Originally sent to:{Address2}");
                     forward.to = new List<MailAddress> { Address3 };
                     mailHandler2.Send(forward);
                 }
