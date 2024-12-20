@@ -221,6 +221,7 @@ namespace ExcellentEmailExperience.ViewModel
             {
                 await Task.Delay(100);
             }
+            await Task.Delay(100);
             if (folderViewModel.mails.Count == 0)
             {
                 HasMoreItems = false;

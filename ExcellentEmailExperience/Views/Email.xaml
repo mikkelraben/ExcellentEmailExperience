@@ -16,6 +16,7 @@
         <local:CountToVisibility x:Key="CountToVisibility"/>
         <local:BoolToVisibility x:Key="BoolToVisibility"/>
         <local:BoolToNotVisibility x:Key="BoolToNotVisibility"/>
+        <local:BoolToSize x:Key="BoolToSize"/>
     </Page.Resources>
     <ScrollViewer>
         
@@ -23,6 +24,7 @@
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="*" MinHeight="150"/>
+                <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
@@ -234,14 +236,17 @@
                 <TextBlock Text="No mail selected." IsTextSelectionEnabled="True" Margin="12,12" VerticalAlignment="Center" HorizontalAlignment="Center"/>
             </Grid>
             <WebView2 Grid.Row="1" x:Name="HTMLViewer" Visibility="Collapsed" CanGoBack="False" CanGoForward="False" CanDrag="False" DefaultBackgroundColor="Transparent" Source="about:blank"/>
+            <Button Grid.Row="2" x:Name="AddAttachment" Click="AddAttachment_Click" ToolTipService.ToolTip="Add attachment" Margin="12,4" Visibility="{x:Bind viewModel.IsEditable,Converter={StaticResource BoolToVisibility},Mode=OneWay}">
+                <FontIcon Glyph="&#xE723;"/>
+            </Button>
             <StackPanel 
-                Grid.Row="2" 
+                Grid.Row="3" 
                 Visibility="{x:Bind viewModel.attachments.Count,Converter={StaticResource CountToVisibility},Mode=OneWay,FallbackValue=collapsed}" 
                 BorderThickness="0,1,0,0"
                 BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}">
             
                 <TextBlock Text="Attachments" Margin="4,4" Style="{ThemeResource BodyStrongTextBlockStyle}"/>
-                <GridView Name="Attachments" MaxHeight="266" ItemsSource="{x:Bind viewModel.attachments,Mode=OneWay}" SelectionMode="None" Padding="0,0">
+                <GridView x:Name="Attachments" MaxHeight="266" ItemsSource="{x:Bind viewModel.attachments,Mode=OneWay}" SelectionMode="None" Padding="0,0">
                     <GridView.ItemContainerStyle>
                         <Style TargetType="GridViewItem" BasedOn="{StaticResource DefaultGridViewItemStyle}">
                             <Setter Property="Margin" Value="5, 5, 5, 5"/>
@@ -254,16 +259,32 @@
                             <Border CornerRadius="4">
                                 <Border.ContextFlyout>
                                     <MenuFlyout>
-                                        <MenuFlyoutItem Text="Save" Click="SaveAttachment"/>
+                                        <MenuFlyoutItem Text="Save" Click="SaveAttachment">
+                                            <MenuFlyoutItem.Icon>
+                                                <FontIcon Glyph="&#xE78C;" />
+                                            </MenuFlyoutItem.Icon>
+
+                                        </MenuFlyoutItem>
                                     </MenuFlyout>
                                 </Border.ContextFlyout>
-                                <Image Source="{x:Bind Preview}" MaxHeight="256" MaxWidth="256" PointerReleased="ClickAttachment"/>
+                                <Grid>
+                                    <Image Source="{x:Bind Preview}" MaxHeight="{x:Bind Editable,Converter={StaticResource BoolToSize},Mode=OneWay}" MaxWidth="{x:Bind Editable,Converter={StaticResource BoolToSize},Mode=OneWay}" ToolTipService.ToolTip="{x:Bind name}" PointerReleased="ClickAttachment"/>
+                                    <Button Width="20" Height="20" MinWidth="20" MinHeight="20" Padding="0" Margin="4" HorizontalAlignment="Right"
+                                        VerticalAlignment="Top"
+                                            Background="{ThemeResource ControlOnImageFillColorDefaultBrush}"
+                                            PointerReleased="RemoveAttachment_Click"
+                                            Click="RemoveAttachment_Click"
+                                            Visibility="{x:Bind Editable,Converter={StaticResource BoolToVisibility},Mode=OneWay}">
+                                        <FontIcon Glyph="&#xE711;" FontSize="12" />
+                                    </Button>
+                                </Grid>
                             </Border>
                         </DataTemplate>
                     </GridView.ItemTemplate>
                 </GridView>
             </StackPanel>
-            <ScrollView x:Name="Editor" Grid.Row="3" Visibility="Collapsed">
+ 
+            <ScrollView x:Name="Editor" Grid.Row="4" Visibility="Collapsed">
                 <RichEditBox x:Name="MailEditor" Margin="12,12" VerticalAlignment="Stretch" MinHeight="200"/>
             </ScrollView>
         </Grid>

@@ -183,7 +183,6 @@ namespace ExcellentEmailExperience.Views
                     thread.Start();
                     currentFolder.mails[MailList.SelectedIndex].Unread = false;
                 }
-
             }
             else if (selectedCount > 1)
             {
@@ -292,6 +291,8 @@ namespace ExcellentEmailExperience.Views
                 ).account.GetEmail();
 
             (MainFrame.Content as Email).ChangeMail(mailContent, true);
+
+            MailList.SelectedIndex = -1;
 
         }
 
@@ -420,6 +421,7 @@ namespace ExcellentEmailExperience.Views
 
             var reply = currentFolder.mailHandler.Reply(mailContent);
             (MainFrame.Content as Email).ChangeMail(reply, true);
+            MailList.SelectedIndex = -1;
         }
 
         private void ReplyAll_Click(object sender, RoutedEventArgs e)
@@ -433,6 +435,7 @@ namespace ExcellentEmailExperience.Views
 
             var reply = currentFolder.mailHandler.ReplyAll(mailContent);
             (MainFrame.Content as Email).ChangeMail(reply, true);
+            MailList.SelectedIndex = -1;
 
         }
 
@@ -447,6 +450,7 @@ namespace ExcellentEmailExperience.Views
 
             var reply = currentFolder.mailHandler.Forward(mailContent);
             (MainFrame.Content as Email).ChangeMail(reply, true);
+            MailList.SelectedIndex = -1;
 
         }
 

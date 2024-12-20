@@ -1,3 +1,4 @@
+using ExcellentEmailExperience.Helpers;
 using ExcellentEmailExperience.Model;
 using ExcellentEmailExperience.ViewModel;
 using Microsoft.UI.Text;
@@ -11,6 +12,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
+using System.Net.Mail;
 using System.Text;
 using System.Threading.Tasks;
 using Windows.Storage;
@@ -125,6 +127,7 @@ namespace ExcellentEmailExperience.Views
         {
             viewModel.Update(mail);
             viewModel.IsEditable = editable;
+            MailEditor.Document.SetText(TextSetOptions.None, "");
 
             Editor.Visibility = editable ? Visibility.Visible : Visibility.Collapsed;
 
@@ -354,6 +357,40 @@ namespace ExcellentEmailExperience.Views
                 HTMLViewer.CoreWebView2.ExecuteScriptAsync($"window.open('https://Attachments/{path}')");
             }
         }
+
+        private async void AddAttachment_Click(object sender, RoutedEventArgs e)
+        {
+            AddAttachment.IsEnabled = false;
+            var openPicker = new Windows.Storage.Pickers.FileOpenPicker();
+
+            var window = App.mainWindow;
+
+            var hWnd = WinRT.Interop.WindowNative.GetWindowHandle(window);
+            WinRT.Interop.InitializeWithWindow.Initialize(openPicker, hWnd);
+
+            openPicker.ViewMode = PickerViewMode.List;
+            openPicker.SuggestedStartLocation = PickerLocationId.DocumentsLibrary;
+            openPicker.FileTypeFilter.Add("*");
+
+            IReadOnlyList<StorageFile> files = await openPicker.PickMultipleFilesAsync();
+            if (files.Count > 0)
+            {
+                foreach (StorageFile file in files)
+                {
+                    viewModel.attachments.Add(new() { Path = file.Path, Editable = true, Preview = ThumbnailFromPath.GetThumbnailFromPath(file.Path), name = Path.GetFileName(file.Path) });
+                }
+            }
+            AddAttachment.IsEnabled = true;
+        }
+
+
+
+        private void RemoveAttachment_Click(object sender, RoutedEventArgs e)
+        {
+            var attachment = (sender as Button).DataContext as AttachmentViewModel;
+            viewModel.attachments.Remove(attachment);
+
+        }
     }
 
     public class CountToVisibility : IValueConverter
@@ -391,5 +428,18 @@ namespace ExcellentEmailExperience.Views
             throw new NotImplementedException();
         }
     }
+
+    public class BoolToSize : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, string language)
+        {
+            return (bool)value ? 64.0 : 256.0;
+        }
+        public object ConvertBack(object value, Type targetType, object parameter, string language)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
 }
 

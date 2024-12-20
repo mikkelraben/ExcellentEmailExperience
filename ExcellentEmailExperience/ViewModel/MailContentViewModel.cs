@@ -1,4 +1,5 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
+using ExcellentEmailExperience.Helpers;
 using ExcellentEmailExperience.Model;
 using Microsoft.UI.Xaml.Media.Imaging;
 using System;
@@ -31,11 +32,8 @@ namespace ExcellentEmailExperience.ViewModel
             attachments.Clear();
             mailContent.attachments.ForEach(x =>
             {
-                StorageFile attachment = StorageFile.GetFileFromPathAsync(x).AsTask().Result;
-                var thumbnail = attachment.GetThumbnailAsync(Windows.Storage.FileProperties.ThumbnailMode.SingleItem).AsTask().Result;
 
-                BitmapImage bitmapImage = new();
-                bitmapImage.SetSource(thumbnail);
+                BitmapImage bitmapImage = ThumbnailFromPath.GetThumbnailFromPath(x);
 
                 attachments.Add(new AttachmentViewModel { Path = x, Preview = bitmapImage });
             });
@@ -43,6 +41,8 @@ namespace ExcellentEmailExperience.ViewModel
 
             mailContent.to.ForEach(x => recipients.Add(new(x.Address)));
         }
+
+
 
         [ObservableProperty]
         public MailAddress from;
@@ -101,5 +101,7 @@ namespace ExcellentEmailExperience.ViewModel
     {
         public string Path { get; set; }
         public BitmapImage Preview { get; set; }
+        public bool Editable = false;
+        public string name;
     }
 }

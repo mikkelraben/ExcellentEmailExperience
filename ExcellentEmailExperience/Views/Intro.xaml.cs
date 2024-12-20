@@ -59,6 +59,8 @@ namespace ExcellentEmailExperience.Views
 
                 account.Login(null);
 
+                account.SetName("My Account");
+
                 mailApp.NewAccount(account);
 
                 DispatcherQueue.TryEnqueue(() =>
