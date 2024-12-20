@@ -48,6 +48,11 @@ namespace ExcellentEmailExperience.ViewModel
             CancelToken = cancellationToken;
             MailHandler = mailHandler;
 
+            if (mailHandler is GmailHandler handler)
+            {
+                name = handler.GetFolderName(name);
+            }
+
             this.name = name.Substring(0, 1).ToUpper() + name.Substring(1).ToLower();
             this.mailHandler = mailHandler;
 

@@ -619,7 +619,7 @@ namespace ExcellentEmailExperience.Model
                 foreach (var labelItem in labels)
                 {
                     // TODO: maybe use labelItem.Id instead of labelItem.Name but we will think about this after implementing mailkit
-                    string folderName = labelItem.Name;
+                    string folderName = labelItem.Id;
                     labelNames.Add(folderName);
                 }
             }
@@ -631,6 +631,23 @@ namespace ExcellentEmailExperience.Model
             labelNames.Insert(0, "INBOX");
 
             return labelNames.ToArray();
+        }
+
+        public string GetFolderName(string folderId)
+        {
+            var labelsListRequest = service.Users.Labels.List("me");
+            IList<Label> labels = (labelsListRequest.Execute()).Labels;
+            if (labels != null && labels.Count > 0)
+            {
+                foreach (var labelItem in labels)
+                {
+                    if (labelItem.Id == folderId)
+                    {
+                        return labelItem.Name;
+                    }
+                }
+            }
+            return null;
         }
 
         public void Send(MailContent content)
