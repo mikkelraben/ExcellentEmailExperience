@@ -137,9 +137,6 @@
                         </Button>
                     </Grid>
                     <AutoSuggestBox PlaceholderText="Search" Grid.Row="1" Margin="8,0,8,16" QueryIcon="Find" QuerySubmitted="AutoSuggestBox_QuerySubmitted"/>
-                    <StackPanel Orientation="Horizontal" Grid.Row="2" Name="MassEditMenu" Visibility="Collapsed">
-                        <Button Margin="8,0,0,0" Click="MassDelete_Click" Padding="8,4" Content="Delete"/>
-                    </StackPanel>
                     <ListView 
                         Grid.Row="3" 
                         SelectionMode="Extended" 

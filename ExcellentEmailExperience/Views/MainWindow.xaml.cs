@@ -173,7 +173,7 @@ namespace ExcellentEmailExperience.Views
                 MailContent mailContent = currentFolder.mailsContent[MailList.SelectedIndex];
 
                 (MainFrame.Content as Email).ChangeMail(mailContent, false);
-                MassEditMenu.Visibility = Visibility.Collapsed;
+                //MassEditMenu.Visibility = Visibility.Collapsed;
                 if (selectedMail.Unread)
                 {
                     Thread thread = new(() =>
@@ -186,7 +186,7 @@ namespace ExcellentEmailExperience.Views
             }
             else if (selectedCount > 1)
             {
-                MassEditMenu.Visibility = Visibility.Visible;
+                //MassEditMenu.Visibility = Visibility.Visible;
             }
 
             foreach (var mail in e.RemovedItems)
