@@ -124,13 +124,6 @@ namespace ExcellentEmailExperience.ViewModel
             }
 
             InboxMail inboxMail = CreateInboxMail(mail);
-            mailsMutex.WaitOne();
-            if (mails.Any(m => m.id == inboxMail.id))
-            {
-                mailsMutex.ReleaseMutex();
-                return;
-            }
-            mailsMutex.ReleaseMutex();
 
             DispatchQueue.TryEnqueue(() =>
             {
@@ -146,8 +139,13 @@ namespace ExcellentEmailExperience.ViewModel
                 }
 
 
-
                 mailsMutex.WaitOne();
+                if (mails.Any(m => m.id == inboxMail.id))
+                {
+                    mailsMutex.ReleaseMutex();
+                    return;
+                }
+
                 mails.Insert(insertIndex, inboxMail);
                 if (mails.Count > count)
                 {

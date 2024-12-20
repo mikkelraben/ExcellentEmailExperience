@@ -49,6 +49,8 @@ namespace ExcellentEmailExperience.Views
             await HTMLViewer.EnsureCoreWebView2Async(environment);
             StorageFolder folder = ApplicationData.Current.LocalFolder;
             var path = @$"{folder.Path}\attachments\";
+            if (!Path.Exists(path))
+                Directory.CreateDirectory(path);
             HTMLViewer.CoreWebView2.SetVirtualHostNameToFolderMapping("Attachments", path, CoreWebView2HostResourceAccessKind.Allow);
 
 
