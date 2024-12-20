@@ -385,15 +385,28 @@ namespace ExcellentEmailExperience.Views
                 return;
             }
 
-            var mails = currentFolder.mailHandler.Search(search, 20);
+            Thread thread = new(() =>
+            {
+                var mails = currentFolder.mailHandler.Search(search, 50);
 
-            FolderViewModel searchFolder = new(mails, DispatcherQueue, cancellationToken.Token);
+                if (mails.Count() == 0)
+                {
+                    MessageHandler.AddMessage("No results found", MessageSeverity.Info);
+                    return;
+                }
 
-            searchFolder.mailHandler = currentFolder.mailHandler;
-            currentFolder = searchFolder;
-            FolderName.Text = currentFolder.Name;
-            MailList.ItemsSource = currentFolder.mails;
-            Siderbar.SelectedItem = null;
+                FolderViewModel searchFolder = new(mails, DispatcherQueue, cancellationToken.Token);
+
+                searchFolder.mailHandler = currentFolder.mailHandler;
+                DispatcherQueue.TryEnqueue(() =>
+                {
+                    currentFolder = searchFolder;
+                    FolderName.Text = currentFolder.Name;
+                    MailList.ItemsSource = currentFolder.mails;
+                    Siderbar.SelectedItem = null;
+                });
+            });
+            thread.Start();
         }
 
         private void Reply_Click(object sender, RoutedEventArgs e)
@@ -473,7 +486,8 @@ namespace ExcellentEmailExperience.Views
                 }
                 if (account.account.GetMailHandler() == currentFolder.mailHandler)
                 {
-                    account.mailHandlerViewModel.folders.First(f => f.FolderName == "TRASH").HandleMessage(mailContent);
+                    var trashFolder = account.mailHandlerViewModel.folders.First(f => f.FolderName == "TRASH");
+                    trashFolder.HandleMessage(mailContent, trashFolder.mails.Count + 1);
                     break;
                 }
             }

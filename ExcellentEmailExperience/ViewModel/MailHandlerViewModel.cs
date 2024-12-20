@@ -56,7 +56,8 @@ namespace ExcellentEmailExperience.ViewModel
                     {
                         if (mail.flags == MailFlag.none)
                         {
-                            folders.First(f => f.FolderName == folder).HandleMessage(mail.email);
+                            var targetFolder = folders.First(f => f.FolderName == folder);
+                            targetFolder.HandleMessage(mail.email, 2000);
                         }
                         else
                         {
